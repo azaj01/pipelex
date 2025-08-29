@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Updated `cocode` dependency from version `v0.0.10` to `v0.0.15`.
+
 ## [v0.8.1] - 2025-08-27
 
 ### Bugfix
