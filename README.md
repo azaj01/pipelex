@@ -73,7 +73,7 @@ PurchaseDocumentText = "Transcript of a receipt, invoice, or order confirmation"
 
 [pipe.extract_buyer]
 type = "PipeLLM"
-description = "Extract buyer from purchase document"
+definition = "Extract buyer from purchase document"
 inputs = { purchase_document_text = "PurchaseDocumentText" }
 output = "Buyer"
 llm = "llm_to_extract_info"
@@ -124,9 +124,9 @@ uv pip install pipelex
 
 The package supports the following additional features:
 
-- `anthropic`: Anthropic/Claude support
+- `anthropic`: Anthropic/Claude support+
 - `google`: Google models (Vertex) support
-- `mistralai`: Mistral AI support
+- `mistralai`: Mistral AI support√
 - `bedrock`: AWS Bedrock support
 - `fal`: Image generation with Black Forest Labs "FAL" service
 
@@ -174,7 +174,7 @@ WritingStyle = "A style of writing"
 [pipe]
 [pipe.analyze_tweet]
 type = "PipeLLM"
-description = "Analyze the draft tweet and identify areas for improvement"
+definition = "Analyze the draft tweet and identify areas for improvement"
 inputs = { draft_tweet = "DraftTweet" }
 output = "TweetAnalysis"
 llm = "llm_for_writing_analysis"
@@ -203,7 +203,7 @@ without providing an actual rewrite
 
 [pipe.optimize_tweet]
 type = "PipeLLM"
-description = "Optimize the tweet based on the analysis"
+definition = "Optimize the tweet based on the analysis"
 inputs = { draft_tweet = "DraftTweet", tweet_analysis = "TweetAnalysis", writing_style = "WritingStyle" }
 output = "OptimizedTweet"
 llm = "llm_for_social_post_writing"
@@ -238,7 +238,7 @@ Keep the core meaning of the original tweet.
 
 [pipe.optimize_tweet_sequence]
 type = "PipeSequence"
-description = "Analyze and optimize a tech tweet in sequence"
+definition = "Analyze and optimize a tech tweet in sequence"
 inputs = { draft_tweet = "DraftTweet", writing_style = "WritingStyle" }
 output = "OptimizedTweet"
 steps = [
