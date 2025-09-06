@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.9.4] - 2025-09-06
+
+### Added
+
+- Added support for BlackboxAI models
+
 ## [v0.9.3] - 2025-09-06
 
 ### Added
