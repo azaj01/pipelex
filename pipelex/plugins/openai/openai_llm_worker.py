@@ -90,6 +90,7 @@ class OpenAILLMWorker(LLMWorkerInternalAbstract):
                     | LLMFamily.CUSTOM_GEMMA_3
                     | LLMFamily.CUSTOM_MISTRAL_SMALL_3_1
                     | LLMFamily.CUSTOM_QWEN_3
+                    | LLMFamily.CUSTOM_BLACKBOXAI
                     | LLMFamily.PERPLEXITY_SEARCH
                     | LLMFamily.PERPLEXITY_RESEARCH
                     | LLMFamily.PERPLEXITY_REASONING
@@ -191,6 +192,7 @@ class OpenAILLMWorker(LLMWorkerInternalAbstract):
                     | LLMFamily.CUSTOM_GEMMA_3
                     | LLMFamily.CUSTOM_MISTRAL_SMALL_3_1
                     | LLMFamily.CUSTOM_QWEN_3
+                    | LLMFamily.CUSTOM_BLACKBOXAI
                     | LLMFamily.PERPLEXITY_SEARCH
                     | LLMFamily.PERPLEXITY_RESEARCH
                     | LLMFamily.PERPLEXITY_REASONING

@@ -100,6 +100,7 @@ class LLMFamily(StrEnum):
     CUSTOM_GEMMA_3 = "custom-gemma-3"
     CUSTOM_MISTRAL_SMALL_3_1 = "custom-mistral-small3.1"
     CUSTOM_QWEN_3 = "custom-qwen3"
+    CUSTOM_BLACKBOXAI = "custom-blackboxai"
 
     @property
     def creator(self) -> LLMCreator:
@@ -151,6 +152,8 @@ class LLMFamily(StrEnum):
                 return LLMCreator.META
             case LLMFamily.CUSTOM_QWEN_3:
                 return LLMCreator.ALIBABA
+            case LLMFamily.CUSTOM_BLACKBOXAI:
+                return LLMCreator.OPENAI
 
     @property
     def prompting_target(self) -> LLMPromptingTarget:
