@@ -21,7 +21,6 @@
  - Modified `Jinja2` filter to use default `TagStyle.TICKS` instead of raising error
  - Added proper error handling for Unicode decode errors when loading model libraries
  - Improved error handling in Anthropic plugin tests with specific `AuthenticationError` handling
- - Updated `mypy` to version `1.18.1`
  - Image handling in `AnthropicFactory` now converts image URLs to `base64` data URLs with proper MIME type prefix
  - Put back Discord link in `README.md`
 
