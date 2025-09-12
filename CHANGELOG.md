@@ -20,6 +20,7 @@
  - Improved error handling in Anthropic plugin tests with specific `AuthenticationError` handling
  - Updated `mypy` to version `1.18.1`
  - Image handling in `AnthropicFactory` now converts image URLs to `base64` data URLs with proper MIME type prefix
+ - Put back Discord link in `README.md`
 
 ## [v0.9.4] - 2025-09-06
 
