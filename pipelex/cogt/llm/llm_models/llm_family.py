@@ -102,6 +102,8 @@ class LLMFamily(StrEnum):
     CUSTOM_QWEN_3 = "custom-qwen3"
     CUSTOM_BLACKBOXAI = "custom-blackboxai"
 
+    PIPELEX_INFERENCE = "pipelex-inference"
+
     @property
     def creator(self) -> LLMCreator:
         match self:
@@ -152,7 +154,8 @@ class LLMFamily(StrEnum):
                 return LLMCreator.META
             case LLMFamily.CUSTOM_QWEN_3:
                 return LLMCreator.ALIBABA
-            case LLMFamily.CUSTOM_BLACKBOXAI:
+            case LLMFamily.CUSTOM_BLACKBOXAI | LLMFamily.PIPELEX_INFERENCE:
+                # TODO: this doesn't make sense for multi-model providers, needs full refactor
                 return LLMCreator.OPENAI
 
     @property
