@@ -1,4 +1,3 @@
-from typing import Type
 
 import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
@@ -13,7 +12,6 @@ from pipelex.cogt.llm.llm_worker_abstract import LLMWorkerAbstract
 from pipelex.cogt.usage.token_category import NbTokensByCategoryDict, TokenCategory
 from pipelex.core.concepts.concept_native import NativeConceptEnum
 from pipelex.hub import get_inference_manager, get_pipe_router, get_report_delegate
-from pipelex.pipe_operators.llm.pipe_llm import PipeLLMOutput
 from pipelex.pipe_operators.llm.pipe_llm_blueprint import PipeLLMBlueprint
 from pipelex.pipe_operators.llm.pipe_llm_factory import PipeLLMFactory
 from pipelex.pipe_works.pipe_job_factory import PipeJobFactory
@@ -49,7 +47,7 @@ class MockExternalLLMWorker(LLMWorkerAbstract):
     async def _gen_object(
         self,
         llm_job: LLMJob,
-        schema: Type[BaseModelTypeVar],
+        schema: type[BaseModelTypeVar],
     ) -> BaseModelTypeVar:
         class ObjectFactory(ModelFactory[schema]):  # type: ignore
             __model__ = schema
@@ -107,7 +105,7 @@ class TestExternalPlugin:
                 blueprint=pipe_llm_blueprint,
             ),
         )
-        pipe_llm_output: PipeLLMOutput = await get_pipe_router().run_pipe_job(
+        pipe_llm_output = await get_pipe_router().run(
             pipe_job=pipe_job,
         )
 

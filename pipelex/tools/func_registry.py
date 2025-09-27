@@ -1,6 +1,7 @@
 import inspect
 import logging
-from typing import Any, Callable, Dict, List, Optional, TypeVar, get_type_hints
+from collections.abc import Callable
+from typing import Any, TypeVar, get_type_hints
 
 from pydantic import Field, PrivateAttr, RootModel
 
@@ -10,7 +11,7 @@ FUNC_REGISTRY_LOGGER_CHANNEL_NAME = "func_registry"
 
 # Type variable for generic function types
 T = TypeVar("T")
-FuncRegistryDict = Dict[str, Callable[..., Any]]
+FuncRegistryDict = dict[str, Callable[..., Any]]
 
 
 class FuncRegistryError(ToolException):
@@ -34,7 +35,7 @@ class FuncRegistry(RootModel[FuncRegistryDict]):
     def register_function(
         self,
         func: Callable[..., Any],
-        name: Optional[str] = None,
+        name: str | None = None,
         should_warn_if_already_registered: bool = True,
     ) -> None:
         """Registers a function in the registry with a name if it meets eligibility criteria."""
@@ -46,7 +47,8 @@ class FuncRegistry(RootModel[FuncRegistryDict]):
             if should_warn_if_already_registered:
                 self.log(f"Function '{key}' already exists in registry")
             else:
-                raise FuncRegistryError(f"Function '{key}' already exists in registry")
+                msg = f"Function '{key}' already exists in registry"
+                raise FuncRegistryError(msg)
         else:
             self.log(f"Registered new single function '{key}' in registry")
         self.root[key] = func
@@ -55,52 +57,56 @@ class FuncRegistry(RootModel[FuncRegistryDict]):
         """Unregisters a function from the registry."""
         key = func.__name__
         if key not in self.root:
-            raise FuncRegistryError(f"Function '{key}' not found in registry")
+            msg = f"Function '{key}' not found in registry"
+            raise FuncRegistryError(msg)
         del self.root[key]
         self.log(f"Unregistered single function '{key}' from registry")
 
     def unregister_function_by_name(self, name: str) -> None:
         """Unregisters a function from the registry by its name."""
         if name not in self.root:
-            raise FuncRegistryError(f"Function '{name}' not found in registry")
+            msg = f"Function '{name}' not found in registry"
+            raise FuncRegistryError(msg)
         del self.root[name]
 
-    def register_functions_dict(self, functions: Dict[str, Callable[..., Any]]) -> None:
+    def register_functions_dict(self, functions: dict[str, Callable[..., Any]]) -> None:
         """Registers multiple functions in the registry with names if they meet eligibility criteria."""
         for name, func in functions.items():
             self.register_function(func=func, name=name, should_warn_if_already_registered=False)
 
-    def register_functions(self, functions: List[Callable[..., Any]]) -> None:
+    def register_functions(self, functions: list[Callable[..., Any]]) -> None:
         """Registers multiple functions in the registry with names if they meet eligibility criteria."""
         for func in functions:
             self.register_function(func=func, should_warn_if_already_registered=False)
 
-    def get_function(self, name: str) -> Optional[Callable[..., Any]]:
+    def get_function(self, name: str) -> Callable[..., Any] | None:
         """Retrieves a function from the registry by its name. Returns None if not found."""
         return self.root.get(name)
 
     def get_required_function(self, name: str) -> Callable[..., Any]:
         """Retrieves a function from the registry by its name. Raises an error if not found."""
         if name not in self.root:
-            raise FuncRegistryError(
-                f"Function '{name}' not found in registry: \
-                See how to register a function here: https://docs.pipelex.com/pages/build-reliable-ai-workflows-with-pipelex/pipe-operators/PipeFunc"
+            msg = (
+                f"Function '{name}' not found in registry:"
+                "See how to register a function here: https://docs.pipelex.com/pages/build-reliable-ai-workflows-with-pipelex/pipe-operators/PipeFunc"
             )
+            raise FuncRegistryError(msg)
         return self.root[name]
 
-    def get_required_function_with_signature(self, name: str, expected_signature: Callable[..., T]) -> Callable[..., T]:
-        """
-        Retrieves a function from the registry by its name and verifies it matches the expected signature.
+    def get_required_function_with_signature(self, name: str) -> Callable[..., object]:
+        """Retrieves a function from the registry by its name and verifies it matches the expected signature.
         Raises an error if not found or if signature doesn't match.
         """
         if name not in self.root:
-            raise FuncRegistryError(f"Function '{name}' not found in registry")
+            msg = f"Function '{name}' not found in registry"
+            raise FuncRegistryError(msg)
 
         func = self.root[name]
         # Note: This is a basic signature check. For more thorough type checking,
         # you might want to use typing.get_type_hints() or a more sophisticated type checker
         if not callable(func):
-            raise FuncRegistryError(f"'{name}' is not a callable function")
+            msg = f"'{name}' is not a callable function"
+            raise FuncRegistryError(msg)
         return func
 
     def has_function(self, name: str) -> bool:
@@ -108,15 +114,14 @@ class FuncRegistry(RootModel[FuncRegistryDict]):
         return name in self.root
 
     def is_eligible_function(self, func: Callable[..., Any]) -> bool:
-        """
-        Checks if a function matches the criteria for PipeFunc registration:
+        """Checks if a function matches the criteria for PipeFunc registration:
         - Exactly 1 parameter named "working_memory" with type WorkingMemory
         - Return type that is a subclass of StuffContent
         """
         try:
             # Import here to avoid circular imports
-            from pipelex.core.memory.working_memory import WorkingMemory
-            from pipelex.core.stuffs.stuff_content import StuffContent
+            from pipelex.core.memory.working_memory import WorkingMemory  # noqa: PLC0415
+            from pipelex.core.stuffs.stuff_content import StuffContent  # noqa: PLC0415
 
             # Get function signature
             sig = inspect.signature(func)
@@ -153,7 +158,7 @@ class FuncRegistry(RootModel[FuncRegistryDict]):
                     return True
                 # Handle generic types like ListContent[SomeType]
                 if hasattr(return_type, "__origin__"):
-                    origin = getattr(return_type, "__origin__")
+                    origin = return_type.__origin__
                     if inspect.isclass(origin) and issubclass(origin, StuffContent):
                         return True
             except TypeError:

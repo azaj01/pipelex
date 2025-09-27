@@ -1,5 +1,3 @@
-from typing import Dict, Type
-
 from typing_extensions import override
 
 from pipelex import log
@@ -21,9 +19,9 @@ class InferenceManager(InferenceManagerProtocol):
     def __init__(self):
         self.img_gen_worker_factory = ImgGenWorkerFactory()
         self.ocr_worker_factory = OcrWorkerFactory()
-        self.llm_workers: Dict[str, LLMWorkerAbstract] = {}
-        self.img_gen_workers: Dict[str, ImgGenWorkerAbstract] = {}
-        self.ocr_workers: Dict[str, OcrWorkerAbstract] = {}
+        self.llm_workers: dict[str, LLMWorkerAbstract] = {}
+        self.img_gen_workers: dict[str, ImgGenWorkerAbstract] = {}
+        self.ocr_workers: dict[str, OcrWorkerAbstract] = {}
 
     @override
     def teardown(self):
@@ -75,28 +73,24 @@ class InferenceManager(InferenceManagerProtocol):
         if llm_worker := self.llm_workers.get(llm_handle):
             return llm_worker
         if not get_config().cogt.inference_manager_config.is_auto_setup_preset_llm:
-            raise InferenceManagerWorkerSetupError(
-                f"No LLM worker for '{llm_handle}', set it up or enable cogt.inference_manager_config.is_auto_setup_preset_llm"
-            )
+            msg = f"No LLM worker for '{llm_handle}', set it up or enable cogt.inference_manager_config.is_auto_setup_preset_llm"
+            raise InferenceManagerWorkerSetupError(msg)
 
         inference_model = get_models_manager().get_inference_model(model_handle=llm_handle)
-        llm_worker = self._setup_one_internal_llm_worker(
+        return self._setup_one_internal_llm_worker(
             inference_model=inference_model,
             llm_handle=llm_handle,
         )
-
-        return llm_worker
 
     @override
     def set_llm_worker_from_external_plugin(
         self,
         llm_handle: str,
-        llm_worker_class: Type[LLMWorkerAbstract],
+        llm_worker_class: type[LLMWorkerAbstract],
         should_warn_if_already_registered: bool = True,
     ):
-        if llm_handle in self.llm_workers:
-            if should_warn_if_already_registered:
-                log.warning(f"LLM worker for '{llm_handle}' already registered, skipping")
+        if llm_handle in self.llm_workers and should_warn_if_already_registered:
+            log.warning(f"LLM worker for '{llm_handle}' already registered, skipping")
         self.llm_workers[llm_handle] = llm_worker_class(reporting_delegate=get_report_delegate())
 
     ####################################################################################################
@@ -118,9 +112,8 @@ class InferenceManager(InferenceManagerProtocol):
         img_gen_worker = self.img_gen_workers.get(img_gen_handle)
         if img_gen_worker is None:
             if not get_config().cogt.inference_manager_config.is_auto_setup_preset_img_gen:
-                raise InferenceManagerWorkerSetupError(
-                    f"Found no Imgg worker for '{img_gen_handle}', set it up or enable cogt.inference_manager_config.is_auto_setup_preset_img_gen"
-                )
+                msg = f"Found no ImgGen worker for '{img_gen_handle}', set it up or enable cogt.inference_manager_config.is_auto_setup_preset_img_gen"
+                raise InferenceManagerWorkerSetupError(msg)
 
             img_gen_worker = self._setup_one_img_gen_worker(img_gen_handle=img_gen_handle)
         return img_gen_worker
@@ -146,13 +139,11 @@ class InferenceManager(InferenceManagerProtocol):
         if ocr_worker := self.ocr_workers.get(model_handle):
             return ocr_worker
         if not get_config().cogt.inference_manager_config.is_auto_setup_preset_ocr:
-            raise InferenceManagerWorkerSetupError(
-                f"Found no OCR worker for '{model_handle}', set it up or enable cogt.inference_manager_config.is_auto_setup_preset_ocr"
-            )
+            msg = f"Found no OCR worker for '{model_handle}', set it up or enable cogt.inference_manager_config.is_auto_setup_preset_ocr"
+            raise InferenceManagerWorkerSetupError(msg)
 
         inference_model = get_models_manager().get_inference_model(model_handle=model_handle)
-        ocr_worker = self._setup_one_ocr_worker(
+        return self._setup_one_ocr_worker(
             inference_model=inference_model,
             model_handle=model_handle,
         )
-        return ocr_worker

@@ -1,6 +1,4 @@
-"""Test data for ConceptFactory tests."""
-
-from typing import ClassVar, List, Optional, Tuple
+from typing import ClassVar, Optional, List, Tuple
 
 from pipelex.core.concepts.concept import Concept
 from pipelex.core.concepts.concept_blueprint import (
@@ -15,7 +13,7 @@ from pipelex.core.domains.domain import SpecialDomain
 
 class TestCases:
     # Test cases for make_refines method - only native concepts can be refined
-    MAKE_REFINES_TEST_CASES: ClassVar[List[Tuple[str, ConceptBlueprint, str]]] = [
+    MAKE_REFINES_TEST_CASES: ClassVar[list[tuple[str, ConceptBlueprint, str]]] = [
         (
             "native_concept_string",
             ConceptBlueprint(definition="A concept that refines a native text concept", refines=NativeConceptEnum.TEXT),
@@ -31,8 +29,8 @@ class TestCases:
         ),
     ]
 
-    # Test cases for make_domain_and_concept_code_from_concept_string_or_concept_code method
-    MAKE_DOMAIN_AND_CONCEPT_CODE_TEST_CASES: ClassVar[List[Tuple[str, str, Optional[List[str]], DomainAndConceptCode]]] = [
+    # Test cases for make_domain_and_concept_code_from_concept_string_or_code method
+    MAKE_DOMAIN_AND_CONCEPT_CODE_TEST_CASES: ClassVar[List[Tuple[str, str, List[str] | None, DomainAndConceptCode]]] = [
         # Test case 1: Concept string with dot notation
         ("my_domain", "other_domain.ConceptName", None, DomainAndConceptCode(domain="other_domain", concept_code="ConceptName")),
         # Test case 2: Concept string with dot notation (ignores same domain codes)
@@ -72,7 +70,7 @@ class TestCases:
     ]
 
     # Test cases for make_from_blueprint method
-    MAKE_FROM_BLUEPRINT_TEST_CASES: ClassVar[List[Tuple[str, str, str, ConceptBlueprint, Optional[List[str]], Concept]]] = [
+    MAKE_FROM_BLUEPRINT_TEST_CASES: ClassVar[list[tuple[str, str, str, ConceptBlueprint, list[str] | None, Concept]]] = [
         # Test case 1: Simple blueprint with no structure or refines (goes to implicit)
         (
             "simple_blueprint",
@@ -189,7 +187,7 @@ class TestCases:
                     "name": "The person's name",
                     "age": ConceptStructureBlueprint(definition="The person's age", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
                     "active": ConceptStructureBlueprint(
-                        definition="Whether the person is active", type=ConceptStructureBlueprintFieldType.BOOLEAN, required=False, default_value=True
+                        definition="Whether the person is active", type=ConceptStructureBlueprintFieldType.BOOLEAN, required=False, default_value=True,
                     ),
                 },
             ),
@@ -213,7 +211,7 @@ class TestCases:
                     "name": ConceptStructureBlueprint(definition="The person's name", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
                     "age": ConceptStructureBlueprint(definition="The person's age", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
                     "active": ConceptStructureBlueprint(
-                        definition="Whether the person is active", type=ConceptStructureBlueprintFieldType.BOOLEAN, required=False, default_value=True
+                        definition="Whether the person is active", type=ConceptStructureBlueprintFieldType.BOOLEAN, required=False, default_value=True,
                     ),
                 },
             ),

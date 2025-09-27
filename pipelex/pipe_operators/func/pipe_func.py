@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional, Set, cast, get_type_hints
+from typing import Literal, cast, get_type_hints
 
 from typing_extensions import override
 
@@ -21,16 +21,16 @@ class PipeFuncOutput(PipeOutput):
     pass
 
 
-class PipeFunc(PipeOperator):
+class PipeFunc(PipeOperator[PipeFuncOutput]):
     type: Literal["PipeFunc"] = "PipeFunc"
     function_name: str
 
     @override
-    def required_variables(self) -> Set[str]:
+    def required_variables(self) -> set[str]:
         return set()
 
     @override
-    def needed_inputs(self, visited_pipes: Optional[Set[str]] = None) -> PipeInputSpec:
+    def needed_inputs(self, visited_pipes: set[str] | None = None) -> PipeInputSpec:
         return self.inputs
 
     @override
@@ -43,25 +43,27 @@ class PipeFunc(PipeOperator):
         job_metadata: JobMetadata,
         working_memory: WorkingMemory,
         pipe_run_params: PipeRunParams,
-        output_name: Optional[str] = None,
+        output_name: str | None = None,
     ) -> PipeFuncOutput:
         log.debug(f"Applying function '{self.function_name}'")
 
         function = func_registry.get_required_function(self.function_name)
         if not callable(function):
-            raise ValueError(f"Function '{self.function_name}' is not callable")
+            msg = f"Function '{self.function_name}' is not callable"
+            raise TypeError(msg)
 
         func_output_object = await function(working_memory=working_memory)
         the_content: StuffContent
         if isinstance(func_output_object, StuffContent):
             the_content = func_output_object
         elif isinstance(func_output_object, list):
-            func_result_list = cast(List[StuffContent], func_output_object)
+            func_result_list = cast("list[StuffContent]", func_output_object)
             the_content = ListContent(items=func_result_list)
         elif isinstance(func_output_object, str):
             the_content = TextContent(text=func_output_object)
         else:
-            raise ValueError(f"Function '{self.function_name}' must return a StuffContent or a list, got {type(func_output_object)}")
+            msg = f"Function '{self.function_name}' must return a StuffContent or a list, got {type(func_output_object)}"
+            raise TypeError(msg)
 
         output_stuff = StuffFactory.make_stuff(
             name=output_name,
@@ -74,11 +76,10 @@ class PipeFunc(PipeOperator):
             name=output_name,
         )
 
-        pipe_output = PipeFuncOutput(
+        return PipeFuncOutput(
             working_memory=working_memory,
             pipeline_run_id=job_metadata.pipeline_run_id,
         )
-        return pipe_output
 
     @override
     async def _dry_run_operator_pipe(
@@ -86,46 +87,48 @@ class PipeFunc(PipeOperator):
         job_metadata: JobMetadata,
         working_memory: WorkingMemory,
         pipe_run_params: PipeRunParams,
-        output_name: Optional[str] = None,
-    ) -> PipeOutput:
+        output_name: str | None = None,
+    ) -> PipeFuncOutput:
         log.debug(f"Dry run for PipeFunc '{self.function_name}'")
 
         function = func_registry.get_required_function(self.function_name)
         if not callable(function):
-            raise ValueError(f"Function '{self.function_name}' is not callable")
+            msg = f"Function '{self.function_name}' is not callable"
+            raise TypeError(msg)
 
         # Check that all needed inputs are present in working memory
         needed_inputs = self.needed_inputs()
         for input_name, _ in needed_inputs.items:
             if input_name not in working_memory.root:
-                raise DryRunError(
-                    f"Required input '{input_name}' not found in working memory for function '{self.function_name}' in pipe '{self.code}'"
-                )
+                msg = f"Required input '{input_name}' not found in working memory for function '{self.function_name}' in pipe '{self.code}'"
+                raise DryRunError(msg)
 
         try:
             return_type = get_type_hints(function).get("return")
 
             if return_type is None:
-                raise DryRunError(f"Function '{self.function_name}' has no return type annotation")
-            else:
-                if not issubclass(return_type, StuffContent):
-                    raise DryRunError(f"Function '{self.function_name}' return type {return_type} is not a subclass of StuffContent")
+                msg = f"Function '{self.function_name}' has no return type annotation"
+                raise DryRunError(msg)
+            if not issubclass(return_type, StuffContent):
+                msg = f"Function '{self.function_name}' return type {return_type} is not a subclass of StuffContent"
+                raise DryRunError(msg)
 
-                requirement = TypedNamedInputRequirement(
-                    variable_name="mock_output",
-                    concept=ConceptFactory.make(
-                        concept_code=self.output.code,
-                        domain="generic",
-                        definition="Lorem Ipsum",
-                        structure_class_name=self.output.structure_class_name,
-                    ),
-                    structure_class=return_type,
-                    multiplicity=False,
-                )
-                mock_content = WorkingMemoryFactory.create_mock_content(requirement)
+            requirement = TypedNamedInputRequirement(
+                variable_name="mock_output",
+                concept=ConceptFactory.make(
+                    concept_code=self.output.code,
+                    domain="generic",
+                    definition="Lorem Ipsum",
+                    structure_class_name=self.output.structure_class_name,
+                ),
+                structure_class=return_type,
+                multiplicity=False,
+            )
+            mock_content = WorkingMemoryFactory.create_mock_content(requirement)
 
         except Exception as exc:
-            raise DryRunError(f"Failed to get type hints for function '{self.function_name}' in pipe '{self.code}': {exc}")
+            msg = f"Failed to get type hints for function '{self.function_name}' in pipe '{self.code}': {exc}"
+            raise DryRunError(msg) from exc
 
         output_stuff = StuffFactory.make_stuff(
             name=output_name,

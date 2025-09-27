@@ -1,17 +1,19 @@
 # Changelog
 
-## [v0.10.3] - 2025-09-26
+## [Unreleased] - 2025-09-26
 
 ### Highlights
 
 - **New pipe builder** pipeline to generate Pipes based on a brief in natural language: use the cli `pipelex build pipe "Your task"` to build the pipe.
 - **Full refactoring of OCR and Image Generation** to use the same patterns as `LLM` workers and pipes.
+- **New observer system** to log events and metrics from pipe runs.
 
 ### Added
 
  - Added a badge on the `README.md` to display the number of tests.
  - Added new placeholder utility module with `make_placeholder_value()` and `value_is_placeholder()` functions
  - Added comprehensive test suite for placeholder functionality
+ - Added new observer system to log events and metrics from pipe runs: Added an extract point before running a pipe, and after running a pipe. Added a local observer that dumps the payload to a local JSONL file.
  - Added new test cases for environment variable functions
  - Added new documentation for `PipeFunc` on how to register functions.
 
@@ -32,6 +34,7 @@
  - Removed `ENV_DUMMY_PLACEHOLDER_VALUE` constant
  - Removed `get_rooted_path()` and `get_env_rooted_path()` utility functions
  - Removed hardcoded placeholder dictionary in test setup
+ - Removed function `run_pipe_code` in pipe router because it was not relevant (used mostly in tests)
 
 ## [v0.10.2] - 2025-09-18
 
@@ -630,7 +633,7 @@ Simplified input memory:
 
 ### Changed
 
-- **Refactored Cognitive Workers**: The abstraction for `LLM`, `Imgg`, and `Ocr` workers has been elegantly simplified. The old decorator-based approach (`..._job_func`) has been replaced with a more robust pattern: a public base method now handles pre- and post-execution logic while calling a private abstract method that each worker implements.
+- **Refactored Cognitive Workers**: The abstraction for `LLM`, `ImgGen`, and `Ocr` workers has been elegantly simplified. The old decorator-based approach (`..._job_func`) has been replaced with a more robust pattern: a public base method now handles pre- and post-execution logic while calling a private abstract method that each worker implements.
 - The `b64_image_bytes` field in `PromptImageBytes` was renamed to `base_64` for better consistency.
 
 ### Fixed
@@ -726,15 +729,15 @@ is_reporting_enabled = true
 ### Tests
 
 - TestTemplatePreprocessor
-- TestImggByOpenAIGpt
+- TestImgGenByOpenAIGpt
 - TestImageGeneration
-- TestPipeImgg
+- TestPipeImgGen
 
 
 ## [v0.2.9] - 2025-05-30
 
 - Include `pyproject.toml` inside the project build.
-- Fix `ImggEngineFactory`: image generation (imgg) handle required format is `platform/model_name`
+- Fix `ImgGenEngineFactory`: image generation (imgg) handle required format is `platform/model_name`
 - pipelex cli: Added `list-pipes` method that can list all the available pipes along with their descriptions.
 - Use a minimum version for `uv` instead of a fixed version
 - Implement `AGENTS.md` for Codex

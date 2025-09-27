@@ -66,7 +66,7 @@ class TestConcept:
         with pytest.raises(ConceptCodeError):
             ConceptBlueprint.is_native_concept_code("text")
 
-    def test_is_native_concept_string_or_concept_code(self):
+    def test_is_native_concept_string_or_code(self):
         """Test is_native_concept_code method."""
         assert NativeConceptManager.is_native_concept(NativeConceptEnum.TEXT) is True
         assert NativeConceptManager.is_native_concept(NativeConceptEnum.IMAGE) is True
@@ -98,7 +98,7 @@ class TestConcept:
         valid_domain = "valid_domain"
         valid_definition = "Lorem Ipsum"
 
-        for native_concept in [native_concept for native_concept in NativeConceptEnum]:
+        for native_concept in NativeConceptEnum.values_list():
             assert Concept.is_native_concept(ConceptFactory.make_native_concept(native_concept_data=NATIVE_CONCEPTS_DATA[native_concept])) is True
 
         assert (
@@ -108,7 +108,7 @@ class TestConcept:
                     domain=valid_domain,
                     blueprint=ConceptBlueprint(definition=valid_definition),
                     concept_codes_from_the_same_domain=["RandomConcept"],
-                )
+                ),
             )
             is True
         )
@@ -118,7 +118,7 @@ class TestConcept:
                     concept_code=NativeConceptEnum.TEXT,
                     domain=SpecialDomain.NATIVE,
                     blueprint=ConceptBlueprint(definition=valid_definition),
-                )
+                ),
             )
             is True
         )
@@ -129,7 +129,7 @@ class TestConcept:
                     domain=valid_domain,
                     blueprint=ConceptBlueprint(definition=valid_definition),
                     concept_codes_from_the_same_domain=["RandomConcept"],
-                )
+                ),
             )
             is True
         )
@@ -140,7 +140,7 @@ class TestConcept:
                     domain=valid_domain,
                     blueprint=ConceptBlueprint(definition=valid_definition),
                     concept_codes_from_the_same_domain=["RandomConcept"],
-                )
+                ),
             )
             is True
         )
@@ -151,7 +151,7 @@ class TestConcept:
                     domain=valid_domain,
                     blueprint=ConceptBlueprint(definition=valid_definition),
                     concept_codes_from_the_same_domain=["RandomConcept"],
-                )
+                ),
             )
             is True
         )
@@ -162,7 +162,7 @@ class TestConcept:
                     domain=valid_domain,
                     blueprint=ConceptBlueprint(definition=valid_definition),
                     concept_codes_from_the_same_domain=["RandomConcept"],
-                )
+                ),
             )
             is True
         )
@@ -173,7 +173,7 @@ class TestConcept:
                     domain=valid_domain,
                     blueprint=ConceptBlueprint(definition=valid_definition),
                     concept_codes_from_the_same_domain=["RandomConcept"],
-                )
+                ),
             )
             is True
         )
@@ -184,7 +184,7 @@ class TestConcept:
                     domain=valid_domain,
                     blueprint=ConceptBlueprint(definition=valid_definition),
                     concept_codes_from_the_same_domain=["RandomConcept"],
-                )
+                ),
             )
             is True
         )
@@ -195,7 +195,7 @@ class TestConcept:
                     domain=valid_domain,
                     blueprint=ConceptBlueprint(definition=valid_definition),
                     concept_codes_from_the_same_domain=["RandomConcept"],
-                )
+                ),
             )
             is False
         )
@@ -260,7 +260,6 @@ class TestConcept:
             ConceptBlueprint.validate_concept_string(f"{SpecialDomain.NATIVE}.InvalidNativeConcept")
 
     def test_are_concept_compatible(self):
-        """Test are_concept_compatible method."""
         concept1 = ConceptFactory.make_from_blueprint(
             concept_code="Code1",
             domain="domain1",

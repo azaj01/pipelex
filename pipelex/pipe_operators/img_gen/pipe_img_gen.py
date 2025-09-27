@@ -1,7 +1,7 @@
-from typing import List, Literal, Optional, Set, Union
+from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
-from typing_extensions import Self, override
+from typing_extensions import override
 
 from pipelex import log
 from pipelex.cogt.content_generation.content_generator_dry import ContentGeneratorDry
@@ -33,12 +33,13 @@ from pipelex.exceptions import (
 from pipelex.hub import get_concept_provider, get_content_generator, get_model_deck
 from pipelex.pipe_operators.pipe_operator import PipeOperator
 from pipelex.pipeline.job_metadata import JobMetadata
+from pipelex.types import Self
 
 
 class PipeImgGenOutput(PipeOutput):
     @property
-    def image_urls(self) -> List[str]:
-        the_urls: List[str] = []
+    def image_urls(self) -> list[str]:
+        the_urls: list[str] = []
         content = self.main_stuff.content
         if isinstance(content, ListContent):
             items = self.main_stuff_as_items(item_type=ImageContent)
@@ -46,42 +47,44 @@ class PipeImgGenOutput(PipeOutput):
         elif isinstance(content, ImageContent):
             the_urls = [content.url]
         else:
-            raise PipeRunParamsError(f"PipeImgGen output should be a ListContent or an ImageContent, got {type(content)}")
+            msg = f"PipeImgGen output should be a ListContent or an ImageContent, got {type(content)}"
+            raise PipeRunParamsError(msg)
         return the_urls
 
 
 DEFAULT_PROMPT_VAR_NAME = "prompt"
 
 
-class PipeImgGen(PipeOperator):
+class PipeImgGen(PipeOperator[PipeImgGenOutput]):
     type: Literal["PipeImgGen"] = "PipeImgGen"
-    img_gen_prompt: Optional[str] = None
-    img_gen_prompt_var_name: Optional[str] = None
+    img_gen_prompt: str | None = None
+    img_gen_prompt_var_name: str | None = None
 
     # New ImgGenChoice pattern (like LLM)
-    img_gen: Optional[ImgGenChoice] = None
+    img_gen: ImgGenChoice | None = None
 
     # Legacy individual settings (for backwards compatibility)
-    img_gen_handle: Optional[str] = None
-    quality: Optional[Quality] = Field(default=None, strict=False)
-    nb_steps: Optional[int] = Field(default=None, gt=0)
-    guidance_scale: Optional[float] = Field(default=None, gt=0)
-    is_moderated: Optional[bool] = None
-    safety_tolerance: Optional[int] = Field(default=None, ge=1, le=6)
+    img_gen_handle: str | None = None
+    quality: Quality | None = Field(default=None, strict=False)
+    nb_steps: int | None = Field(default=None, gt=0)
+    guidance_scale: float | None = Field(default=None, gt=0)
+    is_moderated: bool | None = None
+    safety_tolerance: int | None = Field(default=None, ge=1, le=6)
 
     # One-time settings (not in ImgGenSetting)
-    aspect_ratio: Optional[AspectRatio] = Field(default=None, strict=False)
-    is_raw: Optional[bool] = None
-    seed: Optional[Union[int, Literal["auto"]]] = None
-    background: Optional[Background] = Field(default=None, strict=False)
-    output_format: Optional[OutputFormat] = Field(default=None, strict=False)
+    aspect_ratio: AspectRatio | None = Field(default=None, strict=False)
+    is_raw: bool | None = None
+    seed: int | Literal["auto"] | None = None
+    background: Background | None = Field(default=None, strict=False)
+    output_format: OutputFormat | None = Field(default=None, strict=False)
     output_multiplicity: PipeOutputMultiplicity
 
     @field_validator("img_gen_prompt_var_name")
     @classmethod
-    def validate_input_var_name_not_provided_as_attribute(cls, value: Optional[str]) -> Optional[str]:
+    def validate_input_var_name_not_provided_as_attribute(cls, value: str | None) -> str | None:
         if value is not None:
-            raise PipeDefinitionError("img_gen_prompt_var_name must be None before input validation")
+            msg = "img_gen_prompt_var_name must be None before input validation"
+            raise PipeDefinitionError(msg)
         return value
 
     @model_validator(mode="after")
@@ -102,13 +105,14 @@ class PipeImgGen(PipeOperator):
             wanted_concept=get_concept_provider().get_native_concept(native_concept=NativeConceptEnum.IMAGE),
             strict=True,
         ):
-            raise PipeDefinitionError(
+            msg = (
                 f"The output of a ImgGen pipe must be compatible with the Image concept. "
                 f"In the pipe '{self.code}' the output is '{self.output.concept_string}'"
             )
+            raise PipeDefinitionError(msg)
 
     @override
-    def needed_inputs(self, visited_pipes: Optional[Set[str]] = None) -> PipeInputSpec:
+    def needed_inputs(self, visited_pipes: set[str] | None = None) -> PipeInputSpec:
         needed_inputs = PipeInputSpecFactory.make_empty()
         if self.img_gen_prompt:
             needed_inputs.add_requirement(
@@ -123,11 +127,10 @@ class PipeImgGen(PipeOperator):
         return needed_inputs
 
     @override
-    def required_variables(self) -> Set[str]:
+    def required_variables(self) -> set[str]:
         if self.img_gen_prompt_var_name:
             return {self.img_gen_prompt_var_name}
-        else:
-            return {DEFAULT_PROMPT_VAR_NAME}
+        return {DEFAULT_PROMPT_VAR_NAME}
 
     def _validate_inputs(self):
         concept_provider = get_concept_provider()
@@ -137,12 +140,12 @@ class PipeImgGen(PipeOperator):
         # check that we have either an img_gen_prompt passed as attribute or as a single text input
         if self.img_gen_prompt:
             if self.inputs.items:
-                raise PipeDefinitionError("img_gen_prompt_var_name must be None if img_gen_prompt is provided")
-            else:
-                # we're good with the prompt provided as attribute
-                return
+                msg = "img_gen_prompt_var_name must be None if img_gen_prompt is provided"
+                raise PipeDefinitionError(msg)
+            # we're good with the prompt provided as attribute
+            return
 
-        candidate_prompt_var_names: List[str] = []
+        candidate_prompt_var_names: list[str] = []
         for input_name, requirement in self.inputs.items:
             log.debug(f"Validating input '{input_name}' with concept code '{requirement.concept.code}'")
             if concept_provider.is_compatible(
@@ -205,8 +208,8 @@ class PipeImgGen(PipeOperator):
         job_metadata: JobMetadata,
         working_memory: WorkingMemory,
         pipe_run_params: PipeRunParams,
-        output_name: Optional[str] = None,
-        content_generator: Optional[ContentGeneratorProtocol] = None,
+        output_name: str | None = None,
+        content_generator: ContentGeneratorProtocol | None = None,
     ) -> PipeImgGenOutput:
         content_generator = content_generator or get_content_generator()
 
@@ -223,9 +226,11 @@ class PipeImgGen(PipeOperator):
             try:
                 img_gen_prompt_text = working_memory.get_stuff_as_str(stuff_name)
             except WorkingMemoryStuffNotFoundError as exc:
-                raise PipeInputError(f"Could not find a valid user image named '{stuff_name}' in the working_memory: {exc}") from exc
+                msg = f"Could not find a valid user image named '{stuff_name}' in the working_memory: {exc}"
+                raise PipeInputError(msg) from exc
         else:
-            raise UnexpectedPipeDefinitionError("You must provide an image gen prompt either as attribute of the pipe or as a single text input")
+            msg = "You must provide an image gen prompt either as attribute of the pipe or as a single text input"
+            raise UnexpectedPipeDefinitionError(msg)
 
         img_gen_config = get_config().cogt.img_gen_config
         img_gen_param_defaults = img_gen_config.img_gen_param_defaults
@@ -252,13 +257,13 @@ class PipeImgGen(PipeOperator):
 
         # Process one-time settings
         seed_setting = self.seed or img_gen_param_defaults.seed
-        seed: Optional[int]
+        seed: int | None
         if isinstance(seed_setting, str) and seed_setting == "auto":
             seed = None
         else:
             seed = seed_setting
 
-        # Build ImggJobParams from ImgGenSetting + one-time settings
+        # Build ImgGenJobParams from ImgGenSetting + one-time settings
         img_gen_job_params = ImgGenJobParams(
             aspect_ratio=self.aspect_ratio or img_gen_param_defaults.aspect_ratio,
             background=self.background or img_gen_param_defaults.background,
@@ -276,7 +281,7 @@ class PipeImgGen(PipeOperator):
         log.debug(f"Using img_gen handle: {img_gen_handle}")
 
         the_content: StuffContent
-        image_urls: List[str] = []
+        image_urls: list[str] = []
         nb_images: int
         if isinstance(applied_output_multiplicity, bool):
             if self.output_multiplicity:
@@ -285,8 +290,7 @@ class PipeImgGen(PipeOperator):
                 msg += f" and pipe_run_params.output_multiplicity = {pipe_run_params.output_multiplicity}."
                 msg += f" Tried to apply applied_output_multiplicity = {applied_output_multiplicity}."
                 raise PipeRunParamsError(msg)
-            else:
-                nb_images = 1
+            nb_images = 1
         elif isinstance(applied_output_multiplicity, int):
             nb_images = applied_output_multiplicity
         else:
@@ -303,13 +307,13 @@ class PipeImgGen(PipeOperator):
                 img_gen_job_params=img_gen_job_params,
                 img_gen_job_config=img_gen_config.img_gen_job_config,
             )
-            image_content_items: List[StuffContent] = []
+            image_content_items: list[StuffContent] = []
             for generated_image in generated_image_list:
                 image_content_items.append(
                     ImageContent(
                         url=generated_image.url,
                         source_prompt=img_gen_prompt_text,
-                    )
+                    ),
                 )
                 image_urls.append(generated_image.url)
             the_content = ListContent(
@@ -347,11 +351,10 @@ class PipeImgGen(PipeOperator):
             name=output_name,
         )
 
-        pipe_output = PipeImgGenOutput(
+        return PipeImgGenOutput(
             working_memory=working_memory,
             pipeline_run_id=job_metadata.pipeline_run_id,
         )
-        return pipe_output
 
     @override
     async def _dry_run_operator_pipe(
@@ -359,15 +362,14 @@ class PipeImgGen(PipeOperator):
         job_metadata: JobMetadata,
         working_memory: WorkingMemory,
         pipe_run_params: PipeRunParams,
-        output_name: Optional[str] = None,
-    ) -> PipeOutput:
+        output_name: str | None = None,
+    ) -> PipeImgGenOutput:
         log.debug(f"PipeImgGen: dry run operator pipe: {self.code}")
         content_generator_dry = ContentGeneratorDry()
-        pipe_output = await self._run_operator_pipe(
+        return await self._run_operator_pipe(
             job_metadata=job_metadata,
             working_memory=working_memory,
             pipe_run_params=pipe_run_params or PipeRunParamsFactory.make_run_params(pipe_run_mode=PipeRunMode.DRY),
             output_name=output_name,
             content_generator=content_generator_dry,
         )
-        return pipe_output

@@ -3,7 +3,7 @@ from typing import Type
 
 import pytest
 
-from pipelex import pretty_print
+from pipelex import log, pretty_print
 from pipelex.core.bundles.pipelex_bundle_blueprint import PipelexBundleBlueprint
 from pipelex.core.interpreter import PipelexInterpreter
 from pipelex.tools.plx.plx_utils import make_plx_content
@@ -43,6 +43,7 @@ class TestPipelexInterpreter:
     def test_invalid_plx_should_raise_exception(self, test_name: str, invalid_plx_content: str, expected_exception: Type[Exception]):
         """Test that invalid PLX content raises appropriate exceptions."""
         converter = PipelexInterpreter(file_content=invalid_plx_content)
+        log.verbose(f"Testing invalid PLX content: {test_name}")
 
         with pytest.raises(expected_exception):
             converter.make_pipelex_bundle_blueprint()

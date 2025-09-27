@@ -1,7 +1,7 @@
-from typing import Literal, Optional, Union
+from typing import Literal, Union
 
 from pydantic import Field, field_validator, model_validator
-from typing_extensions import Self, override
+from typing_extensions import override
 
 from pipelex.cogt.llm.llm_setting import LLMChoice, LLMSetting
 from pipelex.core.stuffs.stuff_content import StructuredContent
@@ -9,21 +9,20 @@ from pipelex.exceptions import PipeDefinitionError
 from pipelex.libraries.pipelines.builder.pipe.pipe_signature import PipeSpec
 from pipelex.pipe_operators.llm.pipe_llm_blueprint import PipeLLMBlueprint, StructuringMethod
 from pipelex.tools.typing.validation_utils import has_more_than_one_among_attributes_from_lists
+from pipelex.types import Self
 
 
 class LLMSettingSpec(StructuredContent):
     llm_handle: str
     temperature: float = Field(..., ge=0, le=1)
-    max_tokens: Optional[int] = None
+    max_tokens: int | None = None
 
     @field_validator("max_tokens", mode="before")
     @classmethod
-    def validate_max_tokens(cls, value: Union[int, Literal["auto"], None]) -> Optional[int]:
-        if value is None:
+    def validate_max_tokens(cls, value: int | Literal["auto"] | None) -> int | None:
+        if value is None or (isinstance(value, str) and value == "auto"):
             return None
-        elif isinstance(value, str) and value == "auto":
-            return None
-        elif isinstance(value, int):  # pyright: ignore[reportUnnecessaryIsInstance]
+        if isinstance(value, int):  # pyright: ignore[reportUnnecessaryIsInstance]
             return value
 
 
@@ -73,35 +72,38 @@ class PipeLLMSpec(PipeSpec):
         3. Output cardinality: nb_output and multiple_output are mutually exclusive.
         4. nb_output must be greater than 0 when specified.
         5. Structuring method must be 'direct' or 'preliminary_text' when specified.
+
     """
 
     type: Literal["PipeLLM"] = "PipeLLM"
     category: Literal["PipeOperator"] = "PipeOperator"
     the_pipe_code: str = Field(description="Pipe code. Must be snake_case.")
-    system_prompt_template: Optional[str] = None
-    system_prompt_template_name: Optional[str] = None
-    system_prompt_name: Optional[str] = None
-    system_prompt: Optional[str] = None
+    system_prompt_template: str | None = None
+    system_prompt_template_name: str | None = None
+    system_prompt_name: str | None = None
+    system_prompt: str | None = None
 
-    prompt_template: Optional[str] = None
-    template_name: Optional[str] = None
-    prompt_name: Optional[str] = None
-    prompt: Optional[str] = None
+    prompt_template: str | None = None
+    template_name: str | None = None
+    prompt_name: str | None = None
+    prompt: str | None = None
 
-    llm: Optional[LLMChoiceSpec] = None
-    llm_to_structure: Optional[LLMChoiceSpec] = None
+    llm: LLMChoiceSpec | None = None
+    llm_to_structure: LLMChoiceSpec | None = None
 
-    structuring_method: Optional[StructuringMethod] = None
-    prompt_template_to_structure: Optional[str] = None
-    system_prompt_to_structure: Optional[str] = None
+    structuring_method: StructuringMethod | None = None
+    prompt_template_to_structure: str | None = None
+    system_prompt_to_structure: str | None = None
 
-    nb_output: Optional[int] = None
-    multiple_output: Optional[bool] = None
+    nb_output: int | None = None
+    multiple_output: bool | None = None
 
     @field_validator("nb_output", mode="after")
-    def validate_nb_output(cls, value: Optional[int] = None) -> Optional[int]:
+    @staticmethod
+    def validate_nb_output(value: int | None = None) -> int | None:
         if value and value < 1:
-            raise PipeDefinitionError("PipeLLMBlueprint nb_output must be greater than 0")
+            msg = "PipeLLMBlueprint nb_output must be greater than 0"
+            raise PipeDefinitionError(msg)
         return value
 
     @model_validator(mode="after")
@@ -114,19 +116,20 @@ class PipeLLMSpec(PipeSpec):
                 ["prompt", "prompt_name", "prompt_template", "template_name"],
             ],
         ):
-            raise PipeDefinitionError(f"PipeLLMBlueprint should have no more than one of {excess_attributes_list} among them")
+            msg = f"PipeLLMBlueprint should have no more than one of {excess_attributes_list} among them"
+            raise PipeDefinitionError(msg)
         return self
 
     @override
     def to_blueprint(self) -> PipeLLMBlueprint:
         base_blueprint = super().to_blueprint()
-        llm: Optional[LLMChoice] = None
+        llm: LLMChoice | None = None
         if isinstance(self.llm, LLMSettingSpec):
             llm = LLMSetting(llm_handle=self.llm.llm_handle, temperature=self.llm.temperature, max_tokens=self.llm.max_tokens)
         elif isinstance(self.llm, str):
             llm = self.llm
 
-        llm_to_structure: Optional[LLMChoice] = None
+        llm_to_structure: LLMChoice | None = None
         if isinstance(self.llm_to_structure, LLMSettingSpec):
             llm_to_structure = LLMSetting(
                 llm_handle=self.llm_to_structure.llm_handle,

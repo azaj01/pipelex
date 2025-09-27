@@ -1,8 +1,8 @@
-from typing import Any, ClassVar, Dict, Literal, Optional, Set
+from typing import Any, ClassVar, Literal
 
 from jinja2 import TemplateSyntaxError
 from pydantic import ConfigDict, model_validator
-from typing_extensions import Self, override
+from typing_extensions import override
 
 from pipelex import log
 from pipelex.cogt.content_generation.content_generator_dry import ContentGeneratorDry
@@ -29,6 +29,7 @@ from pipelex.tools.templating.jinja2_required_variables import detect_jinja2_req
 from pipelex.tools.templating.jinja2_template_category import Jinja2TemplateCategory
 from pipelex.tools.templating.templating_models import PromptingStyle
 from pipelex.tools.typing.validation_utils import has_exactly_one_among_attributes_from_list
+from pipelex.types import Self
 
 
 class PipeJinja2Output(PipeOutput):
@@ -37,7 +38,7 @@ class PipeJinja2Output(PipeOutput):
         return self.main_stuff_as_text.text
 
 
-class PipeJinja2(PipeOperator):
+class PipeJinja2(PipeOperator[PipeJinja2Output]):
     type: Literal["PipeJinja2"] = "PipeJinja2"
     model_config = ConfigDict(extra="forbid", strict=False)
 
@@ -46,21 +47,23 @@ class PipeJinja2(PipeOperator):
         native_concept_data=NATIVE_CONCEPTS_DATA[NativeConceptEnum.TEXT],
     )
 
-    jinja2_name: Optional[str] = None
-    jinja2: Optional[str] = None
-    prompting_style: Optional[PromptingStyle] = None
+    jinja2_name: str | None = None
+    jinja2: str | None = None
+    prompting_style: PromptingStyle | None = None
     template_category: Jinja2TemplateCategory = Jinja2TemplateCategory.LLM_PROMPT
-    extra_context: Optional[Dict[str, Any]] = None
+    extra_context: dict[str, Any] | None = None
 
     @model_validator(mode="after")
     def validate_jinja2(self) -> Self:
         if not has_exactly_one_among_attributes_from_list(self, attributes_list=["jinja2_name", "jinja2"]):
-            raise PipeDefinitionError("PipeJinja2 should have exactly one of jinja2_name or jinja2")
+            msg = "PipeJinja2 should have exactly one of jinja2_name or jinja2"
+            raise PipeDefinitionError(msg)
         if self.jinja2:
             try:
                 check_jinja2_parsing(jinja2_template_source=self.jinja2, template_category=self.template_category)
             except TemplateSyntaxError as exc:
-                raise Jinja2TemplateError(f"Could not parse Jinja2 template included in PipeJinja2: {exc}") from exc
+                msg = f"Could not parse Jinja2 template included in PipeJinja2: {exc}"
+                raise Jinja2TemplateError(msg) from exc
         return self
 
     @model_validator(mode="after")
@@ -73,7 +76,8 @@ class PipeJinja2(PipeOperator):
         required_variables = self.required_variables()
         for required_variable_name in required_variables:
             if required_variable_name not in self.inputs.variables:
-                raise PipeDefinitionError(f"Required variable '{required_variable_name}' is not in the inputs of pipe {self.code}")
+                msg = f"Required variable '{required_variable_name}' is not in the inputs of pipe {self.code}"
+                raise PipeDefinitionError(msg)
         return self
 
     @override
@@ -87,7 +91,7 @@ class PipeJinja2(PipeOperator):
             log.debug(f"Validated jinja2 template '{self.jinja2_name}':\n{the_template}")
 
     @override
-    def needed_inputs(self, visited_pipes: Optional[Set[str]] = None) -> PipeInputSpec:
+    def needed_inputs(self, visited_pipes: set[str] | None = None) -> PipeInputSpec:
         needed_inputs = PipeInputSpecFactory.make_empty()
         for input_name, requirement in self.inputs.root.items():
             needed_inputs.add_requirement(variable_name=input_name, concept=requirement.concept)
@@ -103,7 +107,7 @@ class PipeJinja2(PipeOperator):
             return "Jinja2 template not defined"
 
     @override
-    def required_variables(self) -> Set[str]:
+    def required_variables(self) -> set[str]:
         required_variables = detect_jinja2_required_variables(
             template_category=self.template_category,
             template_provider=get_template_provider(),
@@ -113,7 +117,7 @@ class PipeJinja2(PipeOperator):
         return {
             variable_name
             for variable_name in required_variables
-            if not variable_name.startswith("_") and variable_name != "preliminary_text" and variable_name != "place_holder"
+            if not variable_name.startswith("_") and variable_name not in ("preliminary_text", "place_holder")
         }
 
     @override
@@ -122,16 +126,15 @@ class PipeJinja2(PipeOperator):
         job_metadata: JobMetadata,
         working_memory: WorkingMemory,
         pipe_run_params: PipeRunParams,
-        output_name: Optional[str] = None,
-        content_generator: Optional[ContentGeneratorProtocol] = None,
+        output_name: str | None = None,
+        content_generator: ContentGeneratorProtocol | None = None,
     ) -> PipeJinja2Output:
         content_generator = content_generator or get_content_generator()
         if pipe_run_params.is_multiple_output_required:
-            raise PipeRunParamsError(
-                f"PipeJinja2 does not suppport multiple outputs, got output_multiplicity = {pipe_run_params.output_multiplicity}"
-            )
+            msg = f"PipeJinja2 does not suppport multiple outputs, got output_multiplicity = {pipe_run_params.output_multiplicity}"
+            raise PipeRunParamsError(msg)
 
-        context: Dict[str, Any] = working_memory.generate_context()
+        context: dict[str, Any] = working_memory.generate_context()
         if pipe_run_params:
             context.update(**pipe_run_params.params)
         if self.extra_context:
@@ -155,12 +158,10 @@ class PipeJinja2(PipeOperator):
             name=output_name,
         )
 
-        pipe_output = PipeJinja2Output(
+        return PipeJinja2Output(
             working_memory=working_memory,
             pipeline_run_id=job_metadata.pipeline_run_id,
         )
-
-        return pipe_output
 
     @override
     async def _dry_run_operator_pipe(
@@ -168,8 +169,8 @@ class PipeJinja2(PipeOperator):
         job_metadata: JobMetadata,
         working_memory: WorkingMemory,
         pipe_run_params: PipeRunParams,
-        output_name: Optional[str] = None,
-    ) -> PipeOutput:
+        output_name: str | None = None,
+    ) -> PipeJinja2Output:
         content_generator_used: ContentGeneratorProtocol
         if get_config().pipelex.dry_run_config.apply_to_jinja2_rendering:
             log.debug(f"PipeJinja2: using dry run operator pipe for jinja2 rendering: {self.code}")
@@ -178,11 +179,10 @@ class PipeJinja2(PipeOperator):
             log.debug(f"PipeJinja2: using regular operator pipe for jinja2 rendering (dry run not applied to jinja2): {self.code}")
             content_generator_used = get_content_generator()
 
-        pipe_output = await self._run_operator_pipe(
+        return await self._run_operator_pipe(
             job_metadata=job_metadata,
             working_memory=working_memory,
             pipe_run_params=pipe_run_params or PipeRunParamsFactory.make_run_params(pipe_run_mode=PipeRunMode.DRY),
             output_name=output_name,
             content_generator=content_generator_used,
         )
-        return pipe_output

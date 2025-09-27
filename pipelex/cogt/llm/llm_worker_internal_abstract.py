@@ -1,5 +1,3 @@
-from typing import Optional
-
 from typing_extensions import override
 
 from pipelex import log
@@ -15,16 +13,16 @@ class LLMWorkerInternalAbstract(LLMWorkerAbstract):
     def __init__(
         self,
         inference_model: InferenceModelSpec,
-        structure_method: Optional[StructureMethod] = None,
-        reporting_delegate: Optional[ReportingProtocol] = None,
+        structure_method: StructureMethod | None = None,
+        reporting_delegate: ReportingProtocol | None = None,
     ):
-        """
-        Initialize the LLMWorker.
+        """Initialize the LLMWorker.
 
         Args:
             inference_model (InferenceModelSpec): The inference model to be used by the worker.
-            structure_method (Optional[StructureMethod]): The structure method to be used by the worker.
-            reporting_delegate (Optional[ReportingProtocol]): An optional report delegate for reporting unit jobs.
+            structure_method (StructureMethod | None): The structure method to be used by the worker.
+            reporting_delegate (ReportingProtocol | None): An optional report delegate for reporting unit jobs.
+
         """
         LLMWorkerAbstract.__init__(self, reporting_delegate=reporting_delegate)
         self.inference_model = inference_model
@@ -61,9 +59,11 @@ class LLMWorkerInternalAbstract(LLMWorkerAbstract):
     def _check_vision_support(self, llm_job: LLMJob):
         if llm_job.llm_prompt.user_images:
             if not self.inference_model.is_vision_supported:
-                raise LLMCapabilityError(f"LLM Engine '{self.inference_model.tag}' does not support vision.")
+                msg = f"LLM Engine '{self.inference_model.tag}' does not support vision."
+                raise LLMCapabilityError(msg)
 
             nb_images = len(llm_job.llm_prompt.user_images)
             max_prompt_images = self.inference_model.max_prompt_images or 5000
             if nb_images > max_prompt_images:
-                raise LLMCapabilityError(f"LLM Engine '{self.inference_model.tag}' does not accept that many images: {nb_images}.")
+                msg = f"LLM Engine '{self.inference_model.tag}' does not accept that many images: {nb_images}."
+                raise LLMCapabilityError(msg)

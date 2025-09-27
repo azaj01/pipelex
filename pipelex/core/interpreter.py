@@ -1,53 +1,33 @@
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional, Union, cast
+from typing import Any
 
 import toml
 from pydantic import BaseModel, model_validator
-from typing_extensions import Self
 
 from pipelex.core.bundles.pipelex_bundle_blueprint import PipelexBundleBlueprint
-from pipelex.core.concepts.concept_blueprint import ConceptBlueprint
 from pipelex.core.exceptions import (
     PipelexConfigurationError,
-    PipelexUnknownPipeError,
 )
-from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
-from pipelex.pipe_controllers.batch.pipe_batch_blueprint import PipeBatchBlueprint
-from pipelex.pipe_controllers.condition.pipe_condition_blueprint import (
-    PipeConditionBlueprint,
-)
-from pipelex.pipe_controllers.parallel.pipe_parallel_blueprint import (
-    PipeParallelBlueprint,
-)
-from pipelex.pipe_controllers.sequence.pipe_sequence_blueprint import (
-    PipeSequenceBlueprint,
-)
-from pipelex.pipe_operators.func.pipe_func_blueprint import PipeFuncBlueprint
-from pipelex.pipe_operators.img_gen.pipe_img_gen_blueprint import PipeImgGenBlueprint
-from pipelex.pipe_operators.jinja2.pipe_jinja2_blueprint import PipeJinja2Blueprint
-from pipelex.pipe_operators.llm.pipe_llm_blueprint import PipeLLMBlueprint
-from pipelex.pipe_operators.ocr.pipe_ocr_blueprint import PipeOcrBlueprint
 from pipelex.tools.misc.toml_utils import (
     clean_trailing_whitespace,
     validate_toml_content,
     validate_toml_file,
 )
+from pipelex.types import Self
 
 
 class PLXDecodeError(toml.TomlDecodeError):
     """Raised when PLX decoding fails."""
 
-    pass
-
 
 class PipelexInterpreter(BaseModel):
     """plx -> PipelexBundleBlueprint"""
 
-    file_path: Optional[Path] = None
-    file_content: Optional[str] = None
+    file_path: Path | None = None
+    file_content: str | None = None
 
     @staticmethod
-    def escape_plx_string(value: Optional[str]) -> str:
+    def escape_plx_string(value: str | None) -> str:
         """Escape a string for plx serialization."""
         if value is None:
             return ""
@@ -58,14 +38,14 @@ class PipelexInterpreter(BaseModel):
         # Replace actual newlines with escaped newlines
         value = value.replace("\n", "\\n")
         value = value.replace("\r", "\\r")
-        value = value.replace("\t", "\\t")
-        return value
+        return value.replace("\t", "\\t")
 
     @model_validator(mode="after")
     def check_file_path_or_file_content(self) -> Self:
         """Need to check if there is at least one of file_path or file_content"""
         if self.file_path is None and self.file_content is None:
-            raise PipelexConfigurationError("Either file_path or file_content must be provided")
+            msg = "Either file_path or file_content must be provided"
+            raise PipelexConfigurationError(msg)
         return self
 
     @model_validator(mode="after")
@@ -79,7 +59,7 @@ class PipelexInterpreter(BaseModel):
     def _read_and_reformat(self) -> str:
         """Load PLX content from file_path or use file_content directly."""
         if self.file_path:
-            with open(self.file_path, "r", encoding="utf-8") as file:
+            with open(self.file_path, encoding="utf-8") as file:
                 file_content = file.read()
 
             # Clean trailing whitespace and write back if needed
@@ -89,8 +69,9 @@ class PipelexInterpreter(BaseModel):
                     file.write(cleaned_content)
                 return cleaned_content
             return file_content
-        elif self.file_content is None:
-            raise PipelexConfigurationError("file_content must be provided if file_path is not provided")
+        if self.file_content is None:
+            msg = "file_content must be provided if file_path is not provided"
+            raise PipelexConfigurationError(msg)
         return self.file_content
 
     @staticmethod
@@ -106,6 +87,7 @@ class PipelexInterpreter(BaseModel):
         Criteria:
             - Has .plx extension
             - Starts with "domain =" (ignoring leading whitespace)
+
         """
         # Check if it has .toml extension
         if file_path.suffix != ".plx":
@@ -117,7 +99,7 @@ class PipelexInterpreter(BaseModel):
 
         try:
             # Read the first few lines to check for "domain ="
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 # Read first 100 characters (should be enough to find domain)
                 content = f.read(100)
                 # Remove leading whitespace and check if it starts with "domain ="
@@ -127,13 +109,14 @@ class PipelexInterpreter(BaseModel):
             # If we can't read the file, it's not a valid Pipelex file
             return False
 
-    def _parse_plx_content(self, content: str) -> Dict[str, Any]:
+    def _parse_plx_content(self, content: str) -> dict[str, Any]:
         """Parse PLX content and return the dictionary."""
         try:
             return toml.loads(content)
         except toml.TomlDecodeError as exc:
             file_path_str = str(self.file_path) if self.file_path else "content"
-            raise PLXDecodeError(f"PLX parsing error in '{file_path_str}': {exc}", exc.doc, exc.pos) from exc
+            msg = f"PLX parsing error in '{file_path_str}': {exc}"
+            raise PLXDecodeError(msg, exc.doc, exc.pos) from exc
 
     def make_pipelex_bundle_blueprint(self) -> PipelexBundleBlueprint:
         """Make a PipelexBundleBlueprint from the file_path or file_content"""

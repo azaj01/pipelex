@@ -1,4 +1,3 @@
-from typing import List
 
 import pytest
 
@@ -10,7 +9,6 @@ from pipelex.core.pipes.pipe_run_params import PipeRunMode
 from pipelex.core.pipes.pipe_run_params_factory import PipeRunParamsFactory
 from pipelex.core.stuffs.stuff import Stuff
 from pipelex.hub import get_class_registry, get_pipe_provider, get_pipe_router
-from pipelex.pipe_operators.llm.pipe_llm import PipeLLMOutput
 from pipelex.pipe_operators.llm.pipe_llm_blueprint import PipeLLMBlueprint, StructuringMethod
 from pipelex.pipe_operators.llm.pipe_llm_factory import PipeLLMFactory
 from pipelex.pipe_works.pipe_job_factory import PipeJobFactory
@@ -44,7 +42,7 @@ class TestPipeLLM:
             pipe=pipe,
             pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
         )
-        pipe_llm_output: PipeLLMOutput = await get_pipe_router().run_pipe_job(
+        pipe_llm_output = await get_pipe_router().run(
             pipe_job=pipe_job,
         )
 
@@ -111,9 +109,7 @@ class TestPipeLLM:
             working_memory=working_memory,
             pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
         )
-        pipe_llm_output: PipeLLMOutput = await get_pipe_router().run_pipe_job(
-            pipe_job=pipe_job,
-        )
+        pipe_llm_output = await get_pipe_router().run(pipe_job=pipe_job)
 
         # Log test information
         log.verbose(f"Testing {topic} with {structuring_method} method", title="Test Case")
@@ -150,7 +146,7 @@ class TestPipeLLM:
     async def test_pipe_llm_attribute_image(
         self,
         stuff: Stuff,
-        attribute_paths: List[str],
+        attribute_paths: list[str],
         pipe_run_mode: PipeRunMode,
     ):
         for attribute_path in attribute_paths:
@@ -176,7 +172,7 @@ class TestPipeLLM:
                 pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
             )
 
-            pipe_llm_output: PipeLLMOutput = await get_pipe_router().run_pipe_job(
+            pipe_llm_output = await get_pipe_router().run(
                 pipe_job=pipe_job,
             )
 

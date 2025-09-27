@@ -1,9 +1,11 @@
-from typing import Optional, Type, cast
+from typing import TYPE_CHECKING, cast
 
 import instructor
 from google import genai
 from google.genai import types
-from openai.types.chat import ChatCompletionMessageParam
+
+if TYPE_CHECKING:
+    from openai.types.chat import ChatCompletionMessageParam
 from typing_extensions import override
 
 from pipelex import log
@@ -21,16 +23,14 @@ from pipelex.tools.typing.pydantic_utils import BaseModelTypeVar
 class GoogleLLMWorkerError(Exception):
     """Base exception for Google LLM Worker errors."""
 
-    pass
-
 
 class GoogleLLMWorker(LLMWorkerInternalAbstract):
     def __init__(
         self,
         sdk_instance: genai.Client,
         inference_model: InferenceModelSpec,
-        structure_method: Optional[StructureMethod] = None,
-        reporting_delegate: Optional[ReportingProtocol] = None,
+        structure_method: StructureMethod | None = None,
+        reporting_delegate: ReportingProtocol | None = None,
     ):
         super().__init__(
             inference_model=inference_model,
@@ -75,16 +75,19 @@ class GoogleLLMWorker(LLMWorkerInternalAbstract):
 
         # Extract text from response
         if not response.candidates:
-            raise LLMCompletionError(f"No candidates returned from model: {self.inference_model.desc}")
+            msg = f"No candidates returned from model: {self.inference_model.desc}"
+            raise LLMCompletionError(msg)
 
         candidate = response.candidates[0]
         if not candidate.content or not candidate.content.parts:
-            raise LLMCompletionError(f"No content parts in response from model: {self.inference_model.desc}")
+            msg = f"No content parts in response from model: {self.inference_model.desc}"
+            raise LLMCompletionError(msg)
 
         # Extract text from the first part
         text_content = candidate.content.parts[0].text
         if not text_content:
-            raise LLMCompletionError(f"No text content in response from model: {self.inference_model.desc}")
+            msg = f"No text content in response from model: {self.inference_model.desc}"
+            raise LLMCompletionError(msg)
 
         # Track token usage if available
         if llm_job.job_report.llm_tokens_usage and response.usage_metadata:
@@ -96,7 +99,7 @@ class GoogleLLMWorker(LLMWorkerInternalAbstract):
     async def _gen_object(
         self,
         llm_job: LLMJob,
-        schema: Type[BaseModelTypeVar],
+        schema: type[BaseModelTypeVar],
     ) -> BaseModelTypeVar:
         """Generate structured output using Google Gemini API with instructor."""
         # Prepare contents (text and images)
@@ -111,14 +114,15 @@ class GoogleLLMWorker(LLMWorkerInternalAbstract):
         )
 
         result_object, completion = await self.instructor_for_objects.chat.completions.create_with_completion(
-            messages=[cast(ChatCompletionMessageParam, contents)],
+            messages=[cast("ChatCompletionMessageParam", contents)],
             response_model=schema,
             max_retries=llm_job.job_config.max_retries,
             model=self.inference_model.model_id,
             generation_config=generation_config,
         )
         if not isinstance(result_object, schema):
-            raise GoogleLLMWorkerError(f"Google Gemini API returned an object that is not of type {schema}: {result_object}")
+            msg = f"Google Gemini API returned an object that is not of type {schema}: {result_object}"
+            raise GoogleLLMWorkerError(msg)
 
         # Track token usage if available from completion
         if llm_job.job_report.llm_tokens_usage:

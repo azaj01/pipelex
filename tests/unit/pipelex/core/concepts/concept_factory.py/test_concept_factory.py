@@ -1,6 +1,5 @@
-from typing import Dict, List, Optional, Union
-
 import pytest
+from typing import Optional, List
 
 from pipelex.core.concepts.concept import Concept
 from pipelex.core.concepts.concept_blueprint import (
@@ -32,37 +31,37 @@ class TestConceptFactory:
 
     def test_normalize_structure_blueprint(self):
         """Test that mixed structure blueprints are properly normalized."""
-        mixed_structure_blueprint: Dict[str, Union[str, ConceptStructureBlueprint]] = {
+        mixed_structure_blueprint: dict[str, str | ConceptStructureBlueprint] = {
             "name": "The name of the person",
             "age": ConceptStructureBlueprint(definition="The age of the person", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
             "active": ConceptStructureBlueprint(
-                definition="Whether the person is active", type=ConceptStructureBlueprintFieldType.BOOLEAN, required=False, default_value=True
+                definition="Whether the person is active", type=ConceptStructureBlueprintFieldType.BOOLEAN, required=False, default_value=True,
             ),
         }
 
-        expected_structure: Dict[str, ConceptStructureBlueprint] = {
+        expected_structure: dict[str, ConceptStructureBlueprint] = {
             "name": ConceptStructureBlueprint(definition="The name of the person", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
             "age": ConceptStructureBlueprint(definition="The age of the person", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
             "active": ConceptStructureBlueprint(
-                definition="Whether the person is active", type=ConceptStructureBlueprintFieldType.BOOLEAN, required=False, default_value=True
+                definition="Whether the person is active", type=ConceptStructureBlueprintFieldType.BOOLEAN, required=False, default_value=True,
             ),
         }
 
         assert ConceptFactory.normalize_structure_blueprint(mixed_structure_blueprint) == expected_structure
 
-        mixed_structure_blueprint2: Dict[str, Union[str, ConceptStructureBlueprint]] = {
+        mixed_structure_blueprint2: dict[str, str | ConceptStructureBlueprint] = {
             "name": ConceptStructureBlueprint(definition="The name of the person", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
             "age": ConceptStructureBlueprint(definition="The age of the person", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
             "active": ConceptStructureBlueprint(
-                definition="Whether the person is active", type=ConceptStructureBlueprintFieldType.BOOLEAN, required=False, default_value=True
+                definition="Whether the person is active", type=ConceptStructureBlueprintFieldType.BOOLEAN, required=False, default_value=True,
             ),
         }
 
-        expected_structure2: Dict[str, ConceptStructureBlueprint] = {
+        expected_structure2: dict[str, ConceptStructureBlueprint] = {
             "name": ConceptStructureBlueprint(definition="The name of the person", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
             "age": ConceptStructureBlueprint(definition="The age of the person", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
             "active": ConceptStructureBlueprint(
-                definition="Whether the person is active", type=ConceptStructureBlueprintFieldType.BOOLEAN, required=False, default_value=True
+                definition="Whether the person is active", type=ConceptStructureBlueprintFieldType.BOOLEAN, required=False, default_value=True,
             ),
         }
 
@@ -72,15 +71,15 @@ class TestConceptFactory:
         "domain,concept_string_or_code,concept_codes_from_the_same_domain,expected_result",
         TestCases.MAKE_DOMAIN_AND_CONCEPT_CODE_TEST_CASES,
     )
-    def test_make_domain_and_concept_code_from_concept_string_or_concept_code(
+    def test_make_domain_and_concept_code_from_concept_string_or_code(
         self,
         domain: str,
         concept_string_or_code: str,
-        concept_codes_from_the_same_domain: Optional[List[str]],
+        concept_codes_from_the_same_domain: List[str] | None,
         expected_result: List[str],
     ):
-        """Test make_domain_and_concept_code_from_concept_string_or_concept_code method with various inputs."""
-        result = ConceptFactory.make_domain_and_concept_code_from_concept_string_or_concept_code(
+        """Test make_domain_and_concept_code_from_concept_string_or_code method with various inputs."""
+        result = ConceptFactory.make_domain_and_concept_code_from_concept_string_or_code(
             domain=domain,
             concept_string_or_code=concept_string_or_code,
             concept_codes_from_the_same_domain=concept_codes_from_the_same_domain,
@@ -97,7 +96,7 @@ class TestConceptFactory:
         domain: str,
         concept_code: str,
         blueprint: ConceptBlueprint,
-        concept_codes_from_the_same_domain: Optional[List[str]],
+        concept_codes_from_the_same_domain: list[str] | None,
         expected_concept: Concept,
     ):
         """Test make_from_blueprint method with various blueprint configurations."""

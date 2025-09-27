@@ -1,5 +1,4 @@
 import os
-from typing import List, Optional
 
 from dotenv import load_dotenv
 
@@ -16,27 +15,24 @@ class EnvVarNotFoundError(ToolException):
 def get_required_env(key: str) -> str:
     value = os.getenv(key)
     if not value:
-        raise EnvVarNotFoundError(f"Environment variable '{key}' is required but not set")
+        msg = f"Environment variable '{key}' is required but not set"
+        raise EnvVarNotFoundError(msg)
     return value
 
 
-def get_optional_env(key: str) -> Optional[str]:
-    value = os.getenv(key)
-    return value
+def get_optional_env(key: str) -> str | None:
+    return os.getenv(key)
 
 
 def is_env_var_set(key: str) -> bool:
     return os.getenv(key) is not None
 
 
-def all_env_vars_are_set(keys: List[str]) -> bool:
-    for each_key in keys:
-        if not is_env_var_set(each_key):
-            return False
-    return True
+def all_env_vars_are_set(keys: list[str]) -> bool:
+    return all(is_env_var_set(each_key) for each_key in keys)
 
 
-def any_env_var_is_placeholder(keys: List[str]) -> bool:
+def any_env_var_is_placeholder(keys: list[str]) -> bool:
     for each_key in keys:
         env_value = os.getenv(each_key)
         if value_is_placeholder(env_value):
@@ -46,4 +42,3 @@ def any_env_var_is_placeholder(keys: List[str]) -> bool:
 
 def set_env(key: str, value: str) -> None:
     os.environ[key] = value
-    return None

@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pipelex.cogt.exceptions import MissingDependencyError
 from pipelex.cogt.model_backends.model_spec import InferenceModelSpec
 from pipelex.cogt.ocr.ocr_worker_abstract import OcrWorkerAbstract
@@ -12,7 +10,7 @@ class OcrWorkerFactory:
     def make_ocr_worker(
         self,
         inference_model: InferenceModelSpec,
-        reporting_delegate: Optional[ReportingProtocol] = None,
+        reporting_delegate: ReportingProtocol | None = None,
     ) -> OcrWorkerAbstract:
         plugin = Plugin.make_for_inference_model(inference_model=inference_model)
         backend = get_models_manager().get_required_inference_backend(inference_model.backend_name)
@@ -21,16 +19,19 @@ class OcrWorkerFactory:
         match plugin.sdk:
             case "mistral":
                 try:
-                    import mistralai  # noqa: F401
+                    import mistralai  # noqa: PLC0415,F401
                 except ImportError as exc:
+                    lib_name = "mistralai"
+                    lib_extra_name = "mistral"
+                    msg = "The mistralai SDK is required to use Mistral OCR models through the mistralai client."
                     raise MissingDependencyError(
-                        "mistralai",
-                        "mistral",
-                        "The mistralai SDK is required to use Mistral OCR models through the mistralai client.",
+                        lib_name,
+                        lib_extra_name,
+                        msg,
                     ) from exc
 
-                from pipelex.plugins.mistral.mistral_factory import MistralFactory
-                from pipelex.plugins.mistral.mistral_ocr_worker import MistralOcrWorker
+                from pipelex.plugins.mistral.mistral_factory import MistralFactory  # noqa: PLC0415
+                from pipelex.plugins.mistral.mistral_ocr_worker import MistralOcrWorker  # noqa: PLC0415
 
                 ocr_sdk_instance = plugin_sdk_registry.get_sdk_instance(plugin=plugin) or plugin_sdk_registry.set_sdk_instance(
                     plugin=plugin,
@@ -44,15 +45,15 @@ class OcrWorkerFactory:
                     reporting_delegate=reporting_delegate,
                 )
             case "pypdfium2":
-                from pipelex.plugins.pypdfium2.pypdfium2_worker import Pypdfium2Worker
+                from pipelex.plugins.pypdfium2.pypdfium2_worker import Pypdfium2Worker  # noqa: PLC0415
 
                 ocr_worker = Pypdfium2Worker(
-                    sdk_instance=None,
                     extra_config=backend.extra_config,
                     inference_model=inference_model,
                     reporting_delegate=reporting_delegate,
                 )
             case _:
-                raise NotImplementedError(f"Plugin '{plugin}' is not supported")
+                msg = f"Plugin '{plugin}' is not supported"
+                raise NotImplementedError(msg)
 
         return ocr_worker

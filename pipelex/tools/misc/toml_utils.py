@@ -1,28 +1,20 @@
 from __future__ import annotations
 
-import re
-from typing import Any, Dict, List, Mapping, Optional, cast
+from typing import Any
 
 import toml
-import tomlkit
-from pydantic import BaseModel
-from tomlkit import array, document, inline_table, table
-from tomlkit import string as tk_string
 
 from pipelex.tools.misc.file_utils import path_exists
-from pipelex.tools.misc.json_utils import remove_none_values_from_dict
 
 
 class TOMLValidationError(Exception):
     """Raised when TOML file has formatting issues that could cause problems."""
 
-    pass
 
-
-def validate_toml_content(content: str, file_path: Optional[str] = None) -> None:
+def validate_toml_content(content: str, file_path: str | None = None) -> None:
     """Validate TOML content for common formatting issues."""
     lines = content.splitlines()
-    issues: List[str] = []
+    issues: list[str] = []
 
     for line_num, line in enumerate(lines, 1):
         # Check for trailing whitespace
@@ -55,8 +47,9 @@ def validate_toml_file(path: str) -> None:
 
     Raises:
         TOMLValidationError: If formatting issues are detected
+
     """
-    with open(path, "r", encoding="utf-8") as file:
+    with open(path, encoding="utf-8") as file:
         content = file.read()
         validate_toml_content(content, path)
 
@@ -74,6 +67,7 @@ def clean_trailing_whitespace(content: str) -> str:
 
     Returns:
         The cleaned TOML content with trailing whitespace removed and an empty line at EOF
+
     """
     # Split into lines and clean each line
     lines = [line.rstrip() for line in content.splitlines()]
@@ -90,7 +84,7 @@ def clean_trailing_whitespace(content: str) -> str:
     return "\n".join(lines) + "\n\n"
 
 
-def load_toml_from_path(path: str) -> Dict[str, Any]:
+def load_toml_from_path(path: str) -> dict[str, Any]:
     """Load TOML from path.
 
     Args:
@@ -101,9 +95,10 @@ def load_toml_from_path(path: str) -> Dict[str, Any]:
 
     Raises:
         toml.TomlDecodeError: If TOML parsing fails, with file path included
+
     """
     try:
-        with open(path, "r", encoding="utf-8") as file:
+        with open(path, encoding="utf-8") as file:
             content = file.read()
 
         cleaned_content = clean_trailing_whitespace(content)
@@ -114,14 +109,13 @@ def load_toml_from_path(path: str) -> Dict[str, Any]:
                 file.write(cleaned_content)
 
         # Parse TOML first
-        dict_from_toml = toml.loads(cleaned_content)
-
-        return dict_from_toml
+        return toml.loads(cleaned_content)
     except toml.TomlDecodeError as exc:
-        raise toml.TomlDecodeError(f"TOML parsing error in file '{path}': {exc}", exc.doc, exc.pos) from exc
+        msg = f"TOML parsing error in file '{path}': {exc}"
+        raise toml.TomlDecodeError(msg, exc.doc, exc.pos) from exc
 
 
-def failable_load_toml_from_path(path: str) -> Optional[Dict[str, Any]]:
+def failable_load_toml_from_path(path: str) -> dict[str, Any] | None:
     """Load TOML from path with failure handling."""
     if not path_exists(path):
         return None

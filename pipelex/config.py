@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, cast
+from typing import cast
 
 import shortuuid
 from pydantic import Field, field_validator
@@ -25,19 +25,19 @@ class StaticValidationReaction(StrEnum):
 
 class StaticValidationConfig(ConfigModel):
     default_reaction: StaticValidationReaction = Field(strict=False)
-    reactions: Dict[StaticValidationErrorType, StaticValidationReaction]
+    reactions: dict[StaticValidationErrorType, StaticValidationReaction]
 
     @field_validator("reactions", mode="before")
-    def validate_reactions(cls, value: Dict[str, str]) -> Dict[StaticValidationErrorType, StaticValidationReaction]:
-        the_dict = cast(
-            Dict[StaticValidationErrorType, StaticValidationReaction],
+    @staticmethod
+    def validate_reactions(value: dict[str, str]) -> dict[StaticValidationErrorType, StaticValidationReaction]:
+        return cast(
+            "dict[StaticValidationErrorType, StaticValidationReaction]",
             ConfigModel.transform_dict_str_to_enum(
                 input_dict=value,
                 key_enum_cls=StaticValidationErrorType,
                 value_enum_cls=StaticValidationReaction,
             ),
         )
-        return the_dict
 
 
 class PipeRunConfig(ConfigModel):
@@ -49,13 +49,15 @@ class DryRunConfig(ConfigModel):
     text_gen_truncate_length: int
     nb_list_items: int
     nb_ocr_pages: int
-    image_urls: List[str]
-    allowed_to_fail_pipes: List[str] = Field(default_factory=list)
+    image_urls: list[str]
+    allowed_to_fail_pipes: list[str] = Field(default_factory=list)
 
     @field_validator("image_urls", mode="before")
-    def validate_image_urls(cls, value: List[str]) -> List[str]:
+    @staticmethod
+    def validate_image_urls(value: list[str]) -> list[str]:
         if not value:
-            raise PipelexConfigError("dry_run_config.image_urls must be a non-empty list")
+            msg = "dry_run_config.image_urls must be a non-empty list"
+            raise PipelexConfigError(msg)
         return value
 
 
@@ -70,13 +72,12 @@ class StructureConfig(ConfigModel):
 
 class PromptingConfig(ConfigModel):
     default_prompting_style: PromptingStyle
-    prompting_styles: Dict[str, PromptingStyle]
+    prompting_styles: dict[str, PromptingStyle]
 
-    def get_prompting_style(self, prompting_target: Optional[PromptingTarget] = None) -> Optional[PromptingStyle]:
+    def get_prompting_style(self, prompting_target: PromptingTarget | None = None) -> PromptingStyle | None:
         if prompting_target:
             return self.prompting_styles.get(prompting_target, self.default_prompting_style)
-        else:
-            return None
+        return None
 
 
 class FeatureConfig(ConfigModel):
@@ -94,8 +95,11 @@ class ReportingConfig(ConfigModel):
     cost_report_unit_scale: float
 
 
+class ObserverConfig(ConfigModel):
+    observer_dir: str
+
+
 class Pipelex(ConfigModel):
-    extra_env_files: List[str]
     feature_config: FeatureConfig
     log_config: LogConfig
     aws_config: AwsConfig
@@ -110,6 +114,7 @@ class Pipelex(ConfigModel):
     dry_run_config: DryRunConfig
     pipe_run_config: PipeRunConfig
     reporting_config: ReportingConfig
+    observer_config: ObserverConfig
 
 
 class PipelexConfig(ConfigRoot):
@@ -121,5 +126,6 @@ class PipelexConfig(ConfigRoot):
 def get_config() -> PipelexConfig:
     singleton_config = get_required_config()
     if not isinstance(singleton_config, PipelexConfig):
-        raise RuntimeError(f"Expected {PipelexConfig}, but got {type(singleton_config)}")
+        msg = f"Expected {PipelexConfig}, but got {type(singleton_config)}"
+        raise TypeError(msg)
     return singleton_config
