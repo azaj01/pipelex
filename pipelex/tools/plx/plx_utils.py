@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from re import Match
 from typing import TYPE_CHECKING, Any, Mapping, cast
 
 import tomlkit
@@ -99,6 +100,10 @@ def _convert_mapping_to_table(mapping: Mapping[str, Any]) -> Any:  # Can't type 
     """
     tbl = table()
     for field_key, field_value in mapping.items():
+        # Skip the category field as it's not needed in PLX output
+        if field_key == "category":
+            continue
+
         if isinstance(field_value, Mapping):
             # Third-level mapping -> inline table
             tbl.add(field_key, _convert_dicts_to_inline_tables(field_value))
@@ -111,10 +116,25 @@ def _add_spaces_to_inline_tables(toml_string: str) -> str:
     """Add spaces inside inline table curly braces.
 
     Converts {key = value} to { key = value }.
+    Only adds spaces if they're not already present.
     """
-    # Pattern matches inline tables: { ... }
+
+    # Pattern matches inline tables and captures the content
+    # We check if spaces are already present to avoid double-spacing
+    def replace_inline_table(match: Match[str]) -> str:
+        content = match.group(1)
+        # Only add spaces if the content doesn't already start/end with spaces
+        if content.startswith(" ") and content.endswith(" "):
+            return "{" + content + "}"  # Already has spaces, keep as-is
+        elif content.startswith(" "):
+            return "{" + content + " }"  # Has leading space, add trailing
+        elif content.endswith(" "):
+            return "{ " + content + "}"  # Has trailing space, add leading
+        else:
+            return "{ " + content + " }"  # No spaces, add both
+
     pattern = r"\{([^}]+)\}"
-    return re.sub(pattern, r"{ \1 }", toml_string)
+    return re.sub(pattern, replace_inline_table, toml_string)
 
 
 def dict_to_plx_styled_toml(data: Mapping[str, Any]) -> str:
