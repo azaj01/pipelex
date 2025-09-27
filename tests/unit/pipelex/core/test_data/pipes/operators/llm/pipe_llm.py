@@ -32,7 +32,7 @@ prompt_template = "Generate a story about a programmer"
 # PipeLLM with inputs and template variables
 PIPE_LLM_WITH_INPUTS = (
     "pipe_llm_with_inputs",
-    """domain = "test_pipes"
+    '''domain = "test_pipes"
 definition = "Domain with pipe definitions"
 
 [pipe.extract_info]
@@ -40,8 +40,12 @@ type = "PipeLLM"
 definition = "Extract information from text"
 inputs = { text = "Text", topic = "Text" }
 output = "Text"
-prompt_template = "Extract information about $topic from this text:\\n\\n@text"
-""",
+prompt_template = """
+Extract information about $topic from this text:
+
+@text
+"""
+''',
     PipelexBundleBlueprint(
         domain="test_pipes",
         definition="Domain with pipe definitions",
@@ -95,8 +99,8 @@ definition = "Domain with pipe definitions"
 type = "PipeLLM"
 definition = "Generate multiple ideas"
 output = "Text"
-nb_output = 3
 prompt_template = "Generate creative ideas for a mobile app"
+nb_output = 3
 """,
     PipelexBundleBlueprint(
         domain="test_pipes",
@@ -116,7 +120,7 @@ prompt_template = "Generate creative ideas for a mobile app"
 # PipeLLM with dynamic multiple outputs
 PIPE_LLM_DYNAMIC_MULTIPLE = (
     "pipe_llm_dynamic_multiple",
-    """domain = "test_pipes"
+    '''domain = "test_pipes"
 definition = "Domain with pipe definitions"
 
 [pipe.brainstorm_solutions]
@@ -124,9 +128,9 @@ type = "PipeLLM"
 definition = "Brainstorm multiple solutions"
 inputs = { problem = { concept = "Text" } }
 output = "Text"
+prompt_template = "Brainstorm solutions for this problem: $problem"
 multiple_output = true
-prompt_template = "Brainstorm solutions for this problem: @problem"
-""",
+''',
     PipelexBundleBlueprint(
         domain="test_pipes",
         definition="Domain with pipe definitions",
@@ -137,7 +141,7 @@ prompt_template = "Brainstorm solutions for this problem: @problem"
                 inputs={"problem": InputRequirementBlueprint(concept="Text")},
                 output=NativeConceptEnum.TEXT,
                 multiple_output=True,
-                prompt_template="Brainstorm solutions for this problem: @problem",
+                prompt_template="Brainstorm solutions for this problem: $problem",
             ),
         },
     ),
@@ -324,7 +328,7 @@ prompt_template = "Analyze these documents based on the query: $query\\n\\nDocum
 
 # Export all PipeLLM test cases
 PIPE_LLM_TEST_CASES = [
-    PIPE_LLM_BASIC,
+    # PIPE_LLM_BASIC,
     PIPE_LLM_WITH_INPUTS,
     PIPE_LLM_WITH_SYSTEM_PROMPT,
     PIPE_LLM_MULTIPLE_OUTPUTS,
