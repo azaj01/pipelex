@@ -20,7 +20,8 @@ def do_show_config() -> None:
             title=f"Pipelex configuration for project: {config_manager.get_project_name()}",
         )
     except Exception as exc:
-        raise PipelexConfigError(f"Error loading configuration: {exc}") from exc
+        msg = f"Error loading configuration: {exc}"
+        raise PipelexConfigError(msg) from exc
 
 
 def do_list_pipes(relative_config_folder_path: str = "pipelex_libraries") -> None:
@@ -30,7 +31,8 @@ def do_list_pipes(relative_config_folder_path: str = "pipelex_libraries") -> Non
     try:
         get_pipe_provider().pretty_list_pipes()
     except Exception as exc:
-        raise PipelexCLIError(f"Failed to list pipes: {exc}") from exc
+        msg = f"Failed to list pipes: {exc}"
+        raise PipelexCLIError(msg) from exc
 
 
 def do_show_pipe(pipe_code: str, relative_config_folder_path: str = "./pipelex_libraries") -> None:
@@ -52,7 +54,8 @@ def show_config_cmd() -> None:
 @show_app.command("pipes")
 def list_pipes_cmd(
     relative_config_folder_path: Annotated[
-        str, typer.Option("--config-folder-path", "-c", help="Relative path to the config folder path")
+        str,
+        typer.Option("--config-folder-path", "-c", help="Relative path to the config folder path"),
     ] = "pipelex_libraries",
 ) -> None:
     do_list_pipes(relative_config_folder_path=relative_config_folder_path)
@@ -62,7 +65,8 @@ def list_pipes_cmd(
 def show_pipe_cmd(
     pipe_code: Annotated[str, typer.Argument(help="Pipeline code to show definition for")],
     relative_config_folder_path: Annotated[
-        str, typer.Option("--config-folder-path", "-c", help="Relative path to the config folder path")
+        str,
+        typer.Option("--config-folder-path", "-c", help="Relative path to the config folder path"),
     ] = "./pipelex_libraries",
 ) -> None:
     do_show_pipe(pipe_code=pipe_code, relative_config_folder_path=relative_config_folder_path)

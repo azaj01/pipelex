@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import BaseModel, field_validator
 
 from pipelex.core.concepts.concept_blueprint import ConceptBlueprint
@@ -8,7 +6,7 @@ from pipelex.core.pipes.pipe_run_params import PipeOutputMultiplicity
 
 class InputRequirementBlueprint(BaseModel):
     concept: str
-    multiplicity: Optional[PipeOutputMultiplicity] = None
+    multiplicity: PipeOutputMultiplicity | None = None
 
     @field_validator("concept", mode="before")
     @classmethod

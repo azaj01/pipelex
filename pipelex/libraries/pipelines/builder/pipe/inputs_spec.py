@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import Field, field_validator
 
 from pipelex.core.concepts.concept_blueprint import ConceptBlueprint
@@ -25,10 +23,11 @@ class InputRequirementSpec(StructuredContent):
         1. Concept must be a valid concept code (PascalCase) or concept string (domain.ConceptCode).
         2. Domain and concept code are separated by a dot when using full concept strings.
         3. Concept validation is performed using ConceptBlueprint.validate_concept_string_or_code.
+
     """
 
     concept: str = Field(description="Concept code or concept string in PascalCase format")
-    multiplicity: Optional[PipeOutputMultiplicity] = None
+    multiplicity: PipeOutputMultiplicity | None = None
 
     @field_validator("concept", mode="before")
     @classmethod

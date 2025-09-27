@@ -14,6 +14,7 @@ VENV_PYRIGHT := $(VIRTUAL_ENV)/bin/pyright
 VENV_MYPY := $(VIRTUAL_ENV)/bin/mypy
 VENV_PIPELEX := $(VIRTUAL_ENV)/bin/pipelex
 VENV_MKDOCS := $(VIRTUAL_ENV)/bin/mkdocs
+VENV_PYLINT := $(VIRTUAL_ENV)/bin/pylint
 
 UV_MIN_VERSION = $(shell grep -m1 'required-version' pyproject.toml | sed -E 's/.*= *"([^<>=, ]+).*/\1/')
 
@@ -101,7 +102,7 @@ export HELP
 
 .PHONY: \
 	all help env lock install update build \
-	format lint pyright mypy \
+	format lint pyright mypy pylint \
 	cleanderived cleanenv cleanlibraries cleanall \
 	test test-xdist t test-quiet tq test-with-prints tp test-inference ti \
 	test-img-gen tg test-ocr to codex-tests gha-tests \
@@ -380,12 +381,15 @@ lint: env
 
 pyright: env
 	$(call PRINT_TITLE,"Typechecking with pyright")
-	@$(VENV_PYRIGHT) --pythonpath $(VIRTUAL_ENV)/bin/python3  && \
-	echo "Done typechecking with pyright — disregard warning about latest version, it's giving us false positives"
+	@$(VENV_PYRIGHT) . --project pyproject.toml
 
 mypy: env
 	$(call PRINT_TITLE,"Typechecking with mypy")
 	$(VENV_MYPY)
+
+pylint: env
+	$(call PRINT_TITLE,"Linting with pylint")
+	$(VENV_PYLINT) --rcfile pyproject.toml pipelex tests
 
 
 ##########################################################################################
@@ -407,6 +411,10 @@ merge-check-pyright: env
 merge-check-mypy: env
 	$(call PRINT_TITLE,"Typechecking with mypy")
 	$(VENV_MYPY) --config-file pyproject.toml
+
+merge-check-pylint: env
+	$(call PRINT_TITLE,"Linting with pylint")
+	$(VENV_PYLINT) --rcfile pyproject.toml .
 
 ##########################################################################################
 ### MISCELLANEOUS
@@ -447,11 +455,11 @@ docs-deploy: env
 ### SHORTHANDS
 ##########################################################################################
 
-c: format lint pyright mypy
+c: format lint pyright pylint mypy
 	@echo "> done: c = check"
 
 cc: cleanderived c
-	@echo "> done: cc = cleanderived format lint pyright mypy"
+	@echo "> done: cc = cleanderived format lint pyright pylint mypy"
 
 check: cc check-unused-imports
 	@echo "> done: check"

@@ -1,12 +1,10 @@
-from typing import Optional, Union
-
 from pydantic import ConfigDict, model_validator
-from typing_extensions import Self
 
 from pipelex.core.stuffs.stuff_content import StructuredContent
 from pipelex.exceptions import PipeDefinitionError
 from pipelex.pipe_controllers.sub_pipe_blueprint import SubPipeBlueprint
 from pipelex.tools.typing.validation_utils import has_more_than_one_among_attributes_from_list
+from pipelex.types import Self
 
 
 class SubPipeSpec(StructuredContent):
@@ -35,21 +33,23 @@ class SubPipeSpec(StructuredContent):
         2. batch_over and batch_as must be specified together (both or neither).
         3. pipe must reference a valid pipe code.
         4. result, when specified, should follow naming conventions.
+
     """
 
     model_config = ConfigDict(extra="forbid")
 
     the_pipe_code: str
-    result: Optional[str] = None
-    nb_output: Optional[int] = None
-    multiple_output: Optional[bool] = None
-    batch_over: Union[bool, str] = False
-    batch_as: Optional[str] = None
+    result: str | None = None
+    nb_output: int | None = None
+    multiple_output: bool | None = None
+    batch_over: bool | str = False
+    batch_as: str | None = None
 
     @model_validator(mode="after")
     def validate_multiple_output(self) -> Self:
         if has_more_than_one_among_attributes_from_list(self, attributes_list=["nb_output", "multiple_output"]):
-            raise PipeDefinitionError("PipeStepBlueprint should have no more than '1' of nb_output or multiple_output")
+            msg = "PipeStepBlueprint should have no more than '1' of nb_output or multiple_output"
+            raise PipeDefinitionError(msg)
         return self
 
     @model_validator(mode="after")
@@ -58,10 +58,12 @@ class SubPipeSpec(StructuredContent):
         batch_as_is_specified = self.batch_as is not None and self.batch_as != ""
 
         if batch_over_is_specified and not batch_as_is_specified:
-            raise PipeDefinitionError(f"In pipe '{self.the_pipe_code}': When 'batch_over' is specified, 'batch_as' must also be provided")
+            msg = f"In pipe '{self.the_pipe_code}': When 'batch_over' is specified, 'batch_as' must also be provided"
+            raise PipeDefinitionError(msg)
 
         if batch_as_is_specified and not batch_over_is_specified:
-            raise PipeDefinitionError(f"In pipe '{self.the_pipe_code}': When 'batch_as' is specified, 'batch_over' must also be provided")
+            msg = f"In pipe '{self.the_pipe_code}': When 'batch_as' is specified, 'batch_over' must also be provided"
+            raise PipeDefinitionError(msg)
 
         return self
 

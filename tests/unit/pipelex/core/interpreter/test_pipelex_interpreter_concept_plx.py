@@ -5,8 +5,6 @@ from pipelex.core.interpreter import PipelexInterpreter
 
 
 class TestPipelexInterpreterConceptPLX:
-    """Test concept to PLX string conversion."""
-
     @pytest.mark.parametrize(
         "concepts,expected_plx",
         [
@@ -93,5 +91,5 @@ structure = "ProductStructure\"""",
     )
     def test_concepts_to_plx_string(self, concepts: dict[str, ConceptBlueprint | str], expected_plx: str):
         """Test converting concepts dict to PLX string."""
-        result = PipelexInterpreter.concepts_to_plx_string(concepts, "test_domain")
+        result = PipelexInterpreter.concepts_to_plx_string(concepts)
         assert result == expected_plx

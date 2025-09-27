@@ -1,4 +1,4 @@
-from typing import Any, List, Optional
+from typing import Any
 
 import openai
 import shortuuid
@@ -24,12 +24,13 @@ class OpenAIImgGenWorker(ImgGenWorkerAbstract):
         self,
         sdk_instance: Any,
         inference_model: InferenceModelSpec,
-        reporting_delegate: Optional[ReportingProtocol] = None,
+        reporting_delegate: ReportingProtocol | None = None,
     ):
         super().__init__(inference_model=inference_model, reporting_delegate=reporting_delegate)
 
         if not isinstance(sdk_instance, openai.AsyncOpenAI):
-            raise SdkTypeError(f"Provided Imgg sdk_instance is not of type openai.AsyncOpenAI: it's a '{type(sdk_instance)}'")
+            msg = f"Provided ImgGen sdk_instance is not of type openai.AsyncOpenAI: it's a '{type(sdk_instance)}'"
+            raise SdkTypeError(msg)
 
         self.openai_client = sdk_instance
 
@@ -39,15 +40,14 @@ class OpenAIImgGenWorker(ImgGenWorkerAbstract):
         img_gen_job: ImgGenJob,
     ) -> GeneratedImage:
         one_image_list = await self.gen_image_list(img_gen_job=img_gen_job, nb_images=1)
-        generated_image = one_image_list[0]
-        return generated_image
+        return one_image_list[0]
 
     @override
     async def _gen_image_list(
         self,
         img_gen_job: ImgGenJob,
         nb_images: int,
-    ) -> List[GeneratedImage]:
+    ) -> list[GeneratedImage]:
         image_size = OpenAIImgGenFactory.image_size_for_gpt_image_1(aspect_ratio=img_gen_job.job_params.aspect_ratio)
         output_format = OpenAIImgGenFactory.output_format_for_gpt_image_1(output_format=img_gen_job.job_params.output_format)
         moderation = OpenAIImgGenFactory.moderation_for_gpt_image_1(is_moderated=img_gen_job.job_params.is_moderated)
@@ -66,14 +66,16 @@ class OpenAIImgGenWorker(ImgGenWorkerAbstract):
             n=nb_images,
         )
         if not result.data:
-            raise ImgGenGenerationError("No result from OpenAI")
+            msg = "No result from OpenAI"
+            raise ImgGenGenerationError(msg)
 
-        generated_image_list: List[GeneratedImage] = []
+        generated_image_list: list[GeneratedImage] = []
         image_id = shortuuid.uuid()[:4]
         for image_index, image_data in enumerate(result.data):
             image_base64 = image_data.b64_json
             if not image_base64:
-                raise ImgGenGenerationError("No base64 image data received from OpenAI")
+                msg = "No base64 image data received from OpenAI"
+                raise ImgGenGenerationError(msg)
 
             folder_path = TEMP_OUTPUTS_DIR
             ensure_path(folder_path)
@@ -85,6 +87,6 @@ class OpenAIImgGenWorker(ImgGenWorkerAbstract):
                     url=img_path,
                     width=1024,
                     height=1024,
-                )
+                ),
             )
         return generated_image_list

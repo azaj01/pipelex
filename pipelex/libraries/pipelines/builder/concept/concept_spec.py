@@ -1,8 +1,7 @@
 from datetime import datetime
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, cast
 
 from pydantic import ConfigDict, Field, field_validator, model_validator
-from typing_extensions import Self
 
 from pipelex.core.concepts.concept_blueprint import (
     ConceptBlueprint,
@@ -18,7 +17,7 @@ from pipelex.core.domains.domain_blueprint import DomainBlueprint
 from pipelex.core.memory.working_memory import WorkingMemory
 from pipelex.core.stuffs.stuff_content import StructuredContent
 from pipelex.tools.misc.string_utils import is_pascal_case
-from pipelex.types import StrEnum
+from pipelex.types import Self, StrEnum
 
 
 class ConceptStructureSpecFieldType(StrEnum):
@@ -54,13 +53,14 @@ class ConceptStructureSpec(StructuredContent):
            - For typed fields: type must be specified and default_value must match that type
            - Type validation includes: text (str), integer (int), boolean (bool),
              number (int/float), dict (dict)
+
     """
 
     the_field_name: str = Field(description="Field name. Must be snake_case.")
     definition: str
-    type: Optional[ConceptStructureSpecFieldType] = Field(default=None, description="The type of the field.")
-    required: Optional[bool] = True
-    default_value: Optional[Any] = None
+    type: ConceptStructureSpecFieldType | None = Field(default=None, description="The type of the field.")
+    required: bool | None = True
+    default_value: Any | None = None
 
     @model_validator(mode="after")
     def validate_structure_blueprint(self) -> Self:
@@ -95,13 +95,10 @@ class ConceptStructureSpec(StructuredContent):
                     self._raise_type_mismatch_error("date", type(self.default_value).__name__)
 
     def _raise_type_mismatch_error(self, expected_type_name: str, actual_type_name: str) -> None:
-        """Raise a type mismatch error with consistent formatting."""
-        raise ConceptStructureBlueprintError(
-            f"default_value type mismatch: expected {expected_type_name} for type '{self.type}', but got {actual_type_name}"
-        )
+        msg = f"default_value type mismatch: expected {expected_type_name} for type '{self.type}', but got {actual_type_name}"
+        raise ConceptStructureBlueprintError(msg)
 
     def to_blueprint(self) -> ConceptStructureBlueprint:
-        """Convert this ConceptStructureBlueprint to the core ConceptStructureBlueprint."""
         # Convert the type enum value - self.type is already a ConceptStructureBlueprintFieldType enum
         # We need to get the corresponding value in the core enum
         core_type = None
@@ -121,9 +118,9 @@ class ConceptSpecDraft(StructuredContent):
     the_concept_code: str = Field(description="Concept code. Must be PascalCase.")
     definition: str = Field(description="Description of the concept, in natural language.")
     structure: str = Field(
-        description="A description of a dict with fieldnames as keys, and values being a dict with: definition, type, required, default_value"
+        description="A description of a dict with fieldnames as keys, and values being a dict with: definition, type, required, default_value",
     )
-    refines: Optional[str] = Field(
+    refines: str | None = Field(
         default=None,
         description="The native concept this concept extends (Text, Image, PDF, TextAndImages, Number, Page) "
         "in PascalCase format. Cannot be used together with 'structure'.",
@@ -158,37 +155,38 @@ class ConceptSpec(StructuredContent):
         5. Native concepts: When refining, must be one of the valid native concepts.
         6. Structure values: In structure dict, values must be either valid concept strings
            or ConceptStructureBlueprint instances.
+
     """
 
     model_config = ConfigDict(extra="forbid")
 
     the_concept_code: str = Field(description="Concept code. Must be PascalCase.")
     definition: str
-    structure: Optional[Union[str, Dict[str, Union[str, ConceptStructureSpec]]]] = None
-    refines: Optional[str] = None
+    structure: str | dict[str, str | ConceptStructureSpec] | None = None
+    refines: str | None = None
 
     @classmethod
     def is_native_concept_code(cls, concept_code: str) -> bool:
         ConceptSpec.validate_concept_code(concept_code=concept_code)
-        return concept_code in [native_concept for native_concept in [native_concept for native_concept in NativeConceptEnum]]
+        return concept_code in NativeConceptEnum.values_list()
 
     @classmethod
     def validate_concept_code(cls, concept_code: str) -> None:
         if not is_pascal_case(concept_code):
-            raise ConceptCodeError(
-                f"Concept code '{concept_code}' must be PascalCase (letters and numbers only, starting with uppercase, without `.`)"
-            )
+            msg = f"Concept code '{concept_code}' must be PascalCase (letters and numbers only, starting with uppercase, without `.`)"
+            raise ConceptCodeError(msg)
 
     @classmethod
     def validate_concept_string_or_code(cls, concept_string_or_code: str) -> None:
         if concept_string_or_code.count(".") > 1:
-            raise ConceptStringOrConceptCodeError(
+            msg = (
                 f"concept_string_or_code '{concept_string_or_code}' is invalid. "
                 "It should either contain a domain in snake_case and a concept code in PascalCase separated by one dot, "
                 "or be a concept code in PascalCase."
             )
+            raise ConceptStringOrConceptCodeError(msg)
 
-        elif concept_string_or_code.count(".") == 1:
+        if concept_string_or_code.count(".") == 1:
             domain, concept_code = concept_string_or_code.split(".")
             DomainBlueprint.validate_domain_code(code=domain)
             cls.validate_concept_code(concept_code=concept_code)
@@ -198,70 +196,68 @@ class ConceptSpec(StructuredContent):
     @staticmethod
     def validate_concept_string(concept_string: str) -> None:
         """Validate that a concept code follows PascalCase convention."""
-        if "." not in concept_string:
-            raise ConceptStringError(
+        if "." not in concept_string or concept_string.count(".") > 1:
+            msg = (
                 f"Concept string '{concept_string}' is invalid. It should contain a domain in snake_case "
                 "and a concept code in PascalCase separated by one dot."
             )
-        elif concept_string.count(".") > 1:
-            raise ConceptStringError(
-                f"Concept string '{concept_string}' is invalid. It should contain a domain in snake_case "
-                "and a concept code in PascalCase separated by one dot."
-            )
-        else:
-            domain, concept_code = concept_string.split(".", 1)
+            raise ConceptStringError(msg)
+        domain, concept_code = concept_string.split(".", 1)
 
         DomainBlueprint.validate_domain_code(domain)
         if not is_pascal_case(concept_code):
-            raise ConceptCodeError(
-                f"Concept code '{concept_code}' must be PascalCase (letters and numbers only, starting with uppercase, without `.`)"
-            )
+            msg = f"Concept code '{concept_code}' must be PascalCase (letters and numbers only, starting with uppercase, without `.`)"
+            raise ConceptCodeError(msg)
 
         # Validate that if the concept code is among the native concepts, the domain MUST be native.
-        if concept_code in [concept.value for concept in [native_concept for native_concept in NativeConceptEnum]]:
-            if domain != SpecialDomain.NATIVE:
-                raise ConceptStringError(
-                    f"Concept string '{concept_string}' is invalid. "
-                    f"Concept code '{concept_code}' is a native concept, so the domain must be '{SpecialDomain.NATIVE}', "
-                    f"or nothing, but not '{domain}'"
-                )
+        if not SpecialDomain.is_native(domain=domain) and concept_code in NativeConceptEnum.values_list():
+            msg = (
+                f"Concept string '{concept_string}' is invalid. "
+                f"Concept code '{concept_code}' is a native concept, so the domain must be '{SpecialDomain.NATIVE}', "
+                f"or nothing, but not '{domain}'"
+            )
+            raise ConceptStringError(msg)
 
         # Validate that if the domain is native, the concept code is a native concept
         if SpecialDomain.is_native(domain=domain):
-            if concept_code not in [native_concept for native_concept in NativeConceptEnum]:
-                raise ConceptStringError(
+            if concept_code not in NativeConceptEnum.values_list():
+                msg = (
                     f"Concept string '{concept_string}' is invalid. "
                     f"Concept code '{concept_code}' is not a native concept, so the domain must not be '{SpecialDomain.NATIVE}'."
                 )
+                raise ConceptStringError(msg)
 
     @field_validator("refines", mode="before")
     @classmethod
-    def validate_refines(cls, refines: Optional[str] = None) -> Optional[str]:
+    def validate_refines(cls, refines: str | None = None) -> str | None:
         if refines is not None:
             if not NativeConceptManager.is_native_concept(refines):
-                raise ConceptBlueprintError(f"Forbidden to refine a non-native concept: '{refines}'. Refining non-native concepts will come soon.")
+                msg = f"Forbidden to refine a non-native concept: '{refines}'. Refining non-native concepts will come soon."
+                raise ConceptBlueprintError(msg)
             cls.validate_concept_string_or_code(concept_string_or_code=refines)
         return refines
 
     @model_validator(mode="before")
-    def model_validate_spec(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+    @classmethod
+    def model_validate_spec(cls, values: dict[str, Any]) -> dict[str, Any]:
         if values.get("refines") and values.get("structure"):
-            raise ConceptSpecError(
+            msg = (
                 f"Forbidden to have refines and structure at the same time: `{values.get('refines')}` "
-                f"and `{values.get('structure')}` for concept that has the definition `{values.get('definition')}`"
+                f"and `{values.get('structure')}` for concept that has the definition `{values.get('definition')}`",
             )
+            raise ConceptSpecError(msg)
         return values
 
     def to_blueprint(self) -> ConceptBlueprint:
         """Convert this ConceptBlueprint to the original core ConceptBlueprint."""
         # TODO: Clarify concept structure blueprint
-        converted_structure: Optional[Union[str, Dict[str, Union[str, ConceptStructureBlueprint]]]] = None
+        converted_structure: str | dict[str, str | ConceptStructureBlueprint] | None = None
         if self.structure:
             converted_structure = {}
             if isinstance(self.structure, str):
                 converted_structure = self.structure
             else:
-                for field_name, field_spec in cast(Dict[str, ConceptStructureSpec], self.structure).items():
+                for field_name, field_spec in cast("dict[str, ConceptStructureSpec]", self.structure).items():
                     converted_structure[field_name] = field_spec.to_blueprint()
 
         return ConceptBlueprint(definition=self.definition, structure=converted_structure, refines=self.refines)
@@ -271,7 +267,7 @@ async def create_concept_spec(working_memory: WorkingMemory) -> ConceptSpec:
     concept_spec_draft = working_memory.get_stuff_as(name="concept_spec_draft", content_type=ConceptSpecDraft)
     concept_spec_structures_stuff = working_memory.get_stuff_as_list(name="concept_spec_structures", item_type=ConceptStructureSpec)
 
-    structure_dict: Dict[str, Union[str, ConceptStructureSpec]] = {}
+    structure_dict: dict[str, str | ConceptStructureSpec] = {}
     for structure_item in concept_spec_structures_stuff.items:
         structure_spec = ConceptStructureSpec(
             the_field_name=structure_item.the_field_name,

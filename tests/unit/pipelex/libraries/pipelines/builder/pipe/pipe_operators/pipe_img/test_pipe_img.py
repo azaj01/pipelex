@@ -18,8 +18,4 @@ class TestPipeImgGenBlueprintConversion:
         expected_blueprint: PipeImgGenBlueprint,
     ):
         result = pipe_spec.to_blueprint()
-        from pipelex import pretty_print
-
-        pretty_print(result, title=f"Result {test_name}")
-        pretty_print(expected_blueprint, title=f"Expected {test_name}")
         assert result == expected_blueprint

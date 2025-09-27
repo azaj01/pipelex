@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Generic, Literal, Optional, TypeVar
+from typing import Generic, Literal, TypeVar
 
 from typing_extensions import override
 
@@ -25,8 +25,8 @@ class PipeOperator(PipeAbstract, Generic[PipeOperatorOutputType]):
         job_metadata: JobMetadata,
         working_memory: WorkingMemory,
         pipe_run_params: PipeRunParams,
-        output_name: Optional[str] = None,
-        print_intermediate_outputs: Optional[bool] = False,
+        output_name: str | None = None,
+        print_intermediate_outputs: bool | None = False,
     ) -> PipeOutput:
         pipe_run_params.push_pipe_to_stack(pipe_code=self.code)
         self.monitor_pipe_stack(pipe_run_params=pipe_run_params)
@@ -70,7 +70,7 @@ class PipeOperator(PipeAbstract, Generic[PipeOperatorOutputType]):
             activity_report=ActivityReport(
                 job_metadata=job_metadata,
                 content=pipe_output.main_stuff,
-            )
+            ),
         )
 
         pipe_run_params.pop_pipe_from_stack(pipe_code=self.code)
@@ -83,7 +83,7 @@ class PipeOperator(PipeAbstract, Generic[PipeOperatorOutputType]):
         job_metadata: JobMetadata,
         working_memory: WorkingMemory,
         pipe_run_params: PipeRunParams,
-        output_name: Optional[str] = None,
+        output_name: str | None = None,
     ) -> PipeOperatorOutputType:
         pass
 
@@ -93,6 +93,6 @@ class PipeOperator(PipeAbstract, Generic[PipeOperatorOutputType]):
         job_metadata: JobMetadata,
         working_memory: WorkingMemory,
         pipe_run_params: PipeRunParams,
-        output_name: Optional[str] = None,
+        output_name: str | None = None,
     ) -> PipeOperatorOutputType:
         pass

@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from click import ClickException
 from typing_extensions import override
 
@@ -24,12 +22,12 @@ class StaticValidationError(Exception):
         self,
         error_type: StaticValidationErrorType,
         domain: str,
-        pipe_code: Optional[str] = None,
-        variable_names: Optional[List[str]] = None,
-        required_concept_codes: Optional[List[str]] = None,
-        provided_concept_code: Optional[str] = None,
-        file_path: Optional[str] = None,
-        explanation: Optional[str] = None,
+        pipe_code: str | None = None,
+        variable_names: list[str] | None = None,
+        required_concept_codes: list[str] | None = None,
+        provided_concept_code: str | None = None,
+        file_path: str | None = None,
+        explanation: str | None = None,
     ):
         self.error_type = error_type
         self.domain = domain
@@ -92,8 +90,6 @@ class WorkingMemoryStuffNotFoundError(WorkingMemoryVariableError):
 
 class PipelexCLIError(PipelexError, ClickException):
     """Raised when there's an error in CLI usage or operation."""
-
-    pass
 
 
 class PipelexConfigError(PipelexError):
@@ -185,7 +181,7 @@ class PipeStackOverflowError(PipeExecutionError):
 class DryRunError(PipeExecutionError):
     """Raised when a dry run fails due to missing inputs or other validation issues."""
 
-    def __init__(self, message: str, missing_inputs: Optional[List[str]] = None, pipe_code: Optional[str] = None):
+    def __init__(self, message: str, missing_inputs: list[str] | None = None, pipe_code: str | None = None):
         self.missing_inputs = missing_inputs or []
         self.pipe_code = pipe_code
         super().__init__(message)
@@ -206,31 +202,21 @@ class PipeRunParamsError(PipelexError):
 class PipeBatchError(PipelexError):
     """Base class for all PipeBatch-related errors."""
 
-    pass
-
 
 class PipeBatchRecursionError(PipeBatchError):
     """Raised when a PipeBatch attempts to run itself recursively."""
-
-    pass
 
 
 class PipeBatchInputError(PipeBatchError):
     """Raised when the input to a PipeBatch is not a ListContent or is invalid."""
 
-    pass
-
 
 class PipeBatchOutputError(PipeBatchError):
     """Raised when there's an error with the output structure of a PipeBatch operation."""
 
-    pass
-
 
 class PipeBatchBranchError(PipeBatchError):
     """Raised when there's an error with a branch pipe execution in PipeBatch."""
-
-    pass
 
 
 class JobHistoryError(PipelexError):
@@ -272,10 +258,8 @@ class PipeInputDetailsError(PipelexError):
 class ApiSerializationError(Exception):
     """Exception raised when API serialization fails."""
 
-    pass
 
-
-class StartPipelineException(Exception):
+class StartPipelineError(Exception):
     pass
 
 

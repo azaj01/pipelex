@@ -1,26 +1,30 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Optional, Type
+from typing import TYPE_CHECKING
 
 from typing_extensions import override
 
 from pipelex import log
 from pipelex.cogt.inference.inference_worker_abstract import InferenceWorkerAbstract
-from pipelex.cogt.llm.llm_job import LLMJob
 from pipelex.pipeline.job_metadata import UnitJobId
-from pipelex.reporting.reporting_protocol import ReportingProtocol
-from pipelex.tools.typing.pydantic_utils import BaseModelTypeVar
+
+if TYPE_CHECKING:
+    from pipelex.cogt.llm.llm_job import LLMJob
+    from pipelex.reporting.reporting_protocol import ReportingProtocol
+    from pipelex.tools.typing.pydantic_utils import BaseModelTypeVar
 
 
 class LLMWorkerAbstract(InferenceWorkerAbstract, ABC):
     def __init__(
         self,
-        reporting_delegate: Optional[ReportingProtocol] = None,
+        reporting_delegate: ReportingProtocol | None = None,
     ):
-        """
-        Initialize the LLMWorker.
+        """Initialize the LLMWorker.
 
         Args:
-            reporting_delegate (Optional[ReportingProtocol]): An optional report delegate for reporting unit jobs.
+            reporting_delegate (ReportingProtocol | None): An optional report delegate for reporting unit jobs.
+
         """
         InferenceWorkerAbstract.__init__(self, reporting_delegate=reporting_delegate)
 
@@ -89,7 +93,7 @@ class LLMWorkerAbstract(InferenceWorkerAbstract, ABC):
     async def gen_object(
         self,
         llm_job: LLMJob,
-        schema: Type[BaseModelTypeVar],
+        schema: type[BaseModelTypeVar],
     ) -> BaseModelTypeVar:
         log.debug(f"LLM Worker gen_object using {self.desc}")
         log.verbose(llm_job.llm_prompt.desc(), title="llm_prompt")
@@ -114,6 +118,6 @@ class LLMWorkerAbstract(InferenceWorkerAbstract, ABC):
     async def _gen_object(
         self,
         llm_job: LLMJob,
-        schema: Type[BaseModelTypeVar],
+        schema: type[BaseModelTypeVar],
     ) -> BaseModelTypeVar:
         pass

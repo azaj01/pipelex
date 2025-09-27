@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from typing_extensions import override
 
 from pipelex.cogt.llm.llm_prompt_spec import LLMPromptSpec
@@ -26,10 +24,10 @@ class PipeLLMFactory(PipeFactoryProtocol[PipeLLMBlueprint, PipeLLM]):
         domain: str,
         pipe_code: str,
         blueprint: PipeLLMBlueprint,
-        concept_codes_from_the_same_domain: Optional[List[str]] = None,
+        concept_codes_from_the_same_domain: list[str] | None = None,
     ) -> PipeLLM:
-        system_prompt_jinja2_blueprint: Optional[Jinja2Blueprint] = None
-        system_prompt: Optional[str] = None
+        system_prompt_jinja2_blueprint: Jinja2Blueprint | None = None
+        system_prompt: str | None = None
         if blueprint.system_prompt_template or blueprint.system_prompt_template_name:
             try:
                 system_prompt_jinja2_blueprint = Jinja2Blueprint(
@@ -48,7 +46,7 @@ class PipeLLMFactory(PipeFactoryProtocol[PipeLLMBlueprint, PipeLLM]):
             if domain_obj := get_optional_domain(domain=domain):
                 system_prompt = domain_obj.system_prompt
 
-        user_text_jinja2_blueprint: Optional[Jinja2Blueprint] = None
+        user_text_jinja2_blueprint: Jinja2Blueprint | None = None
         if blueprint.prompt_template or blueprint.template_name:
             try:
                 user_text_jinja2_blueprint = Jinja2Blueprint(
@@ -72,12 +70,15 @@ class PipeLLMFactory(PipeFactoryProtocol[PipeLLMBlueprint, PipeLLM]):
                 error_msg = f"Jinja2 template not found for pipe '{pipe_code}' in domain '{domain}': {exc}."
                 raise PipeDefinitionError(error_msg) from exc
 
-        user_images: List[str] = []
+        user_images: list[str] = []
         if blueprint.inputs:
             for stuff_name, requirement in blueprint.inputs.items():
                 if isinstance(requirement, str):
-                    requirement = InputRequirementBlueprint(concept=requirement)
-                concept_string = requirement.concept
+                    input_requirement_blueprint = InputRequirementBlueprint(concept=requirement)
+                else:
+                    input_requirement_blueprint = requirement
+
+                concept_string = input_requirement_blueprint.concept
                 domain_and_code = ConceptFactory.make_domain_and_concept_code_from_concept_string_or_code(
                     domain=domain,
                     concept_string_or_code=concept_string,
@@ -85,8 +86,9 @@ class PipeLLMFactory(PipeFactoryProtocol[PipeLLMBlueprint, PipeLLM]):
                 )
                 concept = get_concept_provider().get_required_concept(
                     concept_string=ConceptFactory.construct_concept_string_with_domain(
-                        domain=domain_and_code.domain, concept_code=domain_and_code.concept_code
-                    )
+                        domain=domain_and_code.domain,
+                        concept_code=domain_and_code.concept_code,
+                    ),
                 )
 
                 if get_concept_provider().is_image_concept(concept=concept):
@@ -125,10 +127,12 @@ class PipeLLMFactory(PipeFactoryProtocol[PipeLLMBlueprint, PipeLLM]):
             code=pipe_code,
             definition=blueprint.definition,
             inputs=PipeInputSpecFactory.make_from_blueprint(
-                domain=domain, blueprint=blueprint.inputs or {}, concept_codes_from_the_same_domain=concept_codes_from_the_same_domain
+                domain=domain,
+                blueprint=blueprint.inputs or {},
+                concept_codes_from_the_same_domain=concept_codes_from_the_same_domain,
             ),
             output=get_concept_provider().get_required_concept(
-                concept_string=ConceptFactory.construct_concept_string_with_domain(domain=output_concept_domain, concept_code=output_concept_code)
+                concept_string=ConceptFactory.construct_concept_string_with_domain(domain=output_concept_domain, concept_code=output_concept_code),
             ),
             llm_prompt_spec=llm_prompt_spec,
             llm_choices=llm_choices,

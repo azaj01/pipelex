@@ -1,4 +1,4 @@
-from typing import Any, List, Optional
+from typing import Any
 
 from fal_client import AsyncClient, InProgress
 from typing_extensions import override
@@ -18,12 +18,13 @@ class FalImgGenWorker(ImgGenWorkerAbstract):
         self,
         sdk_instance: Any,
         inference_model: InferenceModelSpec,
-        reporting_delegate: Optional[ReportingProtocol] = None,
+        reporting_delegate: ReportingProtocol | None = None,
     ):
         super().__init__(inference_model=inference_model, reporting_delegate=reporting_delegate)
 
         if not isinstance(sdk_instance, AsyncClient):
-            raise SdkTypeError(f"Provided Imgg sdk_instance is not of type fal_client.AsyncClient: it's a '{type(sdk_instance)}'")
+            msg = f"Provided ImgGen sdk_instance is not of type fal_client.AsyncClient: it's a '{type(sdk_instance)}'"
+            raise SdkTypeError(msg)
 
         self.fal_async_client = sdk_instance
 
@@ -64,7 +65,7 @@ class FalImgGenWorker(ImgGenWorkerAbstract):
         self,
         img_gen_job: ImgGenJob,
         nb_images: int,
-    ) -> List[GeneratedImage]:
+    ) -> list[GeneratedImage]:
         application = self.inference_model.model_id
         arguments = FalFactory.make_fal_arguments(
             fal_application=application,

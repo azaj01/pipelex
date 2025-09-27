@@ -1,13 +1,12 @@
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import field_validator, model_validator
-from typing_extensions import Self
 
 from pipelex.cogt.llm.llm_setting import LLMChoice
 from pipelex.core.pipes.pipe_blueprint import PipeBlueprint
 from pipelex.exceptions import PipeDefinitionError
 from pipelex.tools.typing.validation_utils import has_more_than_one_among_attributes_from_lists
-from pipelex.types import StrEnum
+from pipelex.types import Self, StrEnum
 
 
 class StructuringMethod(StrEnum):
@@ -18,30 +17,32 @@ class StructuringMethod(StrEnum):
 class PipeLLMBlueprint(PipeBlueprint):
     type: Literal["PipeLLM"] = "PipeLLM"
     category: Literal["PipeOperator"] = "PipeOperator"
-    system_prompt_template: Optional[str] = None
-    system_prompt_template_name: Optional[str] = None
-    system_prompt_name: Optional[str] = None
-    system_prompt: Optional[str] = None
+    system_prompt_template: str | None = None
+    system_prompt_template_name: str | None = None
+    system_prompt_name: str | None = None
+    system_prompt: str | None = None
 
-    prompt_template: Optional[str] = None
-    template_name: Optional[str] = None
-    prompt_name: Optional[str] = None
-    prompt: Optional[str] = None
+    prompt_template: str | None = None
+    template_name: str | None = None
+    prompt_name: str | None = None
+    prompt: str | None = None
 
-    llm: Optional[LLMChoice] = None
-    llm_to_structure: Optional[LLMChoice] = None
+    llm: LLMChoice | None = None
+    llm_to_structure: LLMChoice | None = None
 
-    structuring_method: Optional[StructuringMethod] = None
-    prompt_template_to_structure: Optional[str] = None
-    system_prompt_to_structure: Optional[str] = None
+    structuring_method: StructuringMethod | None = None
+    prompt_template_to_structure: str | None = None
+    system_prompt_to_structure: str | None = None
 
-    nb_output: Optional[int] = None
-    multiple_output: Optional[bool] = None
+    nb_output: int | None = None
+    multiple_output: bool | None = None
 
     @field_validator("nb_output", mode="after")
-    def validate_nb_output(cls, value: Optional[int] = None) -> Optional[int]:
+    @staticmethod
+    def validate_nb_output(value: int | None = None) -> int | None:
         if value and value < 1:
-            raise PipeDefinitionError("PipeLLMBlueprint nb_output must be greater than 0")
+            msg = "PipeLLMBlueprint nb_output must be greater than 0"
+            raise PipeDefinitionError(msg)
         return value
 
     @model_validator(mode="after")
@@ -54,5 +55,6 @@ class PipeLLMBlueprint(PipeBlueprint):
                 ["prompt", "prompt_name", "prompt_template", "template_name"],
             ],
         ):
-            raise PipeDefinitionError(f"PipeLLMBlueprint should have no more than one of {excess_attributes_list} among them")
+            msg = f"PipeLLMBlueprint should have no more than one of {excess_attributes_list} among them"
+            raise PipeDefinitionError(msg)
         return self

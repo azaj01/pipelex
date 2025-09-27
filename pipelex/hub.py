@@ -1,4 +1,4 @@
-from typing import ClassVar, Optional, Type
+from typing import ClassVar, Optional
 
 from kajson.class_registry_abstract import ClassRegistryAbstract
 
@@ -35,8 +35,7 @@ from pipelex.tools.templating.template_provider_abstract import TemplateProvider
 
 
 class PipelexHub:
-    """
-    PipelexHub serves as a central dependency manager to break cyclic imports between components.
+    """PipelexHub serves as a central dependency manager to break cyclic imports between components.
     It provides access to core providers and factories through a singleton instance,
     allowing components to retrieve dependencies based on protocols without direct imports that could create cycles.
     """
@@ -45,30 +44,30 @@ class PipelexHub:
 
     def __init__(self):
         # tools
-        self._config: Optional[ConfigRoot] = None
-        self._secrets_provider: Optional[SecretsProviderAbstract] = None
-        self._template_provider: Optional[TemplateProviderAbstract] = None
-        self._class_registry: Optional[ClassRegistryAbstract] = None
-        self._storage_provider: Optional[StorageProviderAbstract] = None
+        self._config: ConfigRoot | None = None
+        self._secrets_provider: SecretsProviderAbstract | None = None
+        self._template_provider: TemplateProviderAbstract | None = None
+        self._class_registry: ClassRegistryAbstract | None = None
+        self._storage_provider: StorageProviderAbstract | None = None
         # cogt
-        self._models_manager: Optional[ModelManagerAbstract] = None
-        self._plugin_manager: Optional[PluginManager] = None
+        self._models_manager: ModelManagerAbstract | None = None
+        self._plugin_manager: PluginManager | None = None
         self._inference_manager: InferenceManagerProtocol
         self._report_delegate: ReportingProtocol
-        self._content_generator: Optional[ContentGeneratorProtocol] = None
+        self._content_generator: ContentGeneratorProtocol | None = None
 
         # pipelex
-        self._domain_provider: Optional[DomainProviderAbstract] = None
-        self._concept_provider: Optional[ConceptProviderAbstract] = None
-        self._pipe_provider: Optional[PipeProviderAbstract] = None
-        self._pipe_router: Optional[PipeRouterProtocol] = None
-        self._library_manager: Optional[LibraryManagerAbstract] = None
+        self._domain_provider: DomainProviderAbstract | None = None
+        self._concept_provider: ConceptProviderAbstract | None = None
+        self._pipe_provider: PipeProviderAbstract | None = None
+        self._pipe_router: PipeRouterProtocol | None = None
+        self._library_manager: LibraryManagerAbstract | None = None
 
         # pipeline
-        self._pipeline_tracker: Optional[PipelineTrackerProtocol] = None
-        self._pipeline_manager: Optional[PipelineManagerAbstract] = None
-        self._activity_manager: Optional[ActivityManagerProtocol] = None
-        self._observer_provider: Optional[ObserverProtocol] = None
+        self._pipeline_tracker: PipelineTrackerProtocol | None = None
+        self._pipeline_manager: PipelineManagerAbstract | None = None
+        self._activity_manager: ActivityManagerProtocol | None = None
+        self._observer_provider: ObserverProtocol | None = None
 
     ############################################################
     # Class methods for singleton management
@@ -77,7 +76,8 @@ class PipelexHub:
     @classmethod
     def get_instance(cls) -> "PipelexHub":
         if cls._instance is None:
-            raise RuntimeError("PipelexHub is not initialized")
+            msg = "PipelexHub is not initialized"
+            raise RuntimeError(msg)
         return cls._instance
 
     @classmethod
@@ -90,9 +90,8 @@ class PipelexHub:
 
     # tools
 
-    def setup_config(self, config_cls: Type[ConfigRoot], specific_config_path: Optional[str] = None):
-        """
-        Set the global configuration instance.
+    def setup_config(self, config_cls: type[ConfigRoot], specific_config_path: str | None = None):
+        """Set the global configuration instance.
 
         # Args:
         #     config (Config): The configuration instance to set.
@@ -108,9 +107,7 @@ class PipelexHub:
         self._config = config
 
     def reset_config(self) -> None:
-        """
-        Reset the global configuration instance and the config manager.
-        """
+        """Reset the global configuration instance and the config manager."""
         self._config = None
         log.reset()
 
@@ -179,8 +176,7 @@ class PipelexHub:
     # tools
 
     def get_required_config(self) -> ConfigRoot:
-        """
-        Get the current configuration instance as an instance of a particular subclass of ConfigRoot. This should be used only from pipelex.tools.
+        """Get the current configuration instance as an instance of a particular subclass of ConfigRoot. This should be used only from pipelex.tools.
             when getting the config from other projects, use their own project.get_config() method to get the Config
             with the proper subclass which is required for proper type checking.
 
@@ -189,41 +185,49 @@ class PipelexHub:
 
         Raises:
             RuntimeError: If the configuration has not been set.
+
         """
         if self._config is None:
-            raise RuntimeError("Config instance is not set. You must initialize Pipelex first.")
+            msg = "Config instance is not set. You must initialize Pipelex first."
+            raise RuntimeError(msg)
         return self._config
 
     def get_required_secrets_provider(self) -> SecretsProviderAbstract:
         if self._secrets_provider is None:
-            raise RuntimeError("Secrets provider is not set. You must initialize Pipelex first.")
+            msg = "Secrets provider is not set. You must initialize Pipelex first."
+            raise RuntimeError(msg)
         return self._secrets_provider
 
     def get_required_template_provider(self) -> TemplateProviderAbstract:
         if self._template_provider is None:
-            raise RuntimeError("Template provider is not set. You must initialize Pipelex first.")
+            msg = "Template provider is not set. You must initialize Pipelex first."
+            raise RuntimeError(msg)
         return self._template_provider
 
     def get_required_class_registry(self) -> ClassRegistryAbstract:
         if self._class_registry is None:
-            raise RuntimeError("ClassRegistry is not initialized")
+            msg = "ClassRegistry is not initialized"
+            raise RuntimeError(msg)
         return self._class_registry
 
     def get_storage_provider(self) -> StorageProviderAbstract:
         if self._storage_provider is None:
-            raise RuntimeError("StorageProvider is not initialized")
+            msg = "StorageProvider is not initialized"
+            raise RuntimeError(msg)
         return self._storage_provider
 
     # cogt
 
     def get_required_models_manager(self) -> ModelManagerAbstract:
         if self._models_manager is None:
-            raise RuntimeError("ModelsManager is not initialized")
+            msg = "ModelsManager is not initialized"
+            raise RuntimeError(msg)
         return self._models_manager
 
     def get_plugin_manager(self) -> PluginManager:
         if self._plugin_manager is None:
-            raise RuntimeError("PluginManager2 is not initialized")
+            msg = "PluginManager2 is not initialized"
+            raise RuntimeError(msg)
         return self._plugin_manager
 
     def get_inference_manager(self) -> InferenceManagerProtocol:
@@ -234,63 +238,73 @@ class PipelexHub:
 
     def get_required_content_generator(self) -> ContentGeneratorProtocol:
         if self._content_generator is None:
-            raise RuntimeError("ContentGenerator is not initialized")
+            msg = "ContentGenerator is not initialized"
+            raise RuntimeError(msg)
         return self._content_generator
 
     # pipelex
 
     def get_required_domain_provider(self) -> DomainProviderAbstract:
         if self._domain_provider is None:
-            raise RuntimeError("DomainProvider is not initialized")
+            msg = "DomainProvider is not initialized"
+            raise RuntimeError(msg)
         return self._domain_provider
 
-    def get_optional_domain_provider(self) -> Optional[DomainProviderAbstract]:
+    def get_optional_domain_provider(self) -> DomainProviderAbstract | None:
         return self._domain_provider
 
     def get_required_concept_provider(self) -> ConceptProviderAbstract:
         if self._concept_provider is None:
-            raise RuntimeError("ConceptProvider is not initialized")
+            msg = "ConceptProvider is not initialized"
+            raise RuntimeError(msg)
         return self._concept_provider
 
-    def get_optional_concept_provider(self) -> Optional[ConceptProviderAbstract]:
+    def get_optional_concept_provider(self) -> ConceptProviderAbstract | None:
         return self._concept_provider
 
     def get_required_pipe_provider(self) -> PipeProviderAbstract:
         if self._pipe_provider is None:
-            raise RuntimeError("PipeProvider is not initialized")
+            msg = "PipeProvider is not initialized"
+            raise RuntimeError(msg)
         return self._pipe_provider
 
     def get_required_pipe_router(self) -> PipeRouterProtocol:
         if self._pipe_router is None:
-            raise RuntimeError("PipeRouter is not initialized")
+            msg = "PipeRouter is not initialized"
+            raise RuntimeError(msg)
         return self._pipe_router
 
     def get_pipeline_tracker(self) -> PipelineTrackerProtocol:
         if self._pipeline_tracker is None:
-            raise RuntimeError("PipelineTracker is not initialized")
+            msg = "PipelineTracker is not initialized"
+            raise RuntimeError(msg)
         return self._pipeline_tracker
 
     def get_required_pipeline_manager(self) -> PipelineManagerAbstract:
         if self._pipeline_manager is None:
-            raise RuntimeError("PipelineManager is not initialized")
+            msg = "PipelineManager is not initialized"
+            raise RuntimeError(msg)
         return self._pipeline_manager
 
     def get_activity_manager(self) -> ActivityManagerProtocol:
         if self._activity_manager is None:
-            raise RuntimeError("Activity manager is not set. You must initialize Pipelex first.")
+            msg = "Activity manager is not set. You must initialize Pipelex first."
+            raise RuntimeError(msg)
         return self._activity_manager
 
     def get_required_library_manager(self) -> LibraryManagerAbstract:
         if self._library_manager is None:
-            raise RuntimeError("Library manager is not set. You must initialize Pipelex first.")
+            msg = "Library manager is not set. You must initialize Pipelex first."
+            raise RuntimeError(msg)
         return self._library_manager
 
-    def get_optional_library_manager(self) -> Optional[LibraryManagerAbstract]:
+    def get_optional_library_manager(self) -> LibraryManagerAbstract | None:
         return self._library_manager
 
     def get_observer_provider(self) -> ObserverProtocol:
         if self._observer_provider is None:
-            raise RuntimeError("Observer is not set. You must initialize Pipelex first.")
+            msg = "Observer is not set. You must initialize Pipelex first."
+            raise RuntimeError(msg)
         return self._observer_provider
 
 
@@ -390,11 +404,10 @@ def get_required_domain(domain: str) -> Domain:
     return get_pipelex_hub().get_required_domain_provider().get_required_domain(domain=domain)
 
 
-def get_optional_domain(domain: str) -> Optional[Domain]:
+def get_optional_domain(domain: str) -> Domain | None:
     if domain_provider := get_pipelex_hub().get_optional_domain_provider():
         return domain_provider.get_domain(domain=domain)
-    else:
-        return None
+    return None
 
 
 def get_pipe_provider() -> PipeProviderAbstract:
@@ -405,7 +418,7 @@ def get_required_pipe(pipe_code: str) -> PipeAbstract:
     return get_pipelex_hub().get_required_pipe_provider().get_required_pipe(pipe_code=pipe_code)
 
 
-def get_optional_pipe(pipe_code: str) -> Optional[PipeAbstract]:
+def get_optional_pipe(pipe_code: str) -> PipeAbstract | None:
     return get_pipelex_hub().get_required_pipe_provider().get_optional_pipe(pipe_code=pipe_code)
 
 
@@ -413,7 +426,7 @@ def get_concept_provider() -> ConceptProviderAbstract:
     return get_pipelex_hub().get_required_concept_provider()
 
 
-def get_optional_concept_provider() -> Optional[ConceptProviderAbstract]:
+def get_optional_concept_provider() -> ConceptProviderAbstract | None:
     return get_pipelex_hub().get_optional_concept_provider()
 
 

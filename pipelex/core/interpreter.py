@@ -1,12 +1,12 @@
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional, Union, cast
+from typing import Any, cast
 
 import toml
 from pydantic import BaseModel, model_validator
-from typing_extensions import Self
 
 from pipelex.core.bundles.pipelex_bundle_blueprint import PipelexBundleBlueprint
-from pipelex.core.concepts.concept_blueprint import ConceptBlueprint
+from pipelex.core.concepts.concept_blueprint import ConceptBlueprint, ConceptStructureBlueprint
 from pipelex.core.exceptions import (
     PipelexConfigurationError,
     PipelexUnknownPipeError,
@@ -32,22 +32,21 @@ from pipelex.tools.misc.toml_utils import (
     validate_toml_content,
     validate_toml_file,
 )
+from pipelex.types import Self
 
 
 class PLXDecodeError(toml.TomlDecodeError):
     """Raised when PLX decoding fails."""
 
-    pass
-
 
 class PipelexInterpreter(BaseModel):
     """plx -> PipelexBundleBlueprint"""
 
-    file_path: Optional[Path] = None
-    file_content: Optional[str] = None
+    file_path: Path | None = None
+    file_content: str | None = None
 
     @staticmethod
-    def escape_plx_string(value: Optional[str]) -> str:
+    def escape_plx_string(value: str | None) -> str:
         """Escape a string for plx serialization."""
         if value is None:
             return ""
@@ -58,14 +57,14 @@ class PipelexInterpreter(BaseModel):
         # Replace actual newlines with escaped newlines
         value = value.replace("\n", "\\n")
         value = value.replace("\r", "\\r")
-        value = value.replace("\t", "\\t")
-        return value
+        return value.replace("\t", "\\t")
 
     @model_validator(mode="after")
     def check_file_path_or_file_content(self) -> Self:
         """Need to check if there is at least one of file_path or file_content"""
         if self.file_path is None and self.file_content is None:
-            raise PipelexConfigurationError("Either file_path or file_content must be provided")
+            msg = "Either file_path or file_content must be provided"
+            raise PipelexConfigurationError(msg)
         return self
 
     @model_validator(mode="after")
@@ -79,7 +78,7 @@ class PipelexInterpreter(BaseModel):
     def _read_and_reformat(self) -> str:
         """Load PLX content from file_path or use file_content directly."""
         if self.file_path:
-            with open(self.file_path, "r", encoding="utf-8") as file:
+            with open(self.file_path, encoding="utf-8") as file:
                 file_content = file.read()
 
             # Clean trailing whitespace and write back if needed
@@ -89,8 +88,9 @@ class PipelexInterpreter(BaseModel):
                     file.write(cleaned_content)
                 return cleaned_content
             return file_content
-        elif self.file_content is None:
-            raise PipelexConfigurationError("file_content must be provided if file_path is not provided")
+        if self.file_content is None:
+            msg = "file_content must be provided if file_path is not provided"
+            raise PipelexConfigurationError(msg)
         return self.file_content
 
     @staticmethod
@@ -106,6 +106,7 @@ class PipelexInterpreter(BaseModel):
         Criteria:
             - Has .plx extension
             - Starts with "domain =" (ignoring leading whitespace)
+
         """
         # Check if it has .toml extension
         if file_path.suffix != ".plx":
@@ -117,7 +118,7 @@ class PipelexInterpreter(BaseModel):
 
         try:
             # Read the first few lines to check for "domain ="
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 # Read first 100 characters (should be enough to find domain)
                 content = f.read(100)
                 # Remove leading whitespace and check if it starts with "domain ="
@@ -127,13 +128,14 @@ class PipelexInterpreter(BaseModel):
             # If we can't read the file, it's not a valid Pipelex file
             return False
 
-    def _parse_plx_content(self, content: str) -> Dict[str, Any]:
+    def _parse_plx_content(self, content: str) -> dict[str, Any]:
         """Parse PLX content and return the dictionary."""
         try:
             return toml.loads(content)
         except toml.TomlDecodeError as exc:
             file_path_str = str(self.file_path) if self.file_path else "content"
-            raise PLXDecodeError(f"PLX parsing error in '{file_path_str}': {exc}", exc.doc, exc.pos) from exc
+            msg = f"PLX parsing error in '{file_path_str}': {exc}"
+            raise PLXDecodeError(msg, exc.doc, exc.pos) from exc
 
     def make_pipelex_bundle_blueprint(self) -> PipelexBundleBlueprint:
         """Make a PipelexBundleBlueprint from the file_path or file_content"""
@@ -162,13 +164,13 @@ class PipelexInterpreter(BaseModel):
 
         # Concepts section
         if blueprint.concept:
-            concept_plx = PipelexInterpreter.concepts_to_plx_string(blueprint.concept, blueprint.domain)
+            concept_plx = PipelexInterpreter.concepts_to_plx_string(blueprint.concept)
             if concept_plx:  # Only add if not empty
                 plx_parts.append(concept_plx)
 
         # Pipes section
         if blueprint.pipe:
-            pipes_plx = PipelexInterpreter.pipes_to_plx_string(blueprint.pipe, blueprint.domain)
+            pipes_plx = PipelexInterpreter.pipes_to_plx_string(blueprint.pipe)
             if pipes_plx:  # Only add if not empty
                 plx_parts.append(pipes_plx)
 
@@ -178,7 +180,7 @@ class PipelexInterpreter(BaseModel):
         return result
 
     @staticmethod
-    def concepts_to_plx_string(concepts: Dict[str, ConceptBlueprint | str], domain: str) -> str:
+    def concepts_to_plx_string(concepts: dict[str, ConceptBlueprint | str]) -> str:
         """Convert concepts dict to PLX string."""
         if not concepts:
             return ""
@@ -190,15 +192,14 @@ class PipelexInterpreter(BaseModel):
         for concept_name, concept_blueprint in concepts.items():
             if isinstance(concept_blueprint, str):
                 simple_concepts.append(f'{concept_name} = "{PipelexInterpreter.escape_plx_string(concept_blueprint)}"')
+            # Handle ConceptBlueprint objects
+            elif concept_blueprint.structure is None and concept_blueprint.refines is None:
+                # Simple concept with just definition
+                simple_concepts.append(f'{concept_name} = "{PipelexInterpreter.escape_plx_string(concept_blueprint.definition)}"')
             else:
-                # Handle ConceptBlueprint objects
-                if concept_blueprint.structure is None and concept_blueprint.refines is None:
-                    # Simple concept with just definition
-                    simple_concepts.append(f'{concept_name} = "{PipelexInterpreter.escape_plx_string(concept_blueprint.definition)}"')
-                else:
-                    # Complex concept needs its own section
-                    complex_concept_plx = PipelexInterpreter.complex_concept_to_plx_string(concept_name, concept_blueprint)
-                    complex_concepts.append(complex_concept_plx)
+                # Complex concept needs its own section
+                complex_concept_plx = PipelexInterpreter.complex_concept_to_plx_string(concept_name, concept_blueprint)
+                complex_concepts.append(complex_concept_plx)
 
         # Add simple concepts section if we have any
         if simple_concepts:
@@ -247,59 +248,58 @@ class PipelexInterpreter(BaseModel):
         """Convert a structure field to PLX string."""
         if isinstance(field_def, str):
             return f'{field_name} = "{PipelexInterpreter.escape_plx_string(field_def)}"'
-        else:
-            # Complex field with type, definition, required, etc.
-            field_parts: list[str] = []
+        # Complex field with type, definition, required, etc.
+        field_parts: list[str] = []
 
-            if hasattr(field_def, "type") and field_def.type:
-                type_value = field_def.type.value if hasattr(field_def.type, "value") else field_def.type
-                field_parts.append(f'type = "{PipelexInterpreter.escape_plx_string(str(type_value))}"')
+        if hasattr(field_def, "type") and field_def.type:
+            type_value = field_def.type.value if hasattr(field_def.type, "value") else field_def.type
+            field_parts.append(f'type = "{PipelexInterpreter.escape_plx_string(str(type_value))}"')
 
-            if hasattr(field_def, "definition") and field_def.definition:
-                field_parts.append(f'definition = "{PipelexInterpreter.escape_plx_string(field_def.definition)}"')
+        if hasattr(field_def, "definition") and field_def.definition:
+            field_parts.append(f'definition = "{PipelexInterpreter.escape_plx_string(field_def.definition)}"')
 
-            if hasattr(field_def, "required") and field_def.required is not None:
-                field_parts.append(f"required = {str(field_def.required).lower()}")
+        if hasattr(field_def, "required") and field_def.required is not None:
+            field_parts.append(f"required = {str(field_def.required).lower()}")
 
-            return f"{field_name} = {{ {', '.join(field_parts)} }}"
+        return f"{field_name} = {{ {', '.join(field_parts)} }}"
 
     @staticmethod
-    def pipes_to_plx_string(pipes: Dict[str, Any], domain: str) -> str:
+    def pipes_to_plx_string(pipes: dict[str, Any]) -> str:
         """Convert pipes dict to PLX string."""
         plx_parts: list[str] = []
         for pipe_name, blueprint in pipes.items():
-            pipe_plx = PipelexInterpreter.pipe_to_plx_string(pipe_name, blueprint, domain)
+            pipe_plx = PipelexInterpreter.pipe_to_plx_string(pipe_name, blueprint)
             plx_parts.append(pipe_plx)
         return "\n\n".join(plx_parts)
 
     @staticmethod
-    def pipe_to_plx_string(pipe_name: str, blueprint: Any, domain: str) -> str:
+    def pipe_to_plx_string(pipe_name: str, blueprint: Any) -> str:
         """Convert a single pipe blueprint to PLX string."""
         if isinstance(blueprint, PipeLLMBlueprint):
-            return PipelexInterpreter.llm_pipe_to_plx_string(pipe_name, blueprint, domain)
+            return PipelexInterpreter.llm_pipe_to_plx_string(pipe_name, blueprint)
         elif isinstance(blueprint, PipeSequenceBlueprint):
-            return PipelexInterpreter.sequence_pipe_to_plx_string(pipe_name, blueprint, domain)
+            return PipelexInterpreter.sequence_pipe_to_plx_string(pipe_name, blueprint)
         elif isinstance(blueprint, PipeOcrBlueprint):
-            return PipelexInterpreter.ocr_pipe_to_plx_string(pipe_name, blueprint, domain)
+            return PipelexInterpreter.ocr_pipe_to_plx_string(pipe_name, blueprint)
         elif isinstance(blueprint, PipeFuncBlueprint):
-            return PipelexInterpreter.func_pipe_to_plx_string(pipe_name, blueprint, domain)
+            return PipelexInterpreter.func_pipe_to_plx_string(pipe_name, blueprint)
         elif isinstance(blueprint, PipeImgGenBlueprint):
-            return PipelexInterpreter.img_gen_pipe_to_plx_string(pipe_name, blueprint, domain)
+            return PipelexInterpreter.img_gen_pipe_to_plx_string(pipe_name, blueprint)
         elif isinstance(blueprint, PipeJinja2Blueprint):
-            return PipelexInterpreter.jinja2_pipe_to_plx_string(pipe_name, blueprint, domain)
+            return PipelexInterpreter.jinja2_pipe_to_plx_string(pipe_name, blueprint)
         elif isinstance(blueprint, PipeConditionBlueprint):
-            return PipelexInterpreter.condition_pipe_to_plx_string(pipe_name, blueprint, domain)
+            return PipelexInterpreter.condition_pipe_to_plx_string(pipe_name, blueprint)
         elif isinstance(blueprint, PipeParallelBlueprint):
-            return PipelexInterpreter.parallel_pipe_to_plx_string(pipe_name, blueprint, domain)
+            return PipelexInterpreter.parallel_pipe_to_plx_string(pipe_name, blueprint)
         elif isinstance(blueprint, PipeBatchBlueprint):
-            return PipelexInterpreter.batch_pipe_to_plx_string(pipe_name, blueprint, domain)
+            return PipelexInterpreter.batch_pipe_to_plx_string(pipe_name, blueprint)
         else:
             # Fallback to old dict approach for unknown pipe types
-            pipe_dict = PipelexInterpreter.serialize_pipe(blueprint, domain)
+            pipe_dict = PipelexInterpreter.serialize_pipe(blueprint)
             return f"[pipe.{pipe_name}]\n" + "\n".join([f'{k} = "{v}"' if isinstance(v, str) else f"{k} = {v}" for k, v in pipe_dict.items()])
 
     @staticmethod
-    def llm_pipe_to_plx_string(pipe_name: str, pipe: PipeLLMBlueprint, domain: str) -> str:
+    def llm_pipe_to_plx_string(pipe_name: str, pipe: PipeLLMBlueprint) -> str:
         """Convert a PipeLLM blueprint directly to PLX section string."""
         lines: list[str] = [
             f"[pipe.{pipe_name}]",
@@ -332,7 +332,7 @@ class PipelexInterpreter(BaseModel):
         return "\n".join(lines)
 
     @staticmethod
-    def ocr_pipe_to_plx_string(pipe_name: str, pipe: PipeOcrBlueprint, domain: str) -> str:
+    def ocr_pipe_to_plx_string(pipe_name: str, pipe: PipeOcrBlueprint) -> str:
         """Convert a PipeOcr blueprint directly to PLX section string."""
         lines: list[str] = [
             f"[pipe.{pipe_name}]",
@@ -349,7 +349,7 @@ class PipelexInterpreter(BaseModel):
         return "\n".join(lines)
 
     @staticmethod
-    def func_pipe_to_plx_string(pipe_name: str, pipe: PipeFuncBlueprint, domain: str) -> str:
+    def func_pipe_to_plx_string(pipe_name: str, pipe: PipeFuncBlueprint) -> str:
         """Convert a PipeFunc blueprint directly to PLX section string."""
         lines: list[str] = [
             f"[pipe.{pipe_name}]",
@@ -366,7 +366,7 @@ class PipelexInterpreter(BaseModel):
         return "\n".join(lines)
 
     @staticmethod
-    def img_gen_pipe_to_plx_string(pipe_name: str, pipe: PipeImgGenBlueprint, domain: str) -> str:
+    def img_gen_pipe_to_plx_string(pipe_name: str, pipe: PipeImgGenBlueprint) -> str:
         """Convert a PipeImgGen blueprint directly to PLX section string."""
         lines: list[str] = [
             f"[pipe.{pipe_name}]",
@@ -394,7 +394,7 @@ class PipelexInterpreter(BaseModel):
         return "\n".join(lines)
 
     @staticmethod
-    def jinja2_pipe_to_plx_string(pipe_name: str, pipe: PipeJinja2Blueprint, domain: str) -> str:
+    def jinja2_pipe_to_plx_string(pipe_name: str, pipe: PipeJinja2Blueprint) -> str:
         """Convert a PipeJinja2 blueprint directly to PLX section string."""
         lines: list[str] = [
             f"[pipe.{pipe_name}]",
@@ -416,7 +416,7 @@ class PipelexInterpreter(BaseModel):
         return "\n".join(lines)
 
     @staticmethod
-    def condition_pipe_to_plx_string(pipe_name: str, pipe: PipeConditionBlueprint, domain: str) -> str:
+    def condition_pipe_to_plx_string(pipe_name: str, pipe: PipeConditionBlueprint) -> str:
         """Convert a PipeCondition blueprint directly to PLX section string."""
         lines: list[str] = [
             f"[pipe.{pipe_name}]",
@@ -450,7 +450,7 @@ class PipelexInterpreter(BaseModel):
         return "\n".join(lines)
 
     @staticmethod
-    def parallel_pipe_to_plx_string(pipe_name: str, pipe: PipeParallelBlueprint, domain: str) -> str:
+    def parallel_pipe_to_plx_string(pipe_name: str, pipe: PipeParallelBlueprint) -> str:
         """Convert a PipeParallel blueprint directly to PLX section string."""
         lines: list[str] = [
             f"[pipe.{pipe_name}]",
@@ -480,7 +480,7 @@ class PipelexInterpreter(BaseModel):
         return "\n".join(lines)
 
     @staticmethod
-    def batch_pipe_to_plx_string(pipe_name: str, pipe: PipeBatchBlueprint, domain: str) -> str:
+    def batch_pipe_to_plx_string(pipe_name: str, pipe: PipeBatchBlueprint) -> str:
         """Convert a PipeBatch blueprint directly to PLX section string."""
         lines: list[str] = [
             f"[pipe.{pipe_name}]",
@@ -505,12 +505,10 @@ class PipelexInterpreter(BaseModel):
     @staticmethod
     def serialize_concept_structure_field(field_value: Any) -> Any:
         """Serialize a single concept structure field."""
-        from pipelex.core.concepts.concept_blueprint import ConceptStructureBlueprint
-
         if isinstance(field_value, str):
             return field_value
-        elif isinstance(field_value, ConceptStructureBlueprint):
-            field_data: Dict[str, Any] = {
+        if isinstance(field_value, ConceptStructureBlueprint):
+            field_data: dict[str, Any] = {
                 "definition": field_value.definition,
                 "required": field_value.required,
             }
@@ -527,26 +525,24 @@ class PipelexInterpreter(BaseModel):
             if field_value.default_value is not None:
                 field_data["default_value"] = field_value.default_value
             return field_data
-        else:
-            return field_value
+        return field_value
 
     @staticmethod
     def serialize_concept_structure(
-        structure: Union[str, Dict[str, Any]],
-    ) -> Union[str, Dict[str, Any]]:
+        structure: str | dict[str, Any],
+    ) -> str | dict[str, Any]:
         """Serialize concept structure field."""
         if isinstance(structure, str):
             return structure
-        else:
-            result: Dict[str, Any] = {}
-            for field_name, field_value in structure.items():
-                result[field_name] = PipelexInterpreter.serialize_concept_structure_field(field_value)
-            return result
+        result: dict[str, Any] = {}
+        for field_name, field_value in structure.items():
+            result[field_name] = PipelexInterpreter.serialize_concept_structure_field(field_value)
+        return result
 
     @staticmethod
     def serialize_single_concept(
-        concept_blueprint: Union[ConceptBlueprint, str],
-    ) -> Union[str, Dict[str, Any]]:
+        concept_blueprint: ConceptBlueprint | str,
+    ) -> str | dict[str, Any]:
         """Serialize a single concept blueprint."""
         if isinstance(concept_blueprint, str):
             return concept_blueprint
@@ -554,70 +550,66 @@ class PipelexInterpreter(BaseModel):
         # Handle ConceptBlueprint object
         if concept_blueprint.structure is not None:
             # Structured concept
-            concept_data = {
+            return {
                 "definition": concept_blueprint.definition,
                 "structure": PipelexInterpreter.serialize_concept_structure(concept_blueprint.structure),
             }
-            return concept_data
-        elif concept_blueprint.refines is not None:
+        if concept_blueprint.refines is not None:
             # Concept with refines
-            concept_data = {
+            return {
                 "definition": concept_blueprint.definition,
                 "refines": concept_blueprint.refines,
             }
-            return concept_data
-        else:
-            # Simple concept with just definition
-            return concept_blueprint.definition
+        # Simple concept with just definition
+        return concept_blueprint.definition
 
     @staticmethod
-    def serialize_concepts(concepts: Optional[Dict[str, ConceptBlueprint | str]], domain: str) -> Dict[str, Any]:
+    def serialize_concepts(concepts: dict[str, ConceptBlueprint | str] | None) -> dict[str, Any]:
         """Serialize concepts section with domain context."""
         if concepts is None:
             return {}
 
-        result: Dict[str, Any] = {}
+        result: dict[str, Any] = {}
         for concept_name, concept_blueprint in concepts.items():
             result[concept_name] = PipelexInterpreter.serialize_single_concept(concept_blueprint)
         return result
 
     @staticmethod
-    def serialize_pipes(pipes: Dict[str, Any], domain: str) -> Dict[str, Any]:
+    def serialize_pipes(pipes: dict[str, Any]) -> dict[str, Any]:
         """Serialize pipes section with domain context."""
-        result: Dict[str, Any] = {}
+        result: dict[str, Any] = {}
         for pipe_name, blueprint in pipes.items():
-            result[pipe_name] = PipelexInterpreter.serialize_pipe(blueprint, domain)
+            result[pipe_name] = PipelexInterpreter.serialize_pipe(blueprint)
         return result
 
     @staticmethod
-    def serialize_pipe(blueprint: Any, domain: str) -> Dict[str, Any]:
-        """Serialize a single pipe blueprint with domain context."""
-
+    def serialize_pipe(blueprint: Any) -> dict[str, Any]:
         if isinstance(blueprint, PipeLLMBlueprint):
-            return PipelexInterpreter.serialize_llm_pipe(blueprint, domain)
+            return PipelexInterpreter.serialize_llm_pipe(blueprint)
         elif isinstance(blueprint, PipeOcrBlueprint):
-            return PipelexInterpreter.serialize_ocr_pipe(blueprint, domain)
+            return PipelexInterpreter.serialize_ocr_pipe(blueprint)
         elif isinstance(blueprint, PipeFuncBlueprint):
-            return PipelexInterpreter._serialize_func_pipe(blueprint, domain)
+            return PipelexInterpreter._serialize_func_pipe(blueprint)
         elif isinstance(blueprint, PipeImgGenBlueprint):
-            return PipelexInterpreter._serialize_img_gen_pipe(blueprint, domain)
+            return PipelexInterpreter._serialize_img_gen_pipe(blueprint)
         elif isinstance(blueprint, PipeJinja2Blueprint):
-            return PipelexInterpreter.serialize_jinja2_pipe(blueprint, domain)
+            return PipelexInterpreter.serialize_jinja2_pipe(blueprint)
         elif isinstance(blueprint, PipeSequenceBlueprint):
-            return PipelexInterpreter.serialize_sequence_pipe(blueprint, domain)
+            return PipelexInterpreter.serialize_sequence_pipe(blueprint)
         elif isinstance(blueprint, PipeConditionBlueprint):
-            return PipelexInterpreter._serialize_condition_pipe(blueprint, domain)
+            return PipelexInterpreter._serialize_condition_pipe(blueprint)
         elif isinstance(blueprint, PipeParallelBlueprint):
-            return PipelexInterpreter._serialize_parallel_pipe(blueprint, domain)
+            return PipelexInterpreter._serialize_parallel_pipe(blueprint)
         elif isinstance(blueprint, PipeBatchBlueprint):
-            return PipelexInterpreter._serialize_batch_pipe(blueprint, domain)
+            return PipelexInterpreter._serialize_batch_pipe(blueprint)
         else:
-            raise PipelexUnknownPipeError(f"Unknown pipe blueprint type: {type(blueprint)}")
+            msg = f"Unknown pipe blueprint type: {type(blueprint)}"
+            raise PipelexUnknownPipeError(msg)
 
     @staticmethod
-    def serialize_llm_pipe(pipe: PipeLLMBlueprint, domain: str) -> Dict[str, Any]:
+    def serialize_llm_pipe(pipe: PipeLLMBlueprint) -> dict[str, Any]:
         """Serialize PipeLLM blueprint."""
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "type": pipe.type,
             "definition": pipe.definition,
         }
@@ -668,15 +660,15 @@ class PipelexInterpreter(BaseModel):
         return result
 
     @staticmethod
-    def add_common_pipe_fields(result: Dict[str, Any], pipe: Any) -> None:
+    def add_common_pipe_fields(result: dict[str, Any], pipe: Any) -> None:
         """Add common pipe fields (inputs) to result dict if they exist."""
         if hasattr(pipe, "inputs") and pipe.inputs:
             result["inputs"] = PipelexInterpreter.serialize_inputs(pipe.inputs)
 
     @staticmethod
-    def _serialize_ocr_pipe(pipe: PipeOcrBlueprint, domain: str) -> Dict[str, Any]:
+    def _serialize_ocr_pipe(pipe: PipeOcrBlueprint) -> dict[str, Any]:
         """Serialize PipeOcr blueprint."""
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "type": pipe.type,
             "definition": pipe.definition,
             "output": pipe.output,
@@ -686,9 +678,9 @@ class PipelexInterpreter(BaseModel):
         return result
 
     @staticmethod
-    def _serialize_func_pipe(pipe: PipeFuncBlueprint, domain: str) -> Dict[str, Any]:
+    def _serialize_func_pipe(pipe: PipeFuncBlueprint) -> dict[str, Any]:
         """Serialize PipeFunc blueprint."""
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "type": pipe.type,
             "definition": pipe.definition,
             "output": pipe.output,
@@ -699,9 +691,9 @@ class PipelexInterpreter(BaseModel):
         return result
 
     @staticmethod
-    def _serialize_img_gen_pipe(pipe: PipeImgGenBlueprint, domain: str) -> Dict[str, Any]:
+    def _serialize_img_gen_pipe(pipe: PipeImgGenBlueprint) -> dict[str, Any]:
         """Serialize PipeImgGen blueprint."""
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "type": pipe.type,
             "definition": pipe.definition,
             "output": pipe.output,
@@ -724,9 +716,9 @@ class PipelexInterpreter(BaseModel):
         return result
 
     @staticmethod
-    def serialize_ocr_pipe(pipe: PipeOcrBlueprint, domain: str) -> Dict[str, Any]:
+    def serialize_ocr_pipe(pipe: PipeOcrBlueprint) -> dict[str, Any]:
         """Serialize a PipeOcr blueprint."""
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "type": pipe.type,
             "definition": pipe.definition,
         }
@@ -753,9 +745,9 @@ class PipelexInterpreter(BaseModel):
         return result
 
     @staticmethod
-    def serialize_sequence_pipe(pipe: PipeSequenceBlueprint, domain: str) -> Dict[str, Any]:
+    def serialize_sequence_pipe(pipe: PipeSequenceBlueprint) -> dict[str, Any]:
         """Serialize a PipeSequence blueprint."""
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "type": pipe.type,
             "definition": pipe.definition,
         }
@@ -773,9 +765,9 @@ class PipelexInterpreter(BaseModel):
         return result
 
     @staticmethod
-    def serialize_jinja2_pipe(pipe: PipeJinja2Blueprint, domain: str) -> Dict[str, Any]:
+    def serialize_jinja2_pipe(pipe: PipeJinja2Blueprint) -> dict[str, Any]:
         """Serialize PipeJinja2 blueprint."""
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "type": pipe.type,
             "definition": pipe.definition,
             "output": pipe.output,
@@ -795,9 +787,9 @@ class PipelexInterpreter(BaseModel):
         return result
 
     @staticmethod
-    def serialize_sub_pipe(sub_pipe: Any) -> Dict[str, Any]:
+    def serialize_sub_pipe(sub_pipe: Any) -> dict[str, Any]:
         """Serialize a sub pipe (step or parallel) blueprint."""
-        step_data: Dict[str, Any] = {
+        step_data: dict[str, Any] = {
             "pipe": sub_pipe.pipe,
             "result": sub_pipe.result,
         }
@@ -833,9 +825,9 @@ class PipelexInterpreter(BaseModel):
         return "{ " + ", ".join(parts) + " }"
 
     @staticmethod
-    def _serialize_sequence_pipe(pipe: PipeSequenceBlueprint, domain: str) -> Dict[str, Any]:
+    def _serialize_sequence_pipe(pipe: PipeSequenceBlueprint) -> dict[str, Any]:
         """Serialize PipeSequence blueprint."""
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "type": pipe.type,
             "definition": pipe.definition,
             "output": pipe.output,
@@ -849,7 +841,7 @@ class PipelexInterpreter(BaseModel):
         return result
 
     @staticmethod
-    def sequence_pipe_to_plx_string(pipe_name: str, pipe: PipeSequenceBlueprint, domain: str) -> str:
+    def sequence_pipe_to_plx_string(pipe_name: str, pipe: PipeSequenceBlueprint) -> str:
         """Convert a PipeSequence blueprint directly to PLX section string."""
         lines: list[str] = [
             f"[pipe.{pipe_name}]",
@@ -875,9 +867,9 @@ class PipelexInterpreter(BaseModel):
         return "\n".join(lines)
 
     @staticmethod
-    def _serialize_condition_pipe(pipe: PipeConditionBlueprint, domain: str) -> Dict[str, Any]:
+    def _serialize_condition_pipe(pipe: PipeConditionBlueprint) -> dict[str, Any]:
         """Serialize PipeCondition blueprint."""
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "type": pipe.type,
             "definition": pipe.definition,
             "output": pipe.output,
@@ -899,9 +891,9 @@ class PipelexInterpreter(BaseModel):
         return result
 
     @staticmethod
-    def _serialize_parallel_pipe(pipe: PipeParallelBlueprint, domain: str) -> Dict[str, Any]:
+    def _serialize_parallel_pipe(pipe: PipeParallelBlueprint) -> dict[str, Any]:
         """Serialize PipeParallel blueprint."""
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "type": pipe.type,
             "definition": pipe.definition,
             "output": pipe.output,
@@ -919,9 +911,9 @@ class PipelexInterpreter(BaseModel):
         return result
 
     @staticmethod
-    def _serialize_batch_pipe(pipe: PipeBatchBlueprint, domain: str) -> Dict[str, Any]:
+    def _serialize_batch_pipe(pipe: PipeBatchBlueprint) -> dict[str, Any]:
         """Serialize PipeBatch blueprint."""
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "type": pipe.type,
             "definition": pipe.definition,
             "output": pipe.output,
@@ -940,19 +932,19 @@ class PipelexInterpreter(BaseModel):
     @staticmethod
     def serialize_input_requirement(
         input_req: InputRequirementBlueprint,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Serialize a single InputRequirementBlueprint to PLX format."""
-        result: Dict[str, Any] = {"concept": input_req.concept}
+        result: dict[str, Any] = {"concept": input_req.concept}
         if input_req.multiplicity is not None:
             result["multiplicity"] = input_req.multiplicity
         return result
 
     @staticmethod
     def serialize_inputs(
-        inputs: Mapping[str, Union[str, InputRequirementBlueprint]],
-    ) -> Dict[str, Any]:
+        inputs: Mapping[str, str | InputRequirementBlueprint],
+    ) -> dict[str, Any]:
         """Convert InputRequirementBlueprint objects to proper PLX format for serialization."""
-        result: Dict[str, Any] = {}
+        result: dict[str, Any] = {}
         for key, value in inputs.items():
             if isinstance(value, InputRequirementBlueprint):
                 result[key] = PipelexInterpreter.serialize_input_requirement(value)
@@ -963,7 +955,7 @@ class PipelexInterpreter(BaseModel):
 
     @staticmethod
     def inputs_to_plx_string(
-        inputs: Mapping[str, Union[str, InputRequirementBlueprint]],
+        inputs: Mapping[str, str | InputRequirementBlueprint],
     ) -> str:
         """Convert inputs dictionary to PLX string format."""
         inputs_dict = PipelexInterpreter.serialize_inputs(inputs)
@@ -973,27 +965,26 @@ class PipelexInterpreter(BaseModel):
             if isinstance(value, dict):
                 # Nested dict (like InputRequirementBlueprint)
                 nested_parts: list[str] = []
-                nested_dict: Dict[str, Any] = cast(Dict[str, Any], value)
+                nested_dict: dict[str, Any] = cast("dict[str, Any]", value)
                 for nested_key, nested_value in nested_dict.items():
                     if isinstance(nested_value, str):
                         nested_parts.append(f'{nested_key} = "{PipelexInterpreter.escape_plx_string(nested_value)}"')
                     else:
                         nested_parts.append(f"{nested_key} = {str(nested_value).lower()}")
                 inputs_parts.append(f"{key} = {{ {', '.join(nested_parts)} }}")
+            # Simple string value
+            elif isinstance(value, str):
+                inputs_parts.append(f'{key} = "{PipelexInterpreter.escape_plx_string(value)}"')
             else:
-                # Simple string value
-                if isinstance(value, str):
-                    inputs_parts.append(f'{key} = "{PipelexInterpreter.escape_plx_string(value)}"')
-                else:
-                    # Fallback for any other type
-                    inputs_parts.append(f'{key} = "{PipelexInterpreter.escape_plx_string(str(value))}"')
+                # Fallback for any other type
+                inputs_parts.append(f'{key} = "{PipelexInterpreter.escape_plx_string(str(value))}"')
 
         return f"{{ {', '.join(inputs_parts)} }}"
 
     @staticmethod
     def add_inputs_to_lines_if_exist(
         lines: list[str],
-        pipe_inputs: Optional[Mapping[str, Union[str, InputRequirementBlueprint]]],
+        pipe_inputs: Mapping[str, str | InputRequirementBlueprint] | None,
     ) -> None:
         """Add inputs line to PLX lines if inputs exist."""
         if pipe_inputs:
@@ -1002,16 +993,15 @@ class PipelexInterpreter(BaseModel):
             for key, value in inputs_dict.items():
                 if isinstance(value, dict):
                     nested_parts: list[str] = []
-                    nested_dict: Dict[str, Any] = cast(Dict[str, Any], value)
+                    nested_dict: dict[str, Any] = cast("dict[str, Any]", value)
                     for nested_key, nested_value in nested_dict.items():
                         if isinstance(nested_value, str):
                             nested_parts.append(f'{nested_key} = "{PipelexInterpreter.escape_plx_string(nested_value)}"')
                         else:
                             nested_parts.append(f"{nested_key} = {str(nested_value).lower()}")
                     inputs_parts.append(f"{key} = {{ {', '.join(nested_parts)} }}")
+                elif isinstance(value, str):
+                    inputs_parts.append(f'{key} = "{PipelexInterpreter.escape_plx_string(value)}"')
                 else:
-                    if isinstance(value, str):
-                        inputs_parts.append(f'{key} = "{PipelexInterpreter.escape_plx_string(value)}"')
-                    else:
-                        inputs_parts.append(f'{key} = "{PipelexInterpreter.escape_plx_string(str(value))}"')
+                    inputs_parts.append(f'{key} = "{PipelexInterpreter.escape_plx_string(str(value))}"')
             lines.append(f"inputs = {{ {', '.join(inputs_parts)} }}")

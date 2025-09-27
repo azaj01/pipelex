@@ -1,12 +1,13 @@
-"""Generate Pydantic BaseModel classes from concept structure blueprints for structured outputs."""
-
-from __future__ import annotations
-
 import ast
-from typing import Any, Dict, List, Type, Union, cast
+from datetime import datetime
+from enum import Enum
+from typing import Any, Literal, Optional, cast
+
+from pydantic import Field
 
 from pipelex import log
 from pipelex.core.concepts.concept_blueprint import ConceptStructureBlueprint, ConceptStructureBlueprintFieldType
+from pipelex.core.stuffs.stuff_content import StructuredContent
 
 
 class StructureGenerator:
@@ -21,16 +22,15 @@ class StructureGenerator:
             "from pipelex.core.stuffs.stuff_content import StructuredContent",
             "from pydantic import Field",
         }
-        self.enum_definitions: Dict[str, Dict[str, Any]] = {}  # Store enum definitions
+        self.enum_definitions: dict[str, dict[str, Any]] = {}  # Store enum definitions
 
     def _format_default_value(self, value: Any) -> str:
         """Format default value for Python code, ensuring strings use double quotes."""
         if isinstance(value, str):
             return f'"{value}"'
-        else:
-            return repr(value)
+        return repr(value)
 
-    def generate_from_structure_blueprint(self, class_name: str, structure_blueprint: Dict[str, ConceptStructureBlueprint]) -> str:
+    def generate_from_structure_blueprint(self, class_name: str, structure_blueprint: dict[str, ConceptStructureBlueprint]) -> str:
         """Generate Python module content from structure blueprint.
 
         Args:
@@ -39,6 +39,7 @@ class StructureGenerator:
 
         Returns:
             Generated Python module content
+
         """
         # Generate the class
         class_code = self._generate_class_from_blueprint(class_name, structure_blueprint)
@@ -50,11 +51,12 @@ class StructureGenerator:
 
         # Validate the generated code
         if not self.validate_generated_code(generated_code, class_name):
-            raise ValueError(f"Generated code for class '{class_name}' failed validation")
+            msg = f"Generated code for class '{class_name}' failed validation"
+            raise ValueError(msg)
 
         return generated_code
 
-    def _generate_class_from_blueprint(self, class_name: str, structure_blueprint: Dict[str, ConceptStructureBlueprint]) -> str:
+    def _generate_class_from_blueprint(self, class_name: str, structure_blueprint: dict[str, ConceptStructureBlueprint]) -> str:
         """Generate a class definition from ConceptStructureBlueprint.
 
         Args:
@@ -63,12 +65,13 @@ class StructureGenerator:
 
         Returns:
             Generated class code
+
         """
         # Generate class header
         class_header = f'class {class_name}(StructuredContent):\n    """Generated {class_name} class"""\n'
 
         # Generate fields
-        field_definitions: List[str] = []
+        field_definitions: list[str] = []
         for field_name, field_blueprint in structure_blueprint.items():
             field_code = self._generate_field_from_blueprint(field_name, field_blueprint)
             field_definitions.append(field_code)
@@ -89,6 +92,7 @@ class StructureGenerator:
 
         Returns:
             Generated field code
+
         """
         # Determine Python type
         if field_blueprint.choices:
@@ -110,11 +114,10 @@ class StructureGenerator:
                 field_params.insert(0, f"default={self._format_default_value(field_blueprint.default_value)}")
             else:
                 field_params.insert(0, "...")
+        elif field_blueprint.default_value is not None:
+            field_params.insert(0, f"default={self._format_default_value(field_blueprint.default_value)}")
         else:
-            if field_blueprint.default_value is not None:
-                field_params.insert(0, f"default={self._format_default_value(field_blueprint.default_value)}")
-            else:
-                field_params.insert(0, "default=None")
+            field_params.insert(0, "default=None")
 
         field_call = f"Field({', '.join(field_params)})"
 
@@ -128,6 +131,7 @@ class StructureGenerator:
 
         Returns:
             Python type annotation string
+
         """
         if field_blueprint.type is None:
             # This should not happen based on validation, but handle gracefully
@@ -176,7 +180,7 @@ class StructureGenerator:
                     pass
                 return f"Dict[{key_type}, {value_type}]"
 
-    def _generate_field(self, field_name: str, field_def: Union[Dict[str, Any], str]) -> str:
+    def _generate_field(self, field_name: str, field_def: dict[str, Any] | str) -> str:
         """Generate a single field definition.
 
         Args:
@@ -185,6 +189,7 @@ class StructureGenerator:
 
         Returns:
             Generated field code
+
         """
         # Handle simple string definitions (just the definition text)
         if isinstance(field_def, str):
@@ -216,17 +221,16 @@ class StructureGenerator:
                 field_params.insert(0, f"default={self._format_default_value(default_value)}")
             else:
                 field_params.insert(0, "...")
+        elif default_value is not None:
+            field_params.insert(0, f"default={self._format_default_value(default_value)}")
         else:
-            if default_value is not None:
-                field_params.insert(0, f"default={self._format_default_value(default_value)}")
-            else:
-                field_params.insert(0, "default=None")
+            field_params.insert(0, "default=None")
 
         field_call = f"Field({', '.join(field_params)})"
 
         return f"    {field_name}: {python_type} = {field_call}"
 
-    def _get_python_type(self, field_type: Any, field_def: Dict[str, Any]) -> str:
+    def _get_python_type(self, field_type: Any, field_def: dict[str, Any]) -> str:
         """Convert high-level type to Python type annotation.
 
         Args:
@@ -235,6 +239,7 @@ class StructureGenerator:
 
         Returns:
             Python type annotation string
+
         """
         # Check if it's a reference to a defined enum
         if isinstance(field_type, str) and field_type in self.enum_definitions:
@@ -306,6 +311,7 @@ class StructureGenerator:
 
         Returns:
             True if the code is valid, False otherwise
+
         """
         # Step 1: Syntax validation
         if not self._validate_syntax(python_code):
@@ -320,10 +326,7 @@ class StructureGenerator:
             return False
 
         # Step 4: Class instantiation validation
-        if not self._validate_instantiation(python_code, expected_class_name):
-            return False
-
-        return True
+        return self._validate_instantiation(python_code, expected_class_name)
 
     def _validate_syntax(self, python_code: str) -> bool:
         """Validate that the code has valid Python syntax."""
@@ -347,13 +350,13 @@ class StructureGenerator:
         """Validate that the code executes and creates the expected class."""
         try:
             # Import necessary modules for the execution context
-            from datetime import datetime
-            from enum import Enum
-            from typing import Any, Dict, List, Literal, Optional
+            from datetime import datetime  # noqa: PLC0415
+            from enum import Enum  # noqa: PLC0415
+            from typing import Any, Dict, List, Literal, Optional  # noqa: PLC0415,F401
 
-            from pydantic import Field
+            from pydantic import Field  # noqa: PLC0415
 
-            from pipelex.core.stuffs.stuff_content import StructuredContent
+            from pipelex.core.stuffs.stuff_content import StructuredContent  # noqa: PLC0415
 
             # Provide necessary imports in the execution context
             exec_globals = {
@@ -361,14 +364,14 @@ class StructureGenerator:
                 "datetime": datetime,
                 "Enum": Enum,
                 "Optional": Optional,
-                "List": List,
-                "Dict": Dict,
+                "List": list,
+                "Dict": dict,
                 "Any": Any,
                 "Literal": Literal,
                 "Field": Field,
                 "StructuredContent": StructuredContent,
             }
-            exec_locals: Dict[str, Any] = {}
+            exec_locals: dict[str, Any] = {}
             exec(python_code, exec_globals, exec_locals)
 
             # Verify the expected class was created
@@ -391,34 +394,23 @@ class StructureGenerator:
             return False
 
     def _validate_instantiation(self, python_code: str, expected_class_name: str) -> bool:
-        """Validate that the generated class can be instantiated."""
         try:
-            # Import necessary modules for the execution context
-            from datetime import datetime
-            from enum import Enum
-            from typing import Any, Dict, List, Literal, Optional
-
-            from pydantic import Field
-
-            from pipelex.core.stuffs.stuff_content import StructuredContent
-
-            # Provide necessary imports in the execution context
             exec_globals = {
                 "__builtins__": __builtins__,
                 "datetime": datetime,
                 "Enum": Enum,
                 "Optional": Optional,
-                "List": List,
-                "Dict": Dict,
+                "List": list,
+                "Dict": dict,
                 "Any": Any,
                 "Literal": Literal,
                 "Field": Field,
                 "StructuredContent": StructuredContent,
             }
-            exec_locals: Dict[str, Any] = {}
+            exec_locals: dict[str, Any] = {}
             exec(python_code, exec_globals, exec_locals)
 
-            generated_class = cast(Type[Any], exec_locals[expected_class_name])
+            generated_class = cast("type[Any]", exec_locals[expected_class_name])
 
             # Try to create an instance (this will catch Pydantic validation issues)
             # For validation purposes, we'll try to create an instance with minimal valid data
@@ -429,7 +421,7 @@ class StructureGenerator:
             except Exception:
                 # If that fails, try with empty dict (some models accept this)
                 try:
-                    instance = generated_class(**{})
+                    instance = generated_class()
                 except Exception:
                     # If that fails too, the class structure is probably fine but requires specific data
                     # For validation purposes, we'll just check that it's a valid Pydantic model class

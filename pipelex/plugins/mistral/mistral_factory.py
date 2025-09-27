@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 from mistralai import Mistral, OCRImageObject, OCRResponse
 from mistralai.models import (
     ContentChunk,
@@ -47,17 +45,14 @@ class MistralFactory:
     #########################################################
 
     @classmethod
-    def make_simple_messages(cls, llm_job: LLMJob) -> List[Messages]:
-        """
-        Makes a list of messages with a system message (if provided) and followed by a user message.
-        """
-        messages: List[Messages] = []
-        user_content: List[ContentChunk] = []
+    def make_simple_messages(cls, llm_job: LLMJob) -> list[Messages]:
+        """Makes a list of messages with a system message (if provided) and followed by a user message."""
+        messages: list[Messages] = []
+        user_content: list[ContentChunk] = []
         if user_text := llm_job.llm_prompt.user_text:
             user_content.append(TextChunk(text=user_text))
         if user_images := llm_job.llm_prompt.user_images:
-            for user_image in user_images:
-                user_content.append(cls.make_mistral_image_url(user_image))
+            user_content.extend(cls.make_mistral_image_url(user_image) for user_image in user_images)
         if user_content:
             messages.append(UserMessage(content=user_content))
 
@@ -70,28 +65,26 @@ class MistralFactory:
     def make_mistral_image_url(cls, prompt_image: PromptImage) -> ImageURLChunk:
         if isinstance(prompt_image, PromptImageUrl):
             return ImageURLChunk(image_url=prompt_image.url)
-        elif isinstance(prompt_image, PromptImagePath):
+        if isinstance(prompt_image, PromptImagePath):
             image_bytes = load_binary_as_base64(prompt_image.file_path).decode("utf-8")
             file_type = detect_file_type_from_path(prompt_image.file_path)
             return ImageURLChunk(image_url=f"data:{file_type.mime};base64,{image_bytes}")
-        elif isinstance(prompt_image, PromptImageBase64):
+        if isinstance(prompt_image, PromptImageBase64):
             image_bytes = prompt_image.base_64.decode("utf-8")
             file_type = detect_file_type_from_base64(prompt_image.base_64)
             return ImageURLChunk(image_url=f"data:{file_type.mime};base64,{image_bytes}")
-        else:
-            raise PromptImageFormatError(f"prompt_image of type {type(prompt_image)} is not supported")
+        msg = f"prompt_image of type {type(prompt_image)} is not supported"
+        raise PromptImageFormatError(msg)
 
     @classmethod
     def make_simple_messages_openai_typed(
         cls,
         llm_job: LLMJob,
-    ) -> List[ChatCompletionMessageParam]:
-        """
-        Makes a list of messages with a system message (if provided) and followed by a user message.
-        """
+    ) -> list[ChatCompletionMessageParam]:
+        """Makes a list of messages with a system message (if provided) and followed by a user message."""
         llm_prompt = llm_job.llm_prompt
-        messages: List[ChatCompletionMessageParam] = []
-        user_contents: List[ChatCompletionContentPartParam] = []
+        messages: list[ChatCompletionMessageParam] = []
+        user_contents: list[ChatCompletionContentPartParam] = []
         if system_content := llm_prompt.system_text:
             messages.append(ChatCompletionSystemMessageParam(role="system", content=system_content))
         # TODO: confirm that we can prompt without user_contents, for instance if we have only images,
@@ -124,7 +117,7 @@ class MistralFactory:
         should_include_images: bool = False,
         # export_dir: Optional[str] = None,
     ) -> OcrOutput:
-        pages: Dict[int, Page] = {}
+        pages: dict[int, Page] = {}
         for ocr_response_page in mistral_ocr_response.pages:
             page = Page(
                 text=ocr_response_page.markdown,
@@ -145,7 +138,7 @@ class MistralFactory:
         cls,
         mistral_ocr_image_obj: OCRImageObject,
     ) -> ExtractedImageFromPage:
-        extracted_image = ExtractedImageFromPage(
+        return ExtractedImageFromPage(
             image_id=mistral_ocr_image_obj.id,
             top_left_x=mistral_ocr_image_obj.top_left_x,
             top_left_y=mistral_ocr_image_obj.top_left_y,
@@ -153,4 +146,3 @@ class MistralFactory:
             bottom_right_y=mistral_ocr_image_obj.bottom_right_y,
             base_64=mistral_ocr_image_obj.image_base64 if mistral_ocr_image_obj.image_base64 else None,
         )
-        return extracted_image

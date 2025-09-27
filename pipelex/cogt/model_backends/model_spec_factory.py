@@ -1,5 +1,3 @@
-from typing import Dict, List, Optional
-
 from pydantic import BaseModel, Field, field_validator
 
 from pipelex.cogt.model_backends.model_constraints import ModelConstraints
@@ -8,6 +6,7 @@ from pipelex.cogt.model_backends.model_type import ModelType
 from pipelex.cogt.model_backends.prompting_target import PromptingTarget
 from pipelex.cogt.usage.cost_category import CostCategory, CostsByCategoryDict
 from pipelex.tools.config.config_model import ConfigModel
+from pipelex.tools.typing.pydantic_utils import empty_list_factory_of
 
 
 class InferenceModelSpecBlueprint(ConfigModel):
@@ -15,23 +14,25 @@ class InferenceModelSpecBlueprint(ConfigModel):
     sdk: str
     model_type: ModelType = Field(default=ModelType.LLM, strict=False)
     model_id: str
-    inputs: List[str] = Field(default_factory=list)
-    outputs: List[str] = Field(default_factory=list)
+    inputs: list[str] = Field(default_factory=list)
+    outputs: list[str] = Field(default_factory=list)
     costs: CostsByCategoryDict = Field(strict=False)
-    max_tokens: Optional[int] = None
-    max_prompt_images: Optional[int] = None
-    prompting_target: Optional[PromptingTarget] = Field(default=None, strict=False)
-    constraints: List[ModelConstraints] = Field(default_factory=list)
+    max_tokens: int | None = None
+    max_prompt_images: int | None = None
+    prompting_target: PromptingTarget | None = Field(default=None, strict=False)
+    constraints: list[ModelConstraints] = Field(default_factory=empty_list_factory_of(ModelConstraints))
 
     @field_validator("costs", mode="before")
-    def validate_costs(cls, value: Dict[str, float]) -> CostsByCategoryDict:
+    @staticmethod
+    def validate_costs(value: dict[str, float]) -> CostsByCategoryDict:
         return ConfigModel.transform_dict_of_floats_str_to_enum(
             input_dict=value,
             key_enum_cls=CostCategory,
         )
 
     @field_validator("constraints", mode="before")
-    def validate_constraints(cls, value: List[str]) -> List[ModelConstraints]:
+    @staticmethod
+    def validate_constraints(value: list[str]) -> list[ModelConstraints]:
         return ConfigModel.transform_list_of_str_to_enum(
             input_list=value,
             enum_cls=ModelConstraints,
