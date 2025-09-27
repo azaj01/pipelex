@@ -13,7 +13,7 @@ from pipelex.tools.misc.json_utils import remove_none_values_from_dict
 
 def _format_tomlkit_string(
     text: str,
-    prefer_literal: bool = True,
+    prefer_literal: bool = False,
     force_multiline: bool = False,
     ensure_trailing_newline: bool = True,
     ensure_leading_blank_line: bool = True,
@@ -91,6 +91,9 @@ def dict_to_plx_styled_toml(data: Mapping[str, Any]) -> str:
     for section_key, section_value in data.items():
         if isinstance(section_value, Mapping):
             section_value = cast(Mapping[str, Any], section_value)
+            # Skip empty mappings (empty concept and pipe sections)
+            if not section_value:
+                continue
             table_obj = table()
             for field_key, field_value in section_value.items():
                 if isinstance(field_value, Mapping):
@@ -109,8 +112,3 @@ def dict_to_plx_styled_toml(data: Mapping[str, Any]) -> str:
 def make_plx_content(blueprint: PipelexBundleBlueprint) -> str:
     blueprint_dict = blueprint.model_dump(serialize_as_any=True)
     return dict_to_plx_styled_toml(data=blueprint_dict)
-
-
-# def save_bundle_blueprint_toml_to_path(blueprint: PipelexBundleBlueprint, path: str) -> None:
-#     bundle_blueprint_toml = make_plx_content(blueprint=blueprint)
-#     save_text_to_path(text=bundle_blueprint_toml, path=path)
