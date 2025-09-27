@@ -9,9 +9,18 @@ from tomlkit import string as tomlkit_string
 from pipelex import log
 from pipelex.core.bundles.pipelex_bundle_blueprint import PipelexBundleBlueprint
 from pipelex.tools.misc.json_utils import remove_none_values_from_dict
+from pipelex.types import StrEnum
 
 if TYPE_CHECKING:
     from pipelex.core.bundles.pipelex_bundle_blueprint import PipelexBundleBlueprint
+
+
+class SectionKey(StrEnum):
+    PIPE = "pipe"
+    CONCEPT = "concept"
+
+
+CONCEPT_STRUCTURE_FIELD_KEY = "structure"
 
 
 def _format_tomlkit_string(
@@ -87,79 +96,97 @@ def _convert_mapping_to_table(mapping: Mapping[str, Any]) -> Any:  # Can't type 
 
 def dict_to_plx_styled_toml(data: Mapping[str, Any]) -> str:
     """Top-level keys become tables; second-level mappings become tables; inline tables start at third level."""
+    log.debug("=" * 100)
     data = remove_none_values_from_dict(data=data)
     document_root = document()
-    for section_key, section_value in data.items():
-        if not isinstance(section_value, Mapping):
-            document_root.add(section_key, _convert_dicts_to_inline_tables(section_value))
+    for root_key, root_value in data.items():
+        if not isinstance(root_value, Mapping):
+            log.debug(f"Root root_key is not a mapping: key = {root_key}, value = {root_value}")
+            document_root.add(root_key, _convert_dicts_to_inline_tables(root_value))
             continue
 
-        section_value = cast("Mapping[str, Any]", section_value)
+        # It's a mapping, therefore it's a section
+        log.debug(f"Root {root_key} is a section -------------------")
+
+        section_key = SectionKey(root_key)
+        section_value = cast("Mapping[str, Any]", root_value)
         # Skip empty mappings (empty concept and pipe sections)
         if not section_value:
+            log.debug(f"Section {section_key} is empty, skipping")
             continue
-        table_obj = table()
-        for field_key, field_value in section_value.items():
-            if not isinstance(field_value, Mapping):
-                log.debug(f"Field value is not a mapping: key = {field_key}, value = {field_value}")
-                table_obj.add(field_key, _convert_dicts_to_inline_tables(field_value))
-                continue
-            log.debug(f"Field value is a mapping: key = {field_key}, value = {field_value}")
-            field_value = cast("Mapping[str, Any]", field_value)
-            # Special handling for concept structures
-            if section_key == "pipe":
-                # Second level mapping -> standard table [section.field]
-                log.debug("Section key is pipe")
-                sub_table = _convert_mapping_to_table(field_value)
-                table_obj.add(field_key, sub_table)
-            elif section_key == "concept":
-                log.debug("Section key is concept")
-                for concept_key, concept_value in field_value.items():
-                    if isinstance(concept_value, str):
-                        log.debug(f"Concept '{concept_key}' is a string: {concept_value}")
-                        table_obj.add(concept_key, concept_value)
-                        continue
-                    if not isinstance(concept_value, Mapping):
-                        msg = f"Concept field value is not a mapping: key = {concept_key}, value = {concept_value}"
-                        raise TypeError(msg)
-                    log.debug(f"Concept '{concept_key}' is a mapping: {concept_value}")
-                    concept_value = cast("Mapping[str, Any]", concept_value)
-                    concept_table_obj = table()
-                    for concept_field_key, concept_field_value in concept_value.items():
-                        if concept_field_key == "structure":
-                            if isinstance(concept_field_value, str):
-                                log.debug(f"Structure '{concept_field_key}' is a string: {concept_field_value}")
-                                concept_table_obj.add("structure", concept_field_value)
-                                continue
-                            if not isinstance(concept_field_value, Mapping):
-                                msg = f"Structure field value is not a mapping: key = {concept_field_key}, value = {concept_field_value}"
-                                raise TypeError(msg)
-                            log.debug(f"Structure for '{concept_key}' is a mapping: {concept_field_value}")
-                            structure_value = cast("Mapping[str, Any]", concept_field_value)
-                            structure_table_obj = table()
-                            for structure_field_key, structure_field_value in structure_value.items():
-                                if isinstance(structure_field_value, str):
-                                    log.debug(f"Structure '{structure_field_key}' is a string: {structure_field_value}")
-                                    structure_table_obj.add(structure_field_key, structure_field_value)
-                                    continue
-                                if not isinstance(structure_field_value, Mapping):
-                                    msg = f"Structure field value is neither a string nor a mapping: key = {structure_field_key}, value = {structure_field_value}"
-                                    raise TypeError(msg)
-                                log.debug(f"Structure for '{concept_key}' is a mapping: {structure_field_value}")
-                                # structure_field_value = cast("Mapping[str, Any]", structure_field_value)
-                                # structure_field_table = _convert_mapping_to_table(structure_value)
-                                structure_table_obj.add(structure_field_key, _convert_dicts_to_inline_tables(structure_field_value))
-                            concept_table_obj.add("structure", structure_table_obj)
-                        else:
-                            # sub_table = _convert_mapping_to_table(concept_field_value)
-                            log.debug(f"{concept_key}/'{concept_field_key}' is inline: {concept_field_value}")
-                            concept_table_obj.add(concept_field_key, _convert_dicts_to_inline_tables(concept_field_value))
-                    table_obj.add(concept_key, concept_table_obj)
-            else:
-                msg = f"Section key is not valid: {section_key}"
-                raise ValueError(msg)
-        document_root.add(section_key, table_obj)  # `[section_key]` section
+        match section_key:
+            case SectionKey.PIPE:
+                table_obj_for_pipe = _make_table_obj_for_pipe(section_value)
+                document_root.add(section_key, table_obj_for_pipe)
+            case SectionKey.CONCEPT:
+                table_obj_for_concept = _make_table_obj_for_concept(section_value)
+                document_root.add(section_key, table_obj_for_concept)
+
     return tomlkit.dumps(document_root)  # pyright: ignore[reportUnknownMemberType]
+
+
+def _make_table_obj_for_pipe(section_value: Mapping[str, Any]) -> Any:
+    """Make a table object for a pipe section."""
+    log.debug("******** Making table object for pipe section ********")
+    table_obj = table()
+    for field_key, field_value in section_value.items():
+        log.debug(f"------ Field {field_key} is a {type(field_value)}")
+        if not isinstance(field_value, Mapping):
+            log.debug(f"Field is not a mapping: key = {field_key}, value = {field_value}")
+            table_obj.add(field_key, _convert_dicts_to_inline_tables(field_value))
+            continue
+        log.debug(f"Field is a mapping: key = {field_key}, value = {field_value}")
+        field_value = cast("Mapping[str, Any]", field_value)
+        table_obj.add(field_key, _convert_mapping_to_table(field_value))
+    return table_obj
+
+
+def _make_table_obj_for_concept(section_value: Mapping[str, Any]) -> Any:
+    """Make a table object for a concept section."""
+    log.debug("******** Making table object for concept section ********")
+    table_obj = table()
+    for concept_key, concept_value in section_value.items():
+        if isinstance(concept_value, str):
+            log.debug(f"Concept '{concept_key}' is a string: {concept_value}")
+            table_obj.add(concept_key, concept_value)
+            continue
+        if not isinstance(concept_value, Mapping):
+            msg = f"Concept field value is not a mapping: key = {concept_key}, value = {concept_value}"
+            raise TypeError(msg)
+        log.debug(f"Concept '{concept_key}' is a mapping: {concept_value}")
+        concept_value = cast("Mapping[str, Any]", concept_value)
+        concept_table_obj = table()
+        for concept_field_key, concept_field_value in concept_value.items():
+            if concept_field_key == CONCEPT_STRUCTURE_FIELD_KEY:
+                if isinstance(concept_field_value, str):
+                    log.debug(f"Structure for concept '{concept_key}' is a string: {concept_field_value}")
+                    concept_table_obj.add("structure", concept_field_value)
+                    continue
+                if not isinstance(concept_field_value, Mapping):
+                    msg = f"Structure field value is not a mapping: key = {concept_field_key}, value = {concept_field_value}"
+                    raise TypeError(msg)
+                log.debug(f"Structure for concept '{concept_key}' is a mapping: {concept_field_value}")
+                structure_value = cast("Mapping[str, Any]", concept_field_value)
+                structure_table_obj = table()
+                for structure_field_key, structure_field_value in structure_value.items():
+                    if isinstance(structure_field_value, str):
+                        log.debug(f"Structure '{structure_field_key}' is a string: {structure_field_value}")
+                        structure_table_obj.add(structure_field_key, structure_field_value)
+                        continue
+                    if not isinstance(structure_field_value, Mapping):
+                        msg = f"Structure field value is neither a string nor a mapping: key = {structure_field_key}, value = {structure_field_value}"
+                        raise TypeError(msg)
+                    log.debug(f"Structure for '{concept_key}' is a mapping: {structure_field_value}")
+                    # structure_field_value = cast("Mapping[str, Any]", structure_field_value)
+                    # structure_field_table = _convert_mapping_to_table(structure_value)
+                    structure_table_obj.add(structure_field_key, _convert_dicts_to_inline_tables(structure_field_value))
+                concept_table_obj.add("structure", structure_table_obj)
+            else:
+                # sub_table = _convert_mapping_to_table(concept_field_value)
+                log.debug(f"{concept_key}/'{concept_field_key}' is inline: {concept_field_value}")
+                concept_table_obj.add(concept_field_key, _convert_dicts_to_inline_tables(concept_field_value))
+        table_obj.add(concept_key, concept_table_obj)
+    return table_obj
 
 
 def make_plx_content(blueprint: PipelexBundleBlueprint) -> str:
