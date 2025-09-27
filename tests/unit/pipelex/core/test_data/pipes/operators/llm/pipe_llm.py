@@ -294,7 +294,7 @@ prompt_template = "Extract person information from this text: @text"
 # PipeLLM with boolean multiplicity values
 PIPE_LLM_BOOLEAN_MULTIPLICITY = (
     "pipe_llm_boolean_multiplicity",
-    """domain = "test_pipes"
+    '''domain = "test_pipes"
 definition = "Domain with pipe definitions"
 
 [concept]
@@ -305,8 +305,12 @@ type = "PipeLLM"
 definition = "Analyze multiple documents and single query"
 inputs = { documents = { concept = "Text", multiplicity = true }, query = { concept = "Text", multiplicity = false } }
 output = "DocumentSummary"
-prompt_template = "Analyze these documents based on the query: $query\\n\\nDocuments: @documents"
-""",
+prompt_template = """
+Analyze these documents based on the query: $query
+
+Documents: @documents
+"""
+''',
     PipelexBundleBlueprint(
         domain="test_pipes",
         definition="Domain with pipe definitions",
@@ -320,7 +324,10 @@ prompt_template = "Analyze these documents based on the query: $query\\n\\nDocum
                     "query": InputRequirementBlueprint(concept="Text", multiplicity=False),
                 },
                 output="DocumentSummary",
-                prompt_template="Analyze these documents based on the query: $query\n\nDocuments: @documents",
+                prompt_template="""Analyze these documents based on the query: $query
+
+Documents: @documents
+""",
             ),
         },
     ),
