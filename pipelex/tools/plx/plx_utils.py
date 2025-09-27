@@ -26,9 +26,20 @@ CONCEPT_STRUCTURE_FIELD_KEY = "structure"
 
 # Field ordering for specific keys
 FieldOrdering = list[str]
-# FIELD_ORDER: dict[str, FieldOrdering] = {
-#     "structure": ["type", "definition", "choices", "required"],
-# }
+
+# Field ordering for different pipe types
+PIPE_FIELD_ORDERING: FieldOrdering = [
+    "type",
+    "definition",
+    "inputs",
+    "output",
+    # "jinja2",
+    # "jinja2_name",
+    # "prompting_style",
+    # "template_category",
+    # "extra_context",
+]
+
 STRUCTURE_FIELD_ORDERING: FieldOrdering = ["type", "definition", "choices", "required"]
 
 
@@ -91,7 +102,7 @@ def _convert_dicts_to_inline_tables(value: Any, field_ordering: FieldOrdering | 
     return value
 
 
-def _convert_mapping_to_table(mapping: Mapping[str, Any]) -> Any:  # Can't type this because of tomlkit
+def _convert_mapping_to_table(mapping: Mapping[str, Any], field_ordering: FieldOrdering | None = None) -> Any:  # Can't type this because of tomlkit
     """Convert a mapping into a TOML Table where any nested mappings (third level+)
     are converted to inline tables.
 
@@ -99,16 +110,38 @@ def _convert_mapping_to_table(mapping: Mapping[str, Any]) -> Any:  # Can't type 
     third level and deeper structures.
     """
     tbl = table()
-    for field_key, field_value in mapping.items():
-        # Skip the category field as it's not needed in PLX output
-        if field_key == "category":
-            continue
 
-        if isinstance(field_value, Mapping):
-            # Third-level mapping -> inline table
-            tbl.add(field_key, _convert_dicts_to_inline_tables(field_value))
-        else:
-            tbl.add(field_key, _convert_dicts_to_inline_tables(field_value))
+    # If field ordering is provided, add fields in the specified order first
+    if field_ordering:
+        for field_key in field_ordering:
+            if field_key in mapping and field_key != "category":  # Skip category field
+                field_value = mapping[field_key]
+                if isinstance(field_value, Mapping):
+                    # Third-level mapping -> inline table
+                    tbl.add(field_key, _convert_dicts_to_inline_tables(field_value))
+                else:
+                    tbl.add(field_key, _convert_dicts_to_inline_tables(field_value))
+
+        # Add any remaining fields not in the ordering
+        for field_key, field_value in mapping.items():
+            if field_key not in field_ordering and field_key != "category":
+                if isinstance(field_value, Mapping):
+                    # Third-level mapping -> inline table
+                    tbl.add(field_key, _convert_dicts_to_inline_tables(field_value))
+                else:
+                    tbl.add(field_key, _convert_dicts_to_inline_tables(field_value))
+    else:
+        # No field ordering provided, use original logic
+        for field_key, field_value in mapping.items():
+            # Skip the category field as it's not needed in PLX output
+            if field_key == "category":
+                continue
+
+            if isinstance(field_value, Mapping):
+                # Third-level mapping -> inline table
+                tbl.add(field_key, _convert_dicts_to_inline_tables(field_value))
+            else:
+                tbl.add(field_key, _convert_dicts_to_inline_tables(field_value))
     return tbl
 
 
@@ -127,6 +160,16 @@ def _add_spaces_to_inline_tables(toml_string: str) -> str:
 
         while char_index < len(text):
             if text[char_index] == "{":
+                # Check if this is a Jinja2 template (double braces)
+                if char_index + 1 < len(text) and text[char_index + 1] == "{":
+                    # This is a Jinja2 template, find the closing }}
+                    jinja_end = text.find("}}", char_index + 2)
+                    if jinja_end != -1:
+                        # Add the entire Jinja2 template as-is
+                        result += text[char_index : jinja_end + 2]
+                        char_index = jinja_end + 2
+                        continue
+
                 # Found start of inline table, find the matching closing brace
                 brace_count = 1
                 start = char_index
@@ -211,7 +254,7 @@ def _make_table_obj_for_pipe(section_value: Mapping[str, Any]) -> Any:
             continue
         log.debug(f"Field is a mapping: key = {field_key}, value = {field_value}")
         field_value = cast("Mapping[str, Any]", field_value)
-        table_obj.add(field_key, _convert_mapping_to_table(field_value))
+        table_obj.add(field_key, _convert_mapping_to_table(field_value, field_ordering=PIPE_FIELD_ORDERING))
     return table_obj
 
 

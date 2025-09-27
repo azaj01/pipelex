@@ -1,6 +1,7 @@
 from pipelex.core.bundles.pipelex_bundle_blueprint import PipelexBundleBlueprint
 from pipelex.core.concepts.concept_native import NativeConceptEnum
 from pipelex.pipe_operators.jinja2.pipe_jinja2_blueprint import PipeJinja2Blueprint
+from pipelex.tools.templating.jinja2_template_category import Jinja2TemplateCategory
 
 PIPE_JINJA2 = (
     "pipe_jinja2",
@@ -12,6 +13,7 @@ type = "PipeJinja2"
 definition = "Process a Jinja2 template"
 output = "Text"
 jinja2 = "Hello {{ name }}!"
+template_category = "markdown"
 """,
     PipelexBundleBlueprint(
         domain="test_pipes",
@@ -22,6 +24,7 @@ jinja2 = "Hello {{ name }}!"
                 definition="Process a Jinja2 template",
                 output=NativeConceptEnum.TEXT,
                 jinja2="Hello {{ name }}!",
+                template_category=Jinja2TemplateCategory.MARKDOWN,
             ),
         },
     ),
