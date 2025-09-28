@@ -143,20 +143,6 @@ class LibraryManager(LibraryManagerAbstract):
 
         return all_plx_paths
 
-    # @override
-    # def load_from_file(self, plx_path: Path) -> None:
-    #     """Load a single file - this method is kept for compatibility."""
-    #     if not PipelexInterpreter.is_pipelex_file(plx_path):
-    #         msg = f"File is not a valid Pipelex PLX file: {plx_path}"
-    #         raise LibraryError(msg)
-
-    #     blueprint = PipelexInterpreter(file_path=plx_path).make_pipelex_bundle_blueprint()
-    #     try:
-    #         self.load_from_blueprint(blueprint)
-    #     except PipeDefinitionError as exc:
-    #         msg = f"Could not load PLX blueprint from '{plx_path}': {exc}"
-    #         raise LibraryError(msg) from exc
-
     @override
     def load_from_blueprint(self, blueprint: PipelexBundleBlueprint) -> list[PipeAbstract]:
         """Load a blueprint."""
