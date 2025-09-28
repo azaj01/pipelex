@@ -12,7 +12,7 @@ PipeSequenceSpec = "A structured spec for a pipe sequence."
 # Pipe operators
 PipeFuncSpec = "A structured spec for a pipe func."
 PipeImgGenSpec = "A structured spec for a pipe img gen."
-PipeJinja2Spec = "A structured spec for a pipe jinja2."
+PipeComposeSpec = "A structured spec for a pipe jinja2."
 PipeLLMSpec = "A structured spec for a pipe llm."
 PipeOcrSpec = "A structured spec for a pipe ocr."
 PipeFailure = "Details of a single pipe failure during dry run."
@@ -68,7 +68,7 @@ PipeBatch     = "emit_batch_from_signature"
 PipeLLM       = "emit_llm_from_signature"
 PipeOcr       = "emit_ocr_from_signature"
 PipeImgGen    = "emit_imggen_from_signature"
-PipeJinja2    = "emit_jinja_from_signature"
+PipeCompose    = "emit_jinja_from_signature"
 PipeFunc      = "emit_func_from_signature"
 
 # ────────────────────────────────────────────────────────────────────────────────
@@ -226,11 +226,11 @@ And here are the concepts you can use:
 
 [pipe.emit_jinja_from_signature]
 type = "PipeLLM"
-description = "Build a PipeJinja2Spec from the signature."
+description = "Build a PipeComposeSpec from the signature."
 inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec", pipe_spec = "PipeSpec" }
-output = "PipeJinja2Spec"
+output = "PipeComposeSpec"
 prompt_template = """
-Return a PipeJinja2Spec for this signature.
+Return a PipeComposeSpec for this signature.
 
 Signature:
 @pipe_signature
@@ -277,7 +277,7 @@ PipeLLM = "fix_failing_llm_pipe"
 PipeImgGen = "fix_failing_imggen_pipe"
 PipeOcr = "fix_failing_ocr_pipe"
 PipeFunc = "fix_failing_func_pipe"
-PipeJinja2 = "fix_failing_jinja2_pipe"
+PipeCompose = "fix_failing_jinja2_pipe"
 PipeSequence = "fix_failing_sequence_pipe"
 PipeParallel = "fix_failing_parallel_pipe"
 PipeCondition = "fix_failing_condition_pipe"
@@ -373,12 +373,12 @@ Please provide only the corrected PipeFuncSpec. Common Func pipe issues to fix:
 
 [pipe.fix_failing_jinja2_pipe]
 type = "PipeLLM"
-description = "Fix a failing PipeJinja2 spec based on its specific error."
+description = "Fix a failing PipeCompose spec based on its specific error."
 inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
-output = "PipeJinja2Spec"
+output = "PipeComposeSpec"
 llm = "llm_to_engineer"
 prompt_template = """
-Fix this failing PipeJinja2 spec.
+Fix this failing PipeCompose spec.
 
 Failing pipe:
 @failed_pipe.pipe
@@ -386,7 +386,7 @@ Failing pipe:
 Error message:
 @failed_pipe.error_message
 
-Please provide only the corrected PipeJinja2Spec. Common Jinja2 pipe issues to fix:
+Please provide only the corrected PipeComposeSpec. Common Jinja2 pipe issues to fix:
 - Invalid Jinja2 template syntax
 - Missing input variables referenced in template
 - Wrong concept types for inputs/outputs

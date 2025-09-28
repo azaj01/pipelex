@@ -40,7 +40,7 @@ class PipeSpec(StructuredContent):
         category: The pipe category (PipeOperator, PipeController). Uses Any type to avoid
               category override conflicts but validated at runtime.
               The pipe controllers are PipeSequence, PipeParallel, PipeCondition, PipeBatch.
-              The pipe operators are PipeFunc, PipeLLM, PipeImgGen, PipeOcr, PipeJinja2.
+              The pipe operators are PipeFunc, PipeLLM, PipeImgGen, PipeOcr, PipeCompose.
         definition: Natural language description of what the pipe does.
         inputs: Input concept specifications. should be an InputRequirementBlueprint
                Dictionary keys are input names in snake_case, values are concept specifications in PascalCase.

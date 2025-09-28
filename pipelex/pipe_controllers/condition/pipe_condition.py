@@ -28,16 +28,16 @@ from pipelex.exceptions import (
 from pipelex.hub import get_pipe_router, get_pipeline_tracker, get_required_pipe
 from pipelex.pipe_controllers.condition.pipe_condition_details import PipeConditionDetails, PipeConditionPipeMap
 from pipelex.pipe_controllers.pipe_controller import PipeController
-from pipelex.pipe_operators.jinja2.pipe_jinja2 import PipeJinja2Output
-from pipelex.pipe_operators.jinja2.pipe_jinja2_blueprint import PipeJinja2Blueprint
-from pipelex.pipe_operators.jinja2.pipe_jinja2_factory import PipeJinja2Factory
+from pipelex.pipe_operators.compose.pipe_compose import PipeComposeOutput
+from pipelex.pipe_operators.compose.pipe_compose_blueprint import PipeComposeBlueprint
+from pipelex.pipe_operators.compose.pipe_compose_factory import PipeComposeFactory
 from pipelex.pipe_works.pipe_job_factory import PipeJobFactory
 from pipelex.pipeline.job_metadata import JobCategory, JobMetadata
 from pipelex.tools.typing.validation_utils import has_exactly_one_among_attributes_from_list
 from pipelex.types import Self
 
 if TYPE_CHECKING:
-    from pipelex.pipe_operators.jinja2.pipe_jinja2 import PipeJinja2Output
+    from pipelex.pipe_operators.compose.pipe_compose import PipeComposeOutput
 
 
 class PipeCondition(PipeController):
@@ -131,7 +131,7 @@ class PipeCondition(PipeController):
     def required_variables(self) -> set[str]:
         required_variables: set[str] = set()
         # Variables from the expression/expression_template
-        pipe_jinja2 = PipeJinja2Factory.make_pipe_jinja2_from_template_str(
+        pipe_jinja2 = PipeComposeFactory.make_pipe_compose_from_template_str(
             domain=self.domain,
             template_str=self.applied_expression_template,
             inputs=self.inputs,
@@ -165,7 +165,7 @@ class PipeCondition(PipeController):
         needed_inputs = PipeInputSpecFactory.make_empty()
 
         # 1. Add the variables from the expression/expression_template
-        pipe_jinja2 = PipeJinja2Factory.make_pipe_jinja2_from_template_str(
+        pipe_jinja2 = PipeComposeFactory.make_pipe_compose_from_template_str(
             domain=self.domain,
             template_str=self.applied_expression_template,
             inputs=self.inputs,
@@ -285,7 +285,7 @@ class PipeCondition(PipeController):
                 multiplicity=requirement.multiplicity,
             )
 
-        pipe_jinja2_blueprint = PipeJinja2Blueprint(
+        pipe_jinja2_blueprint = PipeComposeBlueprint(
             definition="Jinja2 template for pipe condition evaluation",
             jinja2=self.applied_expression_template,
             inputs=inputs_blueprint,
@@ -293,7 +293,7 @@ class PipeCondition(PipeController):
         )
 
         # TODO: use jinja2 directly without going though a pipe
-        pipe_jinja2 = PipeJinja2Factory.make_from_blueprint(
+        pipe_jinja2 = PipeComposeFactory.make_from_blueprint(
             domain=self.domain,
             pipe_code="evaluation_for_pipe_condition",
             blueprint=pipe_jinja2_blueprint,
@@ -313,7 +313,7 @@ class PipeCondition(PipeController):
         # ).rendered_text.strip()
         # TODO: restore the possibility above, without need to explicitly cast the output
         pipe_jinja2_output = cast(
-            "PipeJinja2Output",
+            "PipeComposeOutput",
             await pipe_jinja2.run_pipe(
                 job_metadata=jinja2_job_metadata,
                 working_memory=working_memory,
@@ -426,7 +426,7 @@ class PipeCondition(PipeController):
 
         # 2. Validate that the expression template is valid
         try:
-            pipe_jinja2 = PipeJinja2Factory.make_pipe_jinja2_from_template_str(
+            pipe_jinja2 = PipeComposeFactory.make_pipe_compose_from_template_str(
                 domain=self.domain,
                 template_str=self.applied_expression_template,
                 inputs=self.inputs,

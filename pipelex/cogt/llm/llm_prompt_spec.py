@@ -129,8 +129,8 @@ class LLMPromptSpec(BaseModel):
             extra_params=extra_params,
         )
         if not user_text:
-            msg = "For user_text we need either a pipe_jinja2, a text_verbatim_name or a fixed user_text"
-            raise ValueError(msg)
+            msg = "Could not unravel user_text, we need either a jinja2_blueprint, a text_verbatim_name or a fixed user_text"
+            raise LLMPromptSpecError(msg)
 
         if output_structure_prompt:
             user_text += output_structure_prompt
@@ -191,7 +191,7 @@ class LLMPromptSpec(BaseModel):
             )
             if not user_text_verbatim:
                 msg = f"Could not find text_verbatim template '{text_verbatim_name}'"
-                raise ValueError(msg)
+                raise LLMPromptSpecError(msg)
             the_text = user_text_verbatim
         elif fixed_text:
             the_text = fixed_text

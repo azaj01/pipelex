@@ -219,7 +219,7 @@ For complete details, see the [Inference Backend Configuration](pages/configurat
 - Refactored the concepts: Blueprints are now more explicit, and hold only concept strings or code. Pipes hold concept instances.
 - Organized code: Created subfolders for controller and operator pipes.
 - Say goodbye to `PipeLLMPrompt`.
-- Removed the `PipeJinja2` and `PipeLLMPrompt` from the `PipeLLM`.
+- Removed the `PipeCompose` and `PipeLLMPrompt` from the `PipeLLM`.
 
 ### Added
 
@@ -314,7 +314,7 @@ Simplified input memory:
 - Refactored `PipeInputSpec` to use `InputRequirement` and `TypedNamedInputRequirement` classes instead of plain strings for input specifications.
 - Updated `WorkingMemoryFactory` to handle `ImplicitMemory` instead of `CompactMemory`.
 - Replaced `ExecutePipelineException` with `PipelineInputError` in `execute_pipeline` function.
-- Updated `PipeBatch`, `PipeCondition`, `PipeParallel`, `PipeSequence`, `PipeFunc`, `PipeImgGen`, `PipeJinja2`, `PipeLLM`, and `PipeOcr` classes to use `InputRequirement` for input handling.
+- Updated `PipeBatch`, `PipeCondition`, `PipeParallel`, `PipeSequence`, `PipeFunc`, `PipeImgGen`, `PipeCompose`, `PipeLLM`, and `PipeOcr` classes to use `InputRequirement` for input handling.
 - Updated `PipeInputSpec` creation in various test files to use `make_from_dict` method.
 - Updated `pyproject.toml` to exclude `pypdfium2` version `4.30.1`.
 - Updated `Jinja2TemplateCategory` to handle HTML and Markdown templates differently.

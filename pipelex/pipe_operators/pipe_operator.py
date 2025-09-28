@@ -38,7 +38,7 @@ class PipeOperator(PipeAbstract, Generic[PipeOperatorOutputType]):
 
         match pipe_run_params.run_mode:
             case PipeRunMode.LIVE:
-                if self.class_name not in ["PipeJinja2", "PipeLLMPrompt"]:
+                if self.class_name not in ["PipeCompose", "PipeLLMPrompt"]:
                     name = f"Running [cyan]{self.class_name}[/cyan]"
                     indent_level = len(pipe_run_params.pipe_stack) - 1
                     indent = "   " * indent_level

@@ -232,7 +232,7 @@ So the input of PipeOcr is {ocr_input: "PDF"} or {ocr_input: "Image"} or a conce
 **PipeFunc**: A pipe that executes a custom Python function.
 - function_name: Name of the Python function to call
 
-**PipeJinja2**: A pipe that uses Jinja2 to render a template.
+**PipeCompose**: A pipe that uses Jinja2 to render a template.
 - jinja2: Raw Jinja2 template string OR
 - jinja2_name: Name reference to a template (use one or the other)
 
@@ -326,7 +326,7 @@ steps = [
 ]
 
 [pipe.check_validation_status]
-type = "PipeJinja2"
+type = "PipeCompose"
 description = "Check if validation failed by examining if failed_pipes list is empty."
 inputs = { failed_pipes = "PipeFailure" }
 output = "Text"
@@ -362,7 +362,7 @@ output = "PipeFailure"
 function_name = "validate_dry_run"
 
 [pipe.continue]
-type = "PipeJinja2"
+type = "PipeCompose"
 description = "Continue with successful validation - return the bundle unchanged."
 inputs = { pipelex_bundle_spec = "PipelexBundleSpec" }
 output = "PipelexBundleSpec"

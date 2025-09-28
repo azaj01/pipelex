@@ -10,10 +10,10 @@ from pipelex.core.stuffs.stuff_content import ListContent, StructuredContent
 from pipelex.hub import get_library_manager
 from pipelex.libraries.pipelines.builder.concept.concept_spec import ConceptSpec
 from pipelex.libraries.pipelines.builder.pipe.pipe_batch_spec import PipeBatchSpec
+from pipelex.libraries.pipelines.builder.pipe.pipe_compose_spec import PipeComposeSpec
 from pipelex.libraries.pipelines.builder.pipe.pipe_condition_spec import PipeConditionSpec
 from pipelex.libraries.pipelines.builder.pipe.pipe_func_spec import PipeFuncSpec
 from pipelex.libraries.pipelines.builder.pipe.pipe_img_spec import PipeImgGenSpec
-from pipelex.libraries.pipelines.builder.pipe.pipe_jinja2_spec import PipeJinja2Spec
 from pipelex.libraries.pipelines.builder.pipe.pipe_llm_spec import PipeLLMSpec
 from pipelex.libraries.pipelines.builder.pipe.pipe_ocr_spec import PipeOcrSpec
 from pipelex.libraries.pipelines.builder.pipe.pipe_parallel_spec import PipeParallelSpec
@@ -47,7 +47,7 @@ class PipelexBundleSpecDraft(StructuredContent):
 PipeSpecUnion = Annotated[
     PipeFuncSpec
     | PipeImgGenSpec
-    | PipeJinja2Spec
+    | PipeComposeSpec
     | PipeLLMSpec
     | PipeOcrSpec
     | PipeBatchSpec
@@ -142,7 +142,7 @@ def _convert_pipe_spec(pipe_spec: PipeSpecUnion) -> PipeSpecUnion:
     pipe_type_to_class: dict[str, type] = {
         "PipeFunc": PipeFuncSpec,
         "PipeImgGen": PipeImgGenSpec,
-        "PipeJinja2": PipeJinja2Spec,
+        "PipeCompose": PipeComposeSpec,
         "PipeLLM": PipeLLMSpec,
         "PipeOcr": PipeOcrSpec,
         "PipeBatch": PipeBatchSpec,
@@ -238,7 +238,7 @@ async def validate_dry_run(working_memory: WorkingMemory) -> ListContent[PipeFai
     pipe_type_to_spec_class = {
         "PipeFunc": PipeFuncSpec,
         "PipeImgGen": PipeImgGenSpec,
-        "PipeJinja2": PipeJinja2Spec,
+        "PipeCompose": PipeComposeSpec,
         "PipeLLM": PipeLLMSpec,
         "PipeOcr": PipeOcrSpec,
         "PipeBatch": PipeBatchSpec,

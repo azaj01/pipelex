@@ -5,7 +5,7 @@ from typing_extensions import override
 
 from pipelex.core.stuffs.stuff_content import StructuredContent
 from pipelex.libraries.pipelines.builder.pipe.pipe_signature import PipeSpec
-from pipelex.pipe_operators.jinja2.pipe_jinja2_blueprint import PipeJinja2Blueprint
+from pipelex.pipe_operators.compose.pipe_compose_blueprint import PipeComposeBlueprint
 from pipelex.tools.templating.jinja2_template_category import Jinja2TemplateCategory
 from pipelex.tools.templating.templating_models import PromptingStyle, TagStyle, TextFormat
 
@@ -15,7 +15,10 @@ class PromptingStyleSpec(StructuredContent):
     text_format: TextFormat = Field(TextFormat.PLAIN, strict=False)
 
 
-class Jinja2Spec(StructuredContent):
+class PipeComposeSpec(PipeSpec):
+    type: Literal["PipeCompose"] = "PipeCompose"
+    category: Literal["PipeOperator"] = "PipeOperator"
+    the_pipe_code: str = Field(description="Pipe code. Must be snake_case.")
     jinja2_name: str | None = Field(default=None, description="Name of the Jinja2 template to use")
     jinja2: str | None = Field(default=None, description="Raw Jinja2 template string")
     prompting_style: PromptingStyleSpec | None = Field(default=None, description="Style of prompting to use (typically for different LLMs)")
@@ -25,14 +28,8 @@ class Jinja2Spec(StructuredContent):
     )
     extra_context: dict[str, Any] | None = Field(default=None, description="Additional context variables for template rendering")
 
-
-class PipeJinja2Spec(PipeSpec, Jinja2Spec):
-    type: Literal["PipeJinja2"] = "PipeJinja2"
-    category: Literal["PipeOperator"] = "PipeOperator"
-    the_pipe_code: str = Field(description="Pipe code. Must be snake_case.")
-
     @override
-    def to_blueprint(self) -> PipeJinja2Blueprint:
+    def to_blueprint(self) -> PipeComposeBlueprint:
         base_blueprint = super().to_blueprint()
 
         if self.prompting_style:
@@ -44,7 +41,7 @@ class PipeJinja2Spec(PipeSpec, Jinja2Spec):
         else:
             prompting_style = None
 
-        return PipeJinja2Blueprint(
+        return PipeComposeBlueprint(
             definition=base_blueprint.definition,
             inputs=base_blueprint.inputs,
             output=base_blueprint.output,
