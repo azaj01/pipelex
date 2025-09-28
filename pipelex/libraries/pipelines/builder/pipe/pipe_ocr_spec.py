@@ -8,7 +8,7 @@ from pipelex.pipe_operators.ocr.pipe_ocr_blueprint import PipeOcrBlueprint
 from pipelex.types import StrEnum
 
 
-class RecommendedOcrPresets(StrEnum):
+class RecommendedOcrPreset(StrEnum):
     BASE_OCR_MISTRAL = "base_ocr_mistral"
     BASE_OCR_PYPDFIUM2 = "base_ocr_pypdfium2"
 
@@ -40,7 +40,7 @@ class PipeOcrSpec(PipeSpec):
     type: Literal["PipeOcr"] = "PipeOcr"
     category: Literal["PipeOperator"] = "PipeOperator"
     the_pipe_code: str = Field(description="Pipe code. Must be snake_case.")
-    ocr: RecommendedOcrPresets = Field(strict=False, description="Use one of the recommended OCR presets")
+    ocr: RecommendedOcrPreset | str = Field(description="Use one of the recommended OCR presets")
     page_images: bool | None = None
     page_image_captions: bool | None = None
     page_views: bool | None = None
