@@ -59,7 +59,7 @@ class ConceptStructureSpec(StructuredContent):
     the_field_name: str = Field(description="Field name. Must be snake_case.")
     definition: str
     type: ConceptStructureSpecFieldType | None = Field(default=None, description="The type of the field.")
-    required: bool | None = True
+    required: bool | None = None
     default_value: Any | None = None
 
     @model_validator(mode="after")

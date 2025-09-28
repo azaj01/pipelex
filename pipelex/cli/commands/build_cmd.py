@@ -45,29 +45,29 @@ def build_pipe_cmd(
     typer.echo("")
 
     async def run_pipeline():
-        if not no_output:
-            if not output_path:
-                typer.echo(typer.style("\n⚠️  Cannot save a pipeline to an empty file name", fg=typer.colors.RED))
-                raise typer.Exit(1)
-
-            ensure_directory_for_file_path(file_path=output_path)
-        else:
+        if no_output:
             typer.echo(typer.style("\n⚠️  Pipeline will not be saved to file (--no-output specified)", fg=typer.colors.YELLOW))
+        elif not output_path:
+            typer.echo(typer.style("\n🛑  Cannot save a pipeline to an empty file name", fg=typer.colors.RED))
+            raise typer.Exit(1)
+        else:
+            ensure_directory_for_file_path(file_path=output_path)
 
         pipe_output = await execute_pipeline(
             pipe_code="pipe_builder",
             input_memory={"brief": brief},
         )
         pretty_print(pipe_output, title="Pipe Output")
-        pipelex_bundle_spec = pipe_output.working_memory.get_stuff_as(name="pipelex_bundle_spec", content_type=PipelexBundleSpec)
-        plx_content = PlxFactory.make_plx_content(blueprint=pipelex_bundle_spec.to_blueprint())
 
         # Save to file unless explicitly disabled with --no-output
-        if not no_output:
-            save_text_to_path(text=plx_content, path=output_path)
-            typer.echo(typer.style(f"\n✅ Pipeline saved to: {output_path}", fg=typer.colors.GREEN))
-        else:
+        if no_output:
             typer.echo(typer.style("\n⚠️  Pipeline not saved to file (--no-output specified)", fg=typer.colors.YELLOW))
+            return
+
+        pipelex_bundle_spec = pipe_output.working_memory.get_stuff_as(name="pipelex_bundle_spec", content_type=PipelexBundleSpec)
+        plx_content = PlxFactory.make_plx_content(blueprint=pipelex_bundle_spec.to_blueprint())
+        save_text_to_path(text=plx_content, path=output_path)
+        typer.echo(typer.style(f"\n✅ Pipeline saved to: {output_path}", fg=typer.colors.GREEN))
 
     start_time = time.time()
     asyncio.run(run_pipeline())

@@ -3,7 +3,8 @@ definition = "Auto-generate a Pipelex bundle (concepts + pipes) from a short use
 
 [concept]
 UserBrief = "A short, natural-language description of what the user wants."
-PlanDraftText = "Natural-language pipeline plan text describing sequences, inputs, outputs."
+PlanDraft = "Natural-language pipeline plan text describing sequences, inputs, outputs."
+ConceptDrafts = "Textual representation of the concepts to create."
 PipelexBundleSpec = "A Pipelex bundle spec."
 PipeFailure = "Details of a single pipe failure during dry run."
 DryRunResult = "A result of a dry run of a pipelex bundle spec."
@@ -17,17 +18,18 @@ DomainInformation = "A domain information object."
 type = "PipeSequence"
 description = "This pipe is going to be the entry point for the builder. It will take a UserBrief and return a PipelexBundleSpec."
 inputs = { brief = "UserBrief" }
-output = "PipelexBundleSpec"
+output = "Dynamic"
 steps = [
     { pipe = "draft_planning_text", result = "plan_draft" },
-    { pipe = "parallel_draft_to_specs" },
-    { pipe = "materialize_concept_spec_drafts", result = "concept_spec_drafts" },
-    { pipe = "materialize_pipe_signatures", result = "pipe_signatures" },
-    { pipe = "pipe_builder_domain_information", result = "domain_information" },
-    { pipe = "build_concept_spec", batch_over = "concept_spec_drafts", batch_as = "concept_spec_draft", result = "concept_specs" },
-    { pipe = "create_pipes_from_signatures", batch_over = "pipe_signatures", batch_as = "pipe_signature", result = "pipe_specs" },
-    { pipe = "compile_in_pipelex_bundle_spec", result = "pipelex_bundle_spec" }
-    { pipe = "validate_pipelex_bundle_spec", result = "pipelex_bundle_spec" }
+    { pipe = "draft_to_conceptspecs_text", result = "concept_spec_drafts_text" },
+    # { pipe = "draft_to_pipesignatures_text", result = "pipe_signatures_text" },
+    # { pipe = "materialize_concept_spec_drafts", result = "concept_spec_drafts" },
+    # { pipe = "materialize_pipe_signatures", result = "pipe_signatures" },
+    # { pipe = "pipe_builder_domain_information", result = "domain_information" },
+    # { pipe = "build_concept_spec", batch_over = "concept_spec_drafts", batch_as = "concept_spec_draft", result = "concept_specs" },
+    # { pipe = "create_pipes_from_signatures", batch_over = "pipe_signatures", batch_as = "pipe_signature", result = "pipe_specs" },
+    # { pipe = "compile_in_pipelex_bundle_spec", result = "pipelex_bundle_spec" }
+    # { pipe = "validate_pipelex_bundle_spec", result = "pipelex_bundle_spec" }
 ]
 
 [pipe.pipe_builder_domain_information]
@@ -54,112 +56,94 @@ For the definition, i would like to see a short description of what the bundle w
 type = "PipeLLM"
 description = "Turn the brief into a pseudo-code plan describing controllers, pipes, their inputs/outputs."
 inputs = { brief = "UserBrief" }
-output = "PlanDraftText"
+output = "PlanDraft"
 llm = "llm_to_engineer"
 prompt_template = """
-Return a PlanDraftText that narrates the pipeline as pseudo-steps (no code):
-- Explicitly describe where a sequence/parallel/condition/batch is used
-- For each pipe: state the pipe's description, inputs (by name), and outputs (by name),
-- Keep it coherent: children pipes referenced by parent sequences must be named consistently
+Return a draft of a plan that narrates the pipeline as pseudo-steps (no code):
+- Explicitly indicate when you are running things in sequence,
+  or in parallel (several independant steps in parallel),
+  or in batch (same operation applied to N elements of a list)
+  or based on a condition
+- For each pipe: state the pipe's description, inputs (by name), and the output (by name), DO NOT indicate the inputs or output type. Just name them.
+- Be aware of the steps where you want structures: either structured objects as outputs or inputs. Make sense of it but be concise.
 
+Available pipe controllers:
+- PipeSequence: A pipe that executes a sequence of pipes: it needs to reference the pipes it will execute.
+- PipeParallel: A pipe that executes a few pipes in parallel. It needs to reference the pipes it will execute.
+  The results of each pipe will be in the working memory. The output MUST BE "Dynamic".
+- PipeCondition: A pipe that based on a conditional expression, branches to a specific pipe.
+  You have to explain what the expression of the condition is,
+  and what the different pipes are that can be executed based on the condition.
+  It needs to reference the pipes it will execute.
 
-Here is a description of the pipes:
-We have pipe controllers:
-- PipeLLM: A pipe that uses an LLM to generate a text, or a structured object. It is a vision LLM that can read images.
+When describing the task of a pipe controller, be concise, don't detail all the sub-pipes.
+
+Available pipe operators:
+- PipeLLM: A pipe that uses an LLM to generate a text, or a structured object. It is a vision LLM so it can also use images.
   CRITICAL: When extracting MULTIPLE items (articles, employees, products), use multiple_output = true with SINGULAR concepts!
   - Create concept "Article" (not "Articles") with fields "item_name", "quantity" (not "item_names", "quantities")
   - Then set multiple_output = true to get a list of Article objects
-- PipeSequence: A pipe that executes a sequence of pipes: It needs to reference the pipes it will execute.
-- PipeParallel: A pipe that executes a few pipes in parallel. It needs to reference the pipes it will execute. The results of each pipe will be in the working memory. The output MUST BE "Dynamic".
-- PipeCondition: A pipe that based on a specific condition, branches to a specific pipe. You have to explain what the expression of the condition is,
-    and what the different pipes are that can be executed based on the condition. It needs to reference the pipes it will execute.
-- PipeBatch: A pipe that executes a batch of pipes in parallel. It needs to reference the pipe it will execute.
-- PipeImgGen: A pipe that uses an LLM to generate an image. VERY IMPORTANT: IF YOU DECIDE TO CREATE A PIPEIMGEN, YOU ALSO HAVE TO CREATE A PIPELLM THAT WILL WRITE THE PROMPT, AND THAT NEEDS TO PRECEED THE PIPEIMGEN, based on the necessary elements.
-That means that in the MAIN pipeline, the prompt should NOT be an input. It should be a step that generates the prompt.
-- PipeOcr: A pipe that uses an OCR technology to extract text from an image.
-VERY IMPORTANT: THE INPUT OF THE PIPEOCR MUST BE either an image or a pdf or a concept which refines one of them.
+- PipeImgGen: A pipe that uses an AI model to generate an image.
+  VERY IMPORTANT: IF YOU DECIDE TO CREATE A PipeImgGen, YOU ALSO HAVE TO CREATE A PIPELLM THAT WILL WRITE THE PROMPT, AND THAT NEEDS TO PRECEED THE PIPEIMGEN, based on the necessary elements.
+  That means that in the MAIN pipeline, the prompt MUST NOT be considered as an input. It should be the output of a step that generates the prompt.
+- PipeOcr: A pipe that uses an OCR technology to extract text from an image or a pdf.
+  VERY IMPORTANT: THE INPUT OF THE PIPEOCR MUST BE either an image or a pdf or a concept which refines one of them.
+- PipeCompose: A pipe that uses Jinja2 to render a template.
 
-Be very detailed, process by steps.
+Keep your style concise, no need to write tags such as "Description:", just write what you need to write.
 
-Brief:
 @brief
-
-LIMIT TO 10 DIFFERENT PIPES FOR NOW
 """
 
 # ────────────────────────────────────────────────────────────────────────────────
 # STAGE 2 — textual specs (still TEXT, not structured objects yet)
 # ────────────────────────────────────────────────────────────────────────────────
-[pipe.parallel_draft_to_specs]
-type = "PipeParallel"
-description = "Generate ConceptSpecDraftsText and PipeSignaturesText in parallel from plan draft."
-inputs = { plan_draft = "PlanDraftText", brief = "UserBrief" }
-output = "Dynamic"
-parallels = [
-    { pipe = "draft_to_conceptspecs_text",   result = "concept_spec_drafts_text" },
-    { pipe = "draft_to_pipesignatures_text", result = "pipe_signatures_text" },
-]
-add_each_output = true
-
 [pipe.draft_to_conceptspecs_text]
 type = "PipeLLM"
-description = "From PlanDraftText (+ brief), extract ConceptSpecsText (codes, descriptions, structure hints) in TEXT."
-inputs = { plan_draft = "PlanDraftText", brief = "UserBrief" }
-output = "Text"
+description = "Interpret the draft of a plan to create an AI pipeline, and define the needed concepts."
+inputs = { plan_draft = "PlanDraft", brief = "UserBrief" }
+output = "ConceptDrafts"
 llm = "llm_to_engineer"
 prompt_template = """
-You will receive a plan for a Pipelex pipeline.
-Each pipeline will take inputs and output. Those inputs/output are represented as concepts.
-
-Return ConceptSpecsText capturing all concepts used in the plan:
-- Use PascalCase for concept codes
-- Provide a short description per concept
-- Include structure hints as plain text (fields, types) IF IT IS needed.
-
-CRITICAL RULE: Concepts must represent SINGLE ENTITIES, never collections!
-- Create "Article" not "Articles"
-- Create "Employee" not "Employees"
-- Use SINGULAR field names: "item_name" not "item_names", "quantity" not "quantities"
-- If you need multiple items, the PipeLLM will use multiple_output=true to generate a LIST of the concept
-
-If you need structure for your concept, to isolate/extract some precise information, assign a structure:
-Here is how the structure as to be described:
-A dict with:
-- key: the field name in snake_case (ALWAYS SINGULAR)
-- value: a dict with:
-  - definition: the definition of the field, in natural language
-  - type: the type of the field (text, integer, boolean, number)
-  - required: whether the field is required
-  - default_value: the default value of the field
-
-You can have multiple fields if needed, but each field should represent a single value.
-
-Otherwise, there are native concepts that you can use:
-If the concept you want to create is JUST a text, assign "Text" to the 'refines' field, and no structure field.
-If the concept you want to create is JUST an image, assign "Image" to the 'refines' field, and no structure field.
-If the concept you want to create is JUST a PDF, assign "PDF" to the 'refines' field, and no structure field.
-If the concept you want to create is JUST a Number, assign "Number" to the 'refines' field, and no structure field.
-
-DO NOT redefine native concepts:
-- Text
-- Image
-- PDF
-- Number
-- Page
-If you need one of these, you will later on use them, but you should NOT REDEFINE THEM.
-Plan:
-@plan_draft
-
-Brief:
+We are working on writing an AI pipeleine to answer this brief:
 @brief
 
-Remember: Create concepts for SINGLE entities. Lists are handled by PipeLLM with multiple_output=true.
+We have already written a plan for the pipeline. It's built using pipes, each with its own inputs (one or more) and output (single).
+Variables are snake_case and concepts are PascalCase.
+
+Your job is to clarify the different concepts used in the plan.
+We want clear concepts but we don't want  too many concepts. If a concept can be reused in the pipeline, it's the same concept.
+For instance:
+- If you have a "FlowerDescription" concept, then it can be used for rose_description, tulip_description, beautiful_flower_description, dead_flower_description, etc.
+- DO NOT define concepts that include adjectives: "LongArticle" is wrong, "Article" is right.
+- DO NOT include circumstances in the concept definition:
+  "ArticleAboutApple" is wrong, "Article" is right.
+  "CounterArgument" is wrong, "Argument" is right.
+- Concepts are always expressed as singular nouns, even if we're to use them as a list:
+  for instance, define the concept as "Article" not "Articles", "Employee" not "Employees".
+  If we need multiple items, we'll indicate it elsewhere so you don't bother with it here.
+- Provide a short description concise description for each concept
+
+If the concept can be expressed as a text, image, pdf, number, or page:
+- Name the concept, define it and just write "refines: Text", "refines: PDF", or "refines: Image" etc.
+- No need to define its structure
+Else, if you need structure for your concept, draft its structure:
+- field name in snake_case
+- definition:
+  - definition: the definition of the field, in natural language
+  - type: the type of the field (text, integer,boolean, number, date)
+  - required: add required = true if the field is required (otherwise, leave it empty)
+  - default_value: the default value of the field
+
+DO NOT redefine native concepts such as: Text, Image, PDF, Number, Page. if you need one of these, they already exist so you should NOT REDEFINE THEM.
+
+@plan_draft
 """
 
 [pipe.draft_to_pipesignatures_text]
 type = "PipeLLM"
-description = "From PlanDraftText (+ brief), extract PipeSignaturesText in TEXT."
-inputs = { plan_draft = "PlanDraftText", brief = "UserBrief" }
+description = "Write the pipe signatures for the plan."
+inputs = { plan_draft = "PlanDraft", brief = "UserBrief" }
 output = "Text"
 llm = "llm_to_engineer"
 prompt_template = """
