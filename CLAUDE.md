@@ -525,6 +525,258 @@ class PageContent(StructuredContent): # CONCEPT IS "Page"
 - `text_and_images` are the text, and the related images found in the input image or PDF.
 - `page_view` is the screenshot of the whole pdf page/image.
 
+## PipeCompose operator
+
+The PipeCompose operator is used to compose text using Jinja2 templates. It supports various output formats including HTML, Markdown, Mermaid diagrams, and more.
+
+### Basic Usage
+
+Simple Template Composition:
+```plx
+[pipe.compose_report]
+type = "PipeCompose"
+definition = "Compose a report using template"
+inputs = { data = "ReportData" }
+output = "Text"
+jinja2 = """
+# Report Summary
+
+Based on the analysis:
+$data
+
+Generated on: {{ current_date }}
+"""
+```
+
+Using Named Templates:
+```plx
+[pipe.use_template]
+type = "PipeCompose"
+definition = "Use a predefined template"
+inputs = { content = "Text" }
+output = "Text"
+jinja2_name = "standard_report_template"
+```
+
+CRM Email Template:
+```plx
+[pipe.compose_follow_up_email]
+type = "PipeCompose"
+definition = "Compose a personalized follow-up email for CRM"
+inputs = { customer = "Customer", deal = "Deal", sales_rep = "SalesRep" }
+output = "Text"
+template_category = "html"
+prompting_style = { tag_style = "square_brackets", text_format = "html" }
+jinja2 = """
+Subject: Following up on our $deal.product_name discussion
+
+Hi $customer.first_name,
+
+I hope this email finds you well! I wanted to follow up on our conversation about $deal.product_name from $deal.last_contact_date.
+
+Based on our discussion, I understand that your key requirements are: $deal.customer_requirements
+
+I'm excited to let you know that we can definitely help you achieve your goals. Here's what I'd like to propose:
+
+**Next Steps:**
+- Schedule a demo tailored to your specific needs
+- Provide you with a customized quote based on your requirements  
+- Connect you with our implementation team
+
+Would you be available for a 30-minute call this week? I have openings on:
+{% for slot in available_slots %}
+- {{ slot }}
+{% endfor %}
+
+Looking forward to moving this forward together!
+
+Best regards,
+$sales_rep.name
+$sales_rep.title
+$sales_rep.phone | $sales_rep.email
+"""
+```
+
+### Key Parameters
+
+- `jinja2`: Inline Jinja2 template (mutually exclusive with jinja2_name)
+- `jinja2_name`: Name of a predefined template (mutually exclusive with jinja2)
+- `template_category`: Template type ("llm_prompt", "html", "markdown", "mermaid", etc.)
+- `prompting_style`: Styling options for template rendering
+- `extra_context`: Additional context variables for template
+
+### Template Variables
+
+Use the same variable insertion rules as PipeLLM:
+- `@variable` for block insertion (multi-line content)
+- `$variable` for inline insertion (short text)
+
+## PipeImgGen operator
+
+The PipeImgGen operator is used to generate images using AI image generation models.
+
+### Basic Usage
+
+Simple Image Generation:
+```plx
+[pipe.generate_image]
+type = "PipeImgGen"
+definition = "Generate an image from prompt"
+inputs = { prompt = "ImgGenPrompt" }
+output = "Image"
+```
+
+Using Image Generation Settings:
+```plx
+[pipe.generate_photo]
+type = "PipeImgGen"
+definition = "Generate a high-quality photo"
+inputs = { prompt = "ImgGenPrompt" }
+output = "Photo"
+img_gen = { img_gen_handle = "dall-e-3", quality = "hd" }
+aspect_ratio = "16:9"
+nb_steps = 8
+```
+
+Multiple Image Generation:
+```plx
+[pipe.generate_variations]
+type = "PipeImgGen"
+definition = "Generate multiple image variations"
+inputs = { prompt = "ImgGenPrompt" }
+output = "Image"
+nb_output = 3
+seed = "auto"
+```
+
+Advanced Configuration:
+```plx
+[pipe.generate_custom]
+type = "PipeImgGen"
+definition = "Generate image with custom settings"
+inputs = { prompt = "ImgGenPrompt" }
+output = "Image"
+img_gen = "img_gen_preset_name"  # Use predefined preset
+aspect_ratio = "1:1"
+quality = "hd"
+background = "transparent"
+output_format = "png"
+is_raw = false
+safety_tolerance = 3
+```
+
+### Key Parameters
+
+**Image Generation Settings:**
+- `img_gen`: ImgGenChoice (preset name or inline settings)
+- `img_gen_handle`: Direct model handle (legacy)
+- `quality`: Image quality ("standard", "hd")
+- `nb_steps`: Number of generation steps
+- `guidance_scale`: How closely to follow the prompt
+
+**Output Configuration:**
+- `nb_output`: Number of images to generate
+- `aspect_ratio`: Image dimensions ("1:1", "16:9", "9:16", etc.)
+- `output_format`: File format ("png", "jpeg", "webp")
+- `background`: Background type ("default", "transparent")
+
+**Generation Control:**
+- `seed`: Random seed (integer or "auto")
+- `is_raw`: Whether to apply post-processing
+- `is_moderated`: Enable content moderation
+- `safety_tolerance`: Content safety level (1-6)
+
+### Input Requirements
+
+PipeImgGen requires exactly one input that must be either:
+- An `ImgGenPrompt` concept
+- A concept that refines `ImgGenPrompt`
+
+The input can be named anything but must contain the prompt text for image generation.
+
+## PipeFunc operator
+
+The PipeFunc operator is used to run custom Python functions within a pipeline. This allows integration of classic Python scripts and custom logic.
+
+### Basic Usage
+
+Simple Function Call:
+```plx
+[pipe.process_data]
+type = "PipeFunc"
+definition = "Process data using custom function"
+inputs = { input_data = "DataType" }
+output = "ProcessedData"
+function_name = "process_data_function"
+```
+
+File Processing Example:
+```plx
+[pipe.read_file]
+type = "PipeFunc"
+definition = "Read file content"
+inputs = { file_path = "FilePath" }
+output = "FileContent"
+function_name = "read_file_content"
+```
+
+### Key Parameters
+
+- `function_name`: Name of the Python function to call (must be registered in func_registry)
+
+### Function Requirements
+
+The Python function must:
+
+1. **Be registered** in the `func_registry`
+2. **Accept `working_memory`** as a parameter:
+   ```python
+   async def my_function(working_memory: WorkingMemory) -> StuffContent | list[StuffContent] | str:
+       # Function implementation
+       pass
+   ```
+
+3. **Return appropriate types**:
+   - `StuffContent`: Single content object
+   - `list[StuffContent]`: Multiple content objects (becomes ListContent)
+   - `str`: Simple string (becomes TextContent)
+
+### Function Registration
+
+Functions must be registered in the function registry before use:
+
+```python
+from pipelex.tools.func_registry import func_registry
+
+@func_registry.register("my_function_name")
+async def my_custom_function(working_memory: WorkingMemory) -> StuffContent:
+    # Access inputs from working memory
+    input_data = working_memory.get_stuff("input_name")
+    
+    # Process data
+    result = process_logic(input_data.content)
+    
+    # Return result
+    return MyResultContent(data=result)
+```
+
+### Working Memory Access
+
+Inside the function, access pipeline inputs through working memory:
+
+```python
+async def process_function(working_memory: WorkingMemory) -> TextContent:
+    # Get input stuff by name
+    input_stuff = working_memory.get_stuff("input_name")
+    
+    # Access the content
+    input_content = input_stuff.content
+    
+    # Process and return
+    processed_text = f"Processed: {input_content.text}"
+    return TextContent(text=processed_text)
+```
+
 ---
 
 ## Rules to choose LLM models used in PipeLLMs.
