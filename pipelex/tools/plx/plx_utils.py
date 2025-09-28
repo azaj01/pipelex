@@ -31,11 +31,6 @@ PIPE_FIELD_ORDERING: FieldOrdering = [
     "definition",
     "inputs",
     "output",
-    # "jinja2",
-    # "jinja2_name",
-    # "prompting_style",
-    # "template_category",
-    # "extra_context",
 ]
 
 STRUCTURE_FIELD_ORDERING: FieldOrdering = ["type", "definition", "choices", "required"]
@@ -143,6 +138,7 @@ def _convert_mapping_to_table(mapping: Mapping[str, Any], field_ordering: FieldO
     return tbl
 
 
+# TODO: replace this by a proper toml formatter utility
 def _add_spaces_to_inline_tables(toml_string: str) -> str:
     """Add spaces inside inline table curly braces.
 

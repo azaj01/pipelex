@@ -40,9 +40,9 @@ class InterpreterTestCases:
         *PIPE_SEQUENCE_TEST_CASES,
         *PIPE_CONDITION_TEST_CASES,
         *PIPE_PARALLEL_TEST_CASES,
-        # *PIPE_BATCH_TEST_CASES,
-        # # Complex tests
-        # *COMPLEX_TEST_CASES,
+        *PIPE_BATCH_TEST_CASES,
+        # Complex tests
+        *COMPLEX_TEST_CASES,
     ]
 
     # Error test cases

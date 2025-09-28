@@ -251,6 +251,15 @@ def ensure_path(path: str) -> bool:
     return True
 
 
+def ensure_directory_for_file_path(file_path: str) -> None:
+    """Ensures a directory exists for the specified file path.
+
+    Args:
+        file_path (str): The path to the file.
+    """
+    ensure_directory_exists(os.path.dirname(file_path))
+
+
 def path_exists(path_str: str) -> bool:
     """Checks if a file or directory exists at the specified path.
 
