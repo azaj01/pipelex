@@ -1,5 +1,3 @@
-# ruff: noqa: UP
-
 try:
     from typing import Self  # Python 3.11+
 except ImportError:  # Python 3.10

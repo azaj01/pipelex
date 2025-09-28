@@ -1,6 +1,3 @@
-"""Tests for ConceptFactory methods."""
-
-
 import pytest
 
 from pipelex.core.concepts.concept import Concept
@@ -75,7 +72,7 @@ class TestConceptFactory:
         "domain,concept_string_or_code,concept_codes_from_the_same_domain,expected_result",
         TestCases.MAKE_DOMAIN_AND_CONCEPT_CODE_TEST_CASES,
     )
-    def test_make_domain_and_concept_code_from_concept_string_orcode(
+    def test_make_domain_and_concept_code_from_concept_string_or_code(
         self,
         domain: str,
         concept_string_or_code: str,
