@@ -123,7 +123,7 @@ class ConceptLibrary(RootModel[ConceptLibraryRoot], ConceptProviderAbstract):
         ConceptBlueprint.validate_concept_code(concept_code=concept_code)
         for domain in search_domains:
             if found_concept := self.get_required_concept(
-                concept_string=ConceptFactory.construct_concept_string_with_domain(domain=domain, concept_code=concept_code),
+                concept_string=ConceptFactory.make_concept_string_with_domain(domain=domain, concept_code=concept_code),
             ):
                 return found_concept
 

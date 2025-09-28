@@ -33,7 +33,7 @@ class PipeImgGenFactory(PipeFactoryProtocol[PipeImgGenBlueprint, PipeImgGen]):
                 concept_codes_from_the_same_domain=concept_codes_from_the_same_domain,
             ),
             output=get_concept_provider().get_required_concept(
-                concept_string=ConceptFactory.construct_concept_string_with_domain(
+                concept_string=ConceptFactory.make_concept_string_with_domain(
                     domain=output_domain_and_code.domain,
                     concept_code=output_domain_and_code.concept_code,
                 ),

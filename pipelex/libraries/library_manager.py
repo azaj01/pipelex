@@ -180,7 +180,7 @@ class LibraryManager(LibraryManagerAbstract):
         # Remove concepts (they may depend on domain)
         if blueprint.concept is not None:
             concept_codes_to_remove = [
-                ConceptFactory.construct_concept_string_with_domain(domain=blueprint.domain, concept_code=concept_code)
+                ConceptFactory.make_concept_string_with_domain(domain=blueprint.domain, concept_code=concept_code)
                 for concept_code in blueprint.concept
             ]
             self.concept_library.remove_concepts_by_codes(concept_codes=concept_codes_to_remove)
