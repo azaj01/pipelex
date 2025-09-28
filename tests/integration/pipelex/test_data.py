@@ -59,7 +59,7 @@ class PipeTestCases:
         content=ImageContent(url=URL_IMG_FASHION_PHOTO_1),
     )
     SIMPLE_STUFF_PDF = StuffFactory.make_stuff(
-        name="arbitrary_name",
+        name="document",
         concept=ConceptFactory.make_native_concept(native_concept_data=NATIVE_CONCEPTS_DATA[NativeConceptEnum.PDF]),
         content=PDFContent(url=PDFTestCases.DOCUMENT_URLS[0]),
     )
