@@ -25,8 +25,8 @@ from pipelex.types import StrEnum
 
 
 class DomainInformation(StructuredContent):
-    domain: str = Field(description="The domain of the pipeline library.")
-    definition: str = Field(description="The definition of the pipeline library.")
+    domain: str = Field(description="Name of the domain of the knowledge work.")
+    definition: str = Field(description="Definition of the domain of the knowledge work.")
 
 
 class PipeBuilderError(Exception):

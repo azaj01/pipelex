@@ -20,10 +20,10 @@ description = "This pipe is going to be the entry point for the builder. It will
 inputs = { brief = "UserBrief" }
 output = "Dynamic"
 steps = [
-    { pipe = "draft_planning_text", result = "plan_draft" },
-    { pipe = "draft_to_conceptspecs_text", result = "concept_spec_drafts_text" },
+    { pipe = "draft_the_plan", result = "plan_draft" },
+    { pipe = "draft_the_concepts", result = "concept_drafts" },
+    { pipe = "structure_concepts", result = "concept_specs" },
     # { pipe = "draft_to_pipesignatures_text", result = "pipe_signatures_text" },
-    # { pipe = "materialize_concept_spec_drafts", result = "concept_spec_drafts" },
     # { pipe = "materialize_pipe_signatures", result = "pipe_signatures" },
     # { pipe = "pipe_builder_domain_information", result = "domain_information" },
     # { pipe = "build_concept_spec", batch_over = "concept_spec_drafts", batch_as = "concept_spec_draft", result = "concept_specs" },
@@ -38,21 +38,16 @@ description = "Turn the brief into a DomainInformation object."
 inputs = { brief = "UserBrief" }
 output = "DomainInformation"
 prompt_template = """
-Based on the brief output the "domain" of this pipe, and a definition of what it would represent.
-
-Brief:
+Name and define the domain of this process:
 @brief
 
-For example, if the pipe is about generating a compliance matrix out of a RFP, the domain would be "rfp_compliance_matrix"...
-It should be not more than 4 words, in snake_case.
-For the definition, i would like to see a short description of what the bundle would represent.
+For example, if the brief is about generating and analyzing a compliance matrix out of a RFP,
+the domain would be "rfp_compliance" and the definition would be "Generating and analyzing compliance related to RFPs".
+The domain name should be not more than 4 words, in snake_case.
+For the definition, be concise.
 """
 
-# ────────────────────────────────────────────────────────────────────────────────
-# STAGE 1 — plan (natural language pseudo-code, but explicit about IO + sequencing)
-# ────────────────────────────────────────────────────────────────────────────────
-
-[pipe.draft_planning_text]
+[pipe.draft_the_plan]
 type = "PipeLLM"
 description = "Turn the brief into a pseudo-code plan describing controllers, pipes, their inputs/outputs."
 inputs = { brief = "UserBrief" }
@@ -95,17 +90,14 @@ Keep your style concise, no need to write tags such as "Description:", just writ
 @brief
 """
 
-# ────────────────────────────────────────────────────────────────────────────────
-# STAGE 2 — textual specs (still TEXT, not structured objects yet)
-# ────────────────────────────────────────────────────────────────────────────────
-[pipe.draft_to_conceptspecs_text]
+[pipe.draft_the_concepts]
 type = "PipeLLM"
 description = "Interpret the draft of a plan to create an AI pipeline, and define the needed concepts."
 inputs = { plan_draft = "PlanDraft", brief = "UserBrief" }
 output = "ConceptDrafts"
 llm = "llm_to_engineer"
 prompt_template = """
-We are working on writing an AI pipeleine to answer this brief:
+We are working on writing an AI pipeleine to fulfill this brief:
 @brief
 
 We have already written a plan for the pipeline. It's built using pipes, each with its own inputs (one or more) and output (single).
@@ -139,6 +131,22 @@ DO NOT redefine native concepts such as: Text, Image, PDF, Number, Page. if you 
 
 @plan_draft
 """
+
+[pipe.structure_concepts]
+type = "PipeLLM"
+description = "Structure the concept definitions."
+inputs = { concept_drafts = "ConceptDrafts", brief = "UserBrief" }
+output = "concept.ConceptSpec"
+multiple_output = true
+llm = "llm_to_engineer"
+prompt_template = """
+Structure the concept drafts.
+
+@concept_drafts
+"""
+
+
+
 
 [pipe.draft_to_pipesignatures_text]
 type = "PipeLLM"
@@ -222,30 +230,6 @@ Brief:
 @brief
 
 No more than 10 PipeSignatures
-"""
-
-# ────────────────────────────────────────────────────────────────────────────────
-# STAGE 3 — materialize: TEXT → real objects (ConceptSpec[], PipeSignature[])
-# ────────────────────────────────────────────────────────────────────────────────
-
-[pipe.materialize_concept_spec_drafts]
-type = "PipeLLM"
-description = "Turn ConceptSpecsText into ConceptSpec objects."
-inputs = { concept_spec_drafts_text = "Text", brief = "UserBrief" }
-output = "concept.ConceptSpecDraft"
-multiple_output = true
-llm = "llm_to_engineer"
-prompt_template = """
-Materialize ConceptSpec objects from the ConceptSpecsText.
-Do not change the information in the input. Just organize the information
-
-ConceptSpecs:
-@concept_spec_drafts_text
-
-Brief:
-@brief
-
-LIMIT TO A MAXIMUM OF 5 fields for now
 """
 
 [pipe.materialize_pipe_signatures]

@@ -118,7 +118,7 @@ class ConceptSpecDraft(StructuredContent):
     the_concept_code: str = Field(description="Concept code. Must be PascalCase.")
     definition: str = Field(description="Description of the concept, in natural language.")
     structure: str = Field(
-        description="A description of a dict with fieldnames as keys, and values being a dict with: definition, type, required, default_value",
+        description="Description of a dict with fieldnames as keys, and values being a dict with: definition, type, required, default_value",
     )
     refines: str | None = Field(
         default=None,
@@ -128,22 +128,7 @@ class ConceptSpecDraft(StructuredContent):
 
 
 class ConceptSpec(StructuredContent):
-    """Spec defining a concept that can be used in the Pipelex framework.
-
-    A concept represents a structured data type that can either define its own structure
-    or refine an existing native concept. Concepts are fundamental building blocks in
-    Pipelex workflows for data validation and transformation.
-
-    Attributes:
-        the_concept_code: Concept code. Must be PascalCase.
-        definition: Natural language description of what the concept represents and its purpose.
-        structure: The concept's field structure. Can be either:
-                  - A string referring to another concept
-                  - A dictionary where keys are field names (in snake_case) and values are
-                    either strings (concept references) or ConceptStructureBlueprint instances
-                  Cannot be used together with 'refines'.
-        refines: The native concept this concept extends (Text, Image, PDF, TextAndImages,
-                Number, Page) in PascalCase format. Cannot be used together with 'structure'.
+    """Spec structuring a concept: a conceptual data type that can either define its own structure or refine an existing native concept.
 
     Validation Rules:
         1. Mutual exclusivity: A concept must have either 'structure' or 'refines', but not both.
@@ -153,17 +138,25 @@ class ConceptSpec(StructuredContent):
         4. Concept strings: Format is "domain.ConceptCode" where domain is lowercase and
            ConceptCode is PascalCase.
         5. Native concepts: When refining, must be one of the valid native concepts.
-        6. Structure values: In structure dict, values must be either valid concept strings
+        6. Structure values: In structure attribute, values must be either valid concept strings
            or ConceptStructureBlueprint instances.
-
     """
 
     model_config = ConfigDict(extra="forbid")
 
     the_concept_code: str = Field(description="Concept code. Must be PascalCase.")
-    definition: str
-    structure: str | dict[str, str | ConceptStructureSpec] | None = None
-    refines: str | None = None
+    definition: str = Field(description="Description of the concept, in natural language.")
+    structure: str | dict[str, str | ConceptStructureSpec] | None = Field(
+        default=None,
+        description=("Definition of the concept's structure. Each attribute (snake_case) specifies: definition, type, required, default_value"),
+    )
+    refines: str | None = Field(
+        default=None,
+        description=(
+            "If applicable: the native concept this concept extends (Text, Image, PDF, TextAndImages, Number, Page) "
+            "in PascalCase format. Cannot be used together with 'structure'."
+        ),
+    )
 
     @classmethod
     def is_native_concept_code(cls, concept_code: str) -> bool:
