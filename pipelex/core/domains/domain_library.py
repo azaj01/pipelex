@@ -28,6 +28,10 @@ class DomainLibrary(RootModel[DomainLibraryRoot], DomainProviderAbstract):
         else:
             self.root[domain_code] = domain
 
+    def add_domains(self, domains: list[Domain]):
+        for domain in domains:
+            self.add_domain(domain=domain)
+
     def remove_domain_by_code(self, domain_code: str) -> None:
         if domain_code in self.root:
             del self.root[domain_code]

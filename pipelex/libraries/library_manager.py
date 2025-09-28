@@ -280,8 +280,7 @@ class LibraryManager(LibraryManagerAbstract):
                 msg = f"Could not load domain from PLX blueprint at '{blueprint.source}', domain code: '{blueprint.domain}': {exc}"
                 raise LibraryLoadingError(msg) from exc
             all_domains.append(domain)
-        for domain in all_domains:
-            self.domain_library.add_domain(domain=domain)
+        self.domain_library.add_domains(domains=all_domains)
 
         # Load all concepts second
         all_concepts: list[Concept] = []
