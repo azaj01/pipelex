@@ -14,8 +14,6 @@ from pipelex.config import StaticValidationReaction, get_config
 from pipelex.core.concepts.concept_native import NativeConceptEnum
 from pipelex.core.memory.working_memory import WorkingMemory
 from pipelex.core.pipes.pipe_input import PipeInputSpec
-from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
-from pipelex.core.pipes.pipe_input_factory import PipeInputSpecFactory
 from pipelex.core.pipes.pipe_output import PipeOutput
 from pipelex.core.pipes.pipe_run_params import PipeRunMode, PipeRunParams
 from pipelex.core.stuffs.stuff_content import ImageContent, ListContent, PageContent, TextAndImagesContent, TextContent
@@ -150,10 +148,7 @@ class PipeOcr(PipeOperator[PipeOcrOutput]):
 
     @override
     def needed_inputs(self, visited_pipes: set[str] | None = None) -> PipeInputSpec:
-        return PipeInputSpecFactory.make_from_blueprint(
-            domain=self.domain,
-            blueprint={PIPE_OCR_INPUT_NAME: InputRequirementBlueprint(concept=self.inputs.root[PIPE_OCR_INPUT_NAME].concept.concept_string)},
-        )
+        return self.inputs
 
     @override
     async def _run_operator_pipe(
