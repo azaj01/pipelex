@@ -15,15 +15,15 @@ class PipeSignature(StructuredContent):
     code: str = Field(description="Pipe code. Must be snake_case.")
     type: AllowedPipeTypes = Field(description="Pipe type.")
     category: AllowedPipeCategories = Field(description="Pipe category.")
-    definition: str = Field(description="What the pipe does")
-    inputs: dict[str, ConceptSpecDraft] = Field(description="Pipe inputs: key is the concept code in pascal Case.")
-    result: str = Field(description="The name of the result of the pipe. Must be snake_case. It will be used in the inputs of the next pipes.")
-    output: ConceptSpecDraft = Field(description="Concept as output")
-    important_features: dict[str, Any] | None = Field(
-        default=None,
-        description="Important features specific to this pipe type "
-        "(e.g., referenced pipe codes for controllers, specific configuration for operators)",
-    )
+    description: str = Field(description="What the pipe does")
+    inputs: dict[str, str] = Field(description="Pipe inputs: key is the concept code in snake_case, value is the ConceptCode in PascalCase.")
+    result: str = Field(description="The name of the result of the pipe. Must be snake_case. It could be referenced as input in a following pipe.")
+    output: str = Field(description="ConceptCode in PascalCase")
+    # important_features: dict[str, Any] | None = Field(
+    #     default=None,
+    #     description="Important features specific to this pipe type "
+    #     "(e.g., referenced pipe codes for controllers, specific configuration for operators)",
+    # )
 
 
 class PipeSpec(StructuredContent):

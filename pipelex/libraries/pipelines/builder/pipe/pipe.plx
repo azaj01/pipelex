@@ -2,7 +2,7 @@ domain = "pipe"
 definition = "Build and process pipes."
 
 [concept]
-PipeSignature = "Pseudo-Pipelex step: code, type, description, inputs, output, optional children refs."
+PipeSignature = "A pipe contract which says what the pipe does, not how it does it: code (the pipe code in snake_case), type, description, inputs, output."
 PipeSpec = "A structured spec for a pipe (union)."
 # Pipe controllers
 PipeBatchSpec = "A structured spec for a pipe batch."

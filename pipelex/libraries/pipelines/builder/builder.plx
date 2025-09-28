@@ -4,7 +4,8 @@ definition = "Auto-generate a Pipelex bundle (concepts + pipes) from a short use
 [concept]
 UserBrief = "A short, natural-language description of what the user wants."
 PlanDraft = "Natural-language pipeline plan text describing sequences, inputs, outputs."
-ConceptDrafts = "Textual representation of the concepts to create."
+ConceptDrafts = "Textual draft of the concepts to create."
+# PipeSignatureDrafts = "Textual draft of the pipe signatures to create."
 PipelexBundleSpec = "A Pipelex bundle spec."
 PipeFailure = "Details of a single pipe failure during dry run."
 DryRunResult = "A result of a dry run of a pipelex bundle spec."
@@ -23,7 +24,7 @@ steps = [
     { pipe = "draft_the_plan", result = "plan_draft" },
     { pipe = "draft_the_concepts", result = "concept_drafts" },
     { pipe = "structure_concepts", result = "concept_specs" },
-    # { pipe = "draft_to_pipesignatures_text", result = "pipe_signatures_text" },
+    { pipe = "design_pipe_signatures", result = "pipe_signatures" },
     # { pipe = "materialize_pipe_signatures", result = "pipe_signatures" },
     # { pipe = "pipe_builder_domain_information", result = "domain_information" },
     # { pipe = "build_concept_spec", batch_over = "concept_spec_drafts", batch_as = "concept_spec_draft", result = "concept_specs" },
@@ -145,92 +146,125 @@ Structure the concept drafts.
 @concept_drafts
 """
 
-
-
-
-[pipe.draft_to_pipesignatures_text]
+[pipe.design_pipe_signatures]
 type = "PipeLLM"
 description = "Write the pipe signatures for the plan."
-inputs = { plan_draft = "PlanDraft", brief = "UserBrief" }
-output = "Text"
+inputs = { plan_draft = "PlanDraft", brief = "UserBrief", concept_specs = "concept.ConceptSpec" }
+output = "pipe.PipeSignature"
+multiple_output = true
 llm = "llm_to_engineer"
 prompt_template = """
-Return PipeSignaturesText listing every pipe to build:
-- For each pipe: give a unique snake_case pipe_code, type, definition, inputs (by concept code/name), output, and important_features
-- Controller pipes must reference children by their codes consistently
-- The Pipe Controllers, if they mention pipes, they should always mention existing pipes.
+Define the contracts of the pipes to build:
+- For each pipe: give a unique snake_case pipe_code, a type and description, specify inputs (one or more) and output (one)
 - Add as much details as possible for the description.
 
-Here are the ESSENTIAL features for each pipe type that should be included in important_features (only include these key ones):
+Available pipe controllers:
+- PipeSequence: A pipe that executes a sequence of pipes: it needs to reference the pipes it will execute.
+- PipeParallel: A pipe that executes a few pipes in parallel. It needs to reference the pipes it will execute.
+  The results of each pipe will be in the working memory. The output MUST BE "Dynamic".
+- PipeCondition: A pipe that based on a conditional expression, branches to a specific pipe.
+  You have to explain what the expression of the condition is,
+  and what the different pipes are that can be executed based on the condition.
+  It needs to reference the pipes it will execute.
 
-**PipeLLM**: A pipe that uses an LLM to generate a text, or a structured object. It is a vision LLM that can read images.
-The inputs of the PipeLLM should be:
-The variables tagged in the prompt template (with $ or @). If there are no variables, the inputs should be empty.
-The ouput should be the concept code of the output
-- prompt_template: The prompt template with variable substitution ($ for inline, @ for blocks)
-- multiple_output: true if generating multiple number of outputs: That means it will output a LIST of the CONCEPT!
+When describing the task of a pipe controller, be concise, don't detail all the sub-pipes.
 
-CRITICAL RULE FOR PIPELLM:
-- If extracting MULTIPLE items (like multiple articles, employees, products), use multiple_output = true
-- The concept should represent ONE SINGLE item (Article, Employee, Product)
-- DO NOT create concepts with plural field names like "item_names", "quantities"
-- Instead: use multiple_output = true with singular concept fields like "item_name", "quantity"
-- Example: To extract multiple articles, create concept "Article" with fields "item_name", "quantity", then use multiple_output = true
+Available pipe operators:
+- PipeLLM: A pipe that uses an LLM to generate a text, or a structured object. It is a vision LLM so it can also use images.
+  CRITICAL: When extracting MULTIPLE items (articles, employees, products), use multiple_output = true with SINGULAR concepts!
+  - Create concept "Article" (not "Articles") with fields "item_name", "quantity" (not "item_names", "quantities")
+  - Then set multiple_output = true to get a list of Article objects
+- PipeImgGen: A pipe that uses an AI model to generate an image.
+  VERY IMPORTANT: IF YOU DECIDE TO CREATE A PipeImgGen, YOU ALSO HAVE TO CREATE A PIPELLM THAT WILL WRITE THE PROMPT, AND THAT NEEDS TO PRECEED THE PIPEIMGEN, based on the necessary elements.
+  That means that in the MAIN pipeline, the prompt MUST NOT be considered as an input. It should be the output of a step that generates the prompt.
+- PipeOcr: A pipe that uses an OCR technology to extract text from an image or a pdf.
+  VERY IMPORTANT: THE INPUT OF THE PIPEOCR MUST BE either an image or a pdf or a concept which refines one of them.
+- PipeCompose: A pipe that uses Jinja2 to render a template.
 
-**PipeSequence**: A pipe that executes a sequence of pipes: It needs to reference the pipes it will execute.
-The inputs of the PipeSequence should be all the necessary inputs in the below steps, and the inputs that are NOT generated by intermediate steps.
-The output should be the concept code of the output of the last step.
-- steps: List of pipe codes to execute in order, with result names
-- Each step format: {"pipe": "pipe_code", "result": "result_name"}
-- Can include batch operations: {"pipe": "pipe_code", "batch_over": "list_input", "batch_as": "item_name", "result": "result_name"}
-
-**PipeParallel**: A pipe that executes a few pipes in parallel. It needs to reference the pipes it will execute.
-The inputs of the PipeParallel should be all the necessary inputs in the below steps
-The output should be the concept code of the output of the last step.
-The results of each pipe will be in the working memory.
-- parallels: List of pipes to execute in parallel
-- Each parallel format: {"pipe": "pipe_code", "result": "result_name"}
-
-**PipeCondition**: A pipe that based on a specific condition, branches to a specific pipe. You have to explain what the expression of the condition is,
-    and what the different pipes are that can be executed based on the condition. It needs to reference the pipes it will execute.
-The inputs of the PipeCondition should be all the necessary inputs in the below steps
-The output should be the concept code of the output of all the steps, except if the outputs are different, then its "Dynamic"
-- expression: Direct expression to evaluate (e.g., "task_result.status")
-- pipe_map: Dictionary mapping condition results to pipe codes (e.g., {"completed": "success_pipe", "failed": "failure_pipe"})
-- default_pipe_code: Fallback pipe when no conditions match
-
-**PipeBatch**: A pipe that executes a batch of pipes in parallel. It needs to reference the pipe it will execute.
-- branch_pipe_code: The pipe code to execute for each item
-- input_list_name: Name of the list to iterate over
-- input_item_name: Name for individual items within each execution
-
-**PipeImgGen**: A pipe that uses an LLM to generate an image.
-The inputs of the PipeImgGen should be: {prompt: ImgGenPrompt}
-The output should be the concept code that refines Image.
-- img_gen_prompt: Static prompt for image generation (if using static prompt)
-- nb_output: Number of images to generate (default 1)
-VERY IMPORTANT: IF YOU DECIDE TO CREATE A PIPEIMGEN, YOU ALSO HAVE TO CREATE A PIPELLM THAT WILL WRITE THE PROMPT, AND THAT NEEDS TO PRECEED THE PIPEIMGEN, based on the necessary elements.
-THERFORE, the OUTPUT OF THIS PIPELLM should be a VARIABLE NAMED "prompt" that will be used as input for the PipeImgGen.
-That means that in the MAIN pipeline, the prompt should NOT be an input. It should be a step that generates the prompt.
-
-**PipeOcr**: A pipe that uses an LLM to extract text from an image.
-- The INPUTS of PipeOcr must be either an image or a pdf or a concept which refines one of them.
-
-**PipeFunc**: A pipe that executes a custom Python function.
-- function_name: Name of the Python function to call
-
-**PipeCompose**: A pipe that uses Jinja2 to render a template.
-- jinja2: Raw Jinja2 template string OR
-- jinja2_name: Name reference to a template (use one or the other)
-
-Plan:
-@plan_draft
-
-Brief:
 @brief
 
-No more than 10 PipeSignatures
+@plan_draft
+
+{% if concept_specs %}
+We have already defined the concepts you can use for inputs/outputs:
+@concept_specs
+And of course you still have the native concepts if required: Text, Image, PDF, Number, Page.
+{% else %}
+You can use the native concepts for inputs/outputs as required: Text, Image, PDF, Number, Page.
+{% endif %}
 """
+
+# """
+# Here are the ESSENTIAL features for each pipe type that should be included in important_features (only include these key ones):
+
+# **PipeLLM**: A pipe that uses an LLM to generate a text, or a structured object. It is a vision LLM that can read images.
+# The inputs of the PipeLLM should be:
+# The variables tagged in the prompt template (with $ or @). If there are no variables, the inputs should be empty.
+# The ouput should be the concept code of the output
+# - prompt_template: The prompt template with variable substitution ($ for inline, @ for blocks)
+# - multiple_output: true if generating multiple number of outputs: That means it will output a LIST of the CONCEPT!
+
+# CRITICAL RULE FOR PIPELLM:
+# - If extracting MULTIPLE items (like multiple articles, employees, products), use multiple_output = true
+# - The concept should represent ONE SINGLE item (Article, Employee, Product)
+# - DO NOT create concepts with plural field names like "item_names", "quantities"
+# - Instead: use multiple_output = true with singular concept fields like "item_name", "quantity"
+# - Example: To extract multiple articles, create concept "Article" with fields "item_name", "quantity", then use multiple_output = true
+
+# **PipeSequence**: A pipe that executes a sequence of pipes: It needs to reference the pipes it will execute.
+# The inputs of the PipeSequence should be all the necessary inputs in the below steps, and the inputs that are NOT generated by intermediate steps.
+# The output should be the concept code of the output of the last step.
+# - steps: List of pipe codes to execute in order, with result names
+# - Each step format: {"pipe": "pipe_code", "result": "result_name"}
+# - Can include batch operations: {"pipe": "pipe_code", "batch_over": "list_input", "batch_as": "item_name", "result": "result_name"}
+
+# **PipeParallel**: A pipe that executes a few pipes in parallel. It needs to reference the pipes it will execute.
+# The inputs of the PipeParallel should be all the necessary inputs in the below steps
+# The output should be the concept code of the output of the last step.
+# The results of each pipe will be in the working memory.
+# - parallels: List of pipes to execute in parallel
+# - Each parallel format: {"pipe": "pipe_code", "result": "result_name"}
+
+# **PipeCondition**: A pipe that based on a specific condition, branches to a specific pipe. You have to explain what the expression of the condition is,
+#     and what the different pipes are that can be executed based on the condition. It needs to reference the pipes it will execute.
+# The inputs of the PipeCondition should be all the necessary inputs in the below steps
+# The output should be the concept code of the output of all the steps, except if the outputs are different, then its "Dynamic"
+# - expression: Direct expression to evaluate (e.g., "task_result.status")
+# - pipe_map: Dictionary mapping condition results to pipe codes (e.g., {"completed": "success_pipe", "failed": "failure_pipe"})
+# - default_pipe_code: Fallback pipe when no conditions match
+
+# **PipeBatch**: A pipe that executes a batch of pipes in parallel. It needs to reference the pipe it will execute.
+# - branch_pipe_code: The pipe code to execute for each item
+# - input_list_name: Name of the list to iterate over
+# - input_item_name: Name for individual items within each execution
+
+# **PipeImgGen**: A pipe that uses an LLM to generate an image.
+# The inputs of the PipeImgGen should be: {prompt: ImgGenPrompt}
+# The output should be the concept code that refines Image.
+# - img_gen_prompt: Static prompt for image generation (if using static prompt)
+# - nb_output: Number of images to generate (default 1)
+# VERY IMPORTANT: IF YOU DECIDE TO CREATE A PIPEIMGEN, YOU ALSO HAVE TO CREATE A PIPELLM THAT WILL WRITE THE PROMPT, AND THAT NEEDS TO PRECEED THE PIPEIMGEN, based on the necessary elements.
+# THERFORE, the OUTPUT OF THIS PIPELLM should be a VARIABLE NAMED "prompt" that will be used as input for the PipeImgGen.
+# That means that in the MAIN pipeline, the prompt should NOT be an input. It should be a step that generates the prompt.
+
+# **PipeOcr**: A pipe that uses an LLM to extract text from an image.
+# - The INPUTS of PipeOcr must be either an image or a pdf or a concept which refines one of them.
+
+# **PipeFunc**: A pipe that executes a custom Python function.
+# - function_name: Name of the Python function to call
+
+# **PipeCompose**: A pipe that uses Jinja2 to render a template.
+# - jinja2: Raw Jinja2 template string OR
+# - jinja2_name: Name reference to a template (use one or the other)
+
+# Plan:
+# @plan_draft
+
+# Brief:
+# @brief
+
+# No more than 10 PipeSignatures
+# """
 
 [pipe.materialize_pipe_signatures]
 type = "PipeLLM"
