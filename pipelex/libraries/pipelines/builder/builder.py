@@ -7,8 +7,16 @@ from pipelex.core.concepts.concept_blueprint import ConceptBlueprint
 from pipelex.core.domains.domain_blueprint import DomainBlueprint
 from pipelex.core.memory.working_memory import WorkingMemory
 from pipelex.core.stuffs.stuff_content import ListContent, StructuredContent
-from pipelex.exceptions import LibraryLoadingError, PipelexError, StaticValidationError
-from pipelex.hub import get_library_manager
+from pipelex.exceptions import (
+    ConceptDefinitionError,
+    ConceptLoadingError,
+    DomainLoadingError,
+    PipeDefinitionError,
+    PipelexError,
+    PipeLoadingError,
+    StaticValidationError,
+)
+from pipelex.hub import get_class_registry, get_library_manager
 from pipelex.libraries.pipelines.builder.concept.concept_spec import ConceptSpec
 from pipelex.libraries.pipelines.builder.pipe.pipe_batch_spec import PipeBatchSpec
 from pipelex.libraries.pipelines.builder.pipe.pipe_compose_spec import PipeComposeSpec
@@ -22,7 +30,6 @@ from pipelex.libraries.pipelines.builder.pipe.pipe_sequence_spec import PipeSequ
 from pipelex.libraries.pipelines.builder.pipe.pipe_signature import PipeSignature
 from pipelex.pipe_works.pipe_dry import dry_run_pipes
 from pipelex.tools.typing.pydantic_utils import format_pydantic_validation_error
-from pipelex.types import StrEnum
 
 
 class DomainInformation(StructuredContent):
@@ -59,34 +66,77 @@ PipeSpecUnion = Annotated[
 ]
 
 
-class PipeFailure(StructuredContent):
-    """Details of a single pipe failure during dry run."""
+class DomainFailure(StructuredContent):
+    """Details of a single domain failure during dry run."""
 
-    pipe: PipeSpecUnion = Field(description="The failing pipe spec blueprint with pipe code")
-    error_message: str = Field(description="The error message for this pipe")
+    domain_code: str = Field(description="The code of the domain that failed")
+    error_message: str = Field(description="The error message for this domain")
+
+
+# class DomainSpecError(PipelexError):
+#     """Details of a single domain failure during dry run."""
+
+#     def __init__(self, message: str, domain_failure: DomainFailure):
+#         self.domain_failure = domain_failure
+#         super().__init__(message)
 
 
 class ConceptFailure(StructuredContent):
     """Details of a single concept failure during dry run."""
 
-    concept: ConceptSpec = Field(description="The failing concept spec blueprint with concept code")
+    concept_spec: ConceptSpec = Field(description="The failing concept spec with concept code")
     error_message: str = Field(description="The error message for this concept")
+
+
+class ConceptSpecError(PipelexError):
+    """Details of a single concept failure during dry run."""
+
+    def __init__(self, message: str, concept_failure: ConceptFailure):
+        self.concept_failure = concept_failure
+        super().__init__(message)
+
+
+class PipeFailure(StructuredContent):
+    """Details of a single pipe failure during dry run."""
+
+    pipe_spec: PipeSpecUnion = Field(description="The failing pipe spec with pipe code")
+    error_message: str = Field(description="The error message for this pipe")
+
+
+class PipeSpecError(PipelexError):
+    """Details of a single pipe failure during dry run."""
+
+    def __init__(self, message: str, pipe_failure: PipeFailure):
+        self.pipe_failure = pipe_failure
+        super().__init__(message)
+
+
+class ValidateDryRunError(Exception):
+    """Raised when validating the dry run of a pipe."""
 
 
 class PipelexBundleError(PipelexError):
     def __init__(
         self,
         message: str,
-        pipe_code: str | None = None,
-        pipe_failure: PipeFailure | None = None,
-        concept_code: str | None = None,
-        concept_failure: ConceptFailure | None = None,
+        static_validation_error: StaticValidationError | None = None,
+        domain_failures: list[DomainFailure] | None = None,
+        pipe_failures: list[PipeFailure] | None = None,
+        concept_failures: list[ConceptFailure] | None = None,
+        concept_definition_errors: list[ConceptDefinitionError] | None = None,
+        pipe_definition_errors: list[PipeDefinitionError] | None = None,
     ):
-        self.pipe_code = pipe_code
-        self.pipe_failure = pipe_failure
-        self.concept_code = concept_code
-        self.concept_failure = concept_failure
+        self.static_validation_error = static_validation_error
+        self.domain_failures = domain_failures
+        self.pipe_failures = pipe_failures
+        self.concept_failures = concept_failures
+        self.concept_definition_errors = concept_definition_errors
+        self.pipe_definition_errors = pipe_definition_errors
         super().__init__(message)
+
+
+class PipelexBundleUnexpectedError(PipelexError):
+    """Raised when an unexpected error occurs during validation."""
 
 
 class PipelexBundleSpec(StructuredContent):
@@ -150,9 +200,9 @@ class PipelexBundleSpec(StructuredContent):
                     try:
                         concept[concept_code] = concept_spec_or_name.to_blueprint()
                     except ValidationError as exc:
-                        msg = f"Failed to validate concept spec for concept code {concept_code}: {format_pydantic_validation_error(exc)}"
-                        concept_failure = ConceptFailure(concept=concept_spec_or_name, error_message=msg)
-                        raise PipelexBundleError(message=msg, concept_code=concept_code, concept_failure=concept_failure) from exc
+                        msg = f"Failed to create concept blueprint from spec for concept code {concept_code}: {format_pydantic_validation_error(exc)}"
+                        concept_failure = ConceptFailure(concept_spec=concept_spec_or_name, error_message=msg)
+                        raise ConceptSpecError(message=msg, concept_failure=concept_failure) from exc
                 else:
                     concept[concept_code] = ConceptBlueprint(definition=concept_code, structure=concept_spec_or_name)
 
@@ -163,9 +213,9 @@ class PipelexBundleSpec(StructuredContent):
                 try:
                     pipe[pipe_code] = pipe_spec.to_blueprint()
                 except ValidationError as exc:
-                    msg = f"Failed to validate pipe spec for pipe code {pipe_code}: {format_pydantic_validation_error(exc)}"
-                    pipe_failure = PipeFailure(pipe=pipe_spec, error_message=msg)
-                    raise PipelexBundleError(message=msg, pipe_code=pipe_code, pipe_failure=pipe_failure) from exc
+                    msg = f"Failed to create pipe blueprint from spec for pipe code {pipe_code}: {format_pydantic_validation_error(exc)}"
+                    pipe_failure = PipeFailure(pipe_spec=pipe_spec, error_message=msg)
+                    raise PipeSpecError(message=msg, pipe_failure=pipe_failure) from exc
 
         return PipelexBundleBlueprint(
             domain=self.domain,
@@ -245,95 +295,81 @@ async def compile_in_pipelex_bundle_spec(working_memory: WorkingMemory) -> Pipel
 #     FAILURE = "FAILURE"
 
 
-class Status(StrEnum):
-    SUCCESS = "SUCCESS"
-    FAILURE = "FAILURE"
+# class Status(StrEnum):
+#     SUCCESS = "SUCCESS"
+#     FAILURE = "FAILURE"
 
 
-class ValidationFollowUp(StrEnum):
-    CONTINUE = "continue"
-    FIX_PIPES = "fix_pipes"
-    FIX_CONCEPTS = "fix_concepts"
+# class ValidationFollowUp(StrEnum):
+#     CONTINUE = "continue"
+#     FIX_PIPES = "fix_pipes"
+#     FIX_CONCEPTS = "fix_concepts"
 
 
-class ValidateDryRunError(Exception):
-    """Raised when validating the dry run of a pipelex bundle blueprint."""
+# class ValidationResult(StructuredContent):
+#     status: Status
+#     error_message: str | None = Field(default=None, description="The error message for the failure if applicable")
+#     failed_pipes: ListContent[PipeSpecFailure] | None = Field(default=None, description="The error details for the failure if applicable")
+#     failed_concepts: ListContent[ConceptSpecFailure] | None = Field(default=None, description="The error details for the failure if applicable")
 
 
-class ValidationResult(StructuredContent):
-    status: Status
-    error_message: str | None = Field(default=None, description="The error message for the failure if applicable")
-    failed_pipes: ListContent[PipeFailure] | None = Field(default=None, description="The error details for the failure if applicable")
-    failed_concepts: ListContent[ConceptFailure] | None = Field(default=None, description="The error details for the failure if applicable")
-
-
-async def validate_loading(working_memory: WorkingMemory) -> ValidationResult:
+async def validate_bundle_spec(working_memory: WorkingMemory):
     library_manager = get_library_manager()
     pipelex_bundle_spec = working_memory.get_stuff_as(name="pipelex_bundle_spec", content_type=PipelexBundleSpec)
     try:
         pipelex_bundle_blueprint = pipelex_bundle_spec.to_blueprint()
-    except PipelexBundleError as exc:
-        if exc.concept_failure:
-            failed_concepts = ListContent[ConceptFailure](items=[exc.concept_failure])
-            return ValidationResult(status=Status.FAILURE, error_message=exc.message, failed_concepts=failed_concepts)
-        elif exc.pipe_failure:
-            failed_pipes = ListContent[PipeFailure](items=[exc.pipe_failure])
-            return ValidationResult(status=Status.FAILURE, error_message=exc.message, failed_pipes=failed_pipes)
-        else:
-            return ValidationResult(status=Status.FAILURE, error_message=exc.message)
+    except ConceptSpecError as concept_spec_error:
+        concept_failures = [concept_spec_error.concept_failure]
+        raise PipelexBundleError(message=concept_spec_error.message, concept_failures=concept_failures) from concept_spec_error
+    except PipeSpecError as pipe_spec_error:
+        pipe_failures = [pipe_spec_error.pipe_failure]
+        raise PipelexBundleError(message=pipe_spec_error.message, pipe_failures=pipe_failures) from pipe_spec_error
+
     try:
-        library_manager.load_from_blueprint(blueprint=pipelex_bundle_blueprint)
-    except LibraryLoadingError as library_loading_exc:
-        return ValidationResult(status=Status.FAILURE, error_message=str(library_loading_exc))
-    except StaticValidationError as static_validation_exc:
-        return ValidationResult(status=Status.FAILURE, error_message=str(static_validation_exc))
+        pipes = library_manager.load_from_blueprint(blueprint=pipelex_bundle_blueprint)
+    except StaticValidationError as static_validation_error:
+        raise PipelexBundleError(message=static_validation_error.desc(), static_validation_error=static_validation_error) from static_validation_error
+    except DomainLoadingError as domain_loading_error:
+        domain_failures = [DomainFailure(domain_code=domain_loading_error.domain_code, error_message=str(domain_loading_error))]
+        raise PipelexBundleError(message=domain_loading_error.message, domain_failures=domain_failures) from domain_loading_error
+    except ConceptLoadingError as concept_loading_error:
+        raise PipelexBundleError(
+            message=concept_loading_error.message, concept_definition_errors=[concept_loading_error.concept_definition_error]
+        ) from concept_loading_error
+    except PipeLoadingError as pipe_loading_error:
+        raise PipelexBundleError(
+            message=pipe_loading_error.message, pipe_definition_errors=[pipe_loading_error.pipe_definition_error]
+        ) from pipe_loading_error
 
-    library_manager.remove_from_blueprint(blueprint=pipelex_bundle_blueprint)
-    return ValidationResult(status=Status.SUCCESS)
-
-
-async def validate_dry_run(working_memory: WorkingMemory) -> ValidationResult:
-    pipelex_bundle_spec = working_memory.get_stuff_as(name="pipelex_bundle_spec", content_type=PipelexBundleSpec)
-    pipelex_bundle_blueprint = pipelex_bundle_spec.to_blueprint()
-
-    library_manager = get_library_manager()
-
-    pipes = library_manager.load_from_blueprint(blueprint=pipelex_bundle_blueprint)
     dry_run_result = await dry_run_pipes(pipes=pipes, raise_on_failure=False)
     library_manager.remove_from_blueprint(blueprint=pipelex_bundle_blueprint)
 
-    pipe_type_to_spec_class = {
-        "PipeFunc": PipeFuncSpec,
-        "PipeImgGen": PipeImgGenSpec,
-        "PipeCompose": PipeComposeSpec,
-        "PipeLLM": PipeLLMSpec,
-        "PipeOcr": PipeOcrSpec,
-        "PipeBatch": PipeBatchSpec,
-        "PipeCondition": PipeConditionSpec,
-        "PipeParallel": PipeParallelSpec,
-        "PipeSequence": PipeSequenceSpec,
-    }
-
-    failed_pipes: list[PipeFailure] = []
+    dry_run_pipe_failures: list[PipeFailure] = []
     for pipe_code, dry_run_output in dry_run_result.items():
-        if dry_run_output.status.is_failure and pipelex_bundle_spec.pipe and pipe_code in pipelex_bundle_spec.pipe:
-            pipe_spec = pipelex_bundle_spec.pipe[pipe_code]
-            spec_class = pipe_type_to_spec_class.get(pipe_spec.type)
+        if dry_run_output.status.is_failure:
+            if not pipelex_bundle_spec.pipe:
+                msg = f"No pipes section found in bundle spec but we recorded a dry run failure for pipe '{pipe_code}'"
+                raise PipelexBundleUnexpectedError(message="No pipes section found in bundle spec")
+            if pipe_code not in pipelex_bundle_spec.pipe:
+                msg = f"Pipe '{pipe_code}' not found in bundle spec but we recorded a dry run failure for it"
+                raise PipelexBundleUnexpectedError(message=msg)
+
+            failing_pipe_spec = pipelex_bundle_spec.pipe[pipe_code]
+            pipe_spec_type_name = failing_pipe_spec.type
+            pipe_spec_class_name = pipe_spec_type_name + "Spec"
+            spec_class = get_class_registry().get_class(name=pipe_spec_class_name)
             if not spec_class:
-                msg = f"Unknown pipe type: {pipe_spec.type}"
-                raise ValidateDryRunError(msg)
-            pipe_spec = spec_class(**pipe_spec.model_dump(serialize_as_any=True))
-            failed_pipes.append(
+                msg = f"Unknown pipe spec class: {pipe_spec_class_name}"
+                raise PipelexBundleUnexpectedError(message=msg)
+            pipe_spec = spec_class.model_validate(obj=failing_pipe_spec.model_dump(serialize_as_any=True))
+            dry_run_pipe_failures.append(
                 PipeFailure(
-                    pipe=pipe_spec,
+                    pipe_spec=pipe_spec,
                     error_message=dry_run_output.error_message or "",
                 ),
             )
-    if failed_pipes:
-        failed_pipes_list_content = ListContent[PipeFailure](items=failed_pipes)
-        return ValidationResult(status=Status.FAILURE, failed_pipes=failed_pipes_list_content)
-    else:
-        return ValidationResult(status=Status.SUCCESS)
+    if dry_run_pipe_failures:
+        raise PipelexBundleError(message="Pipes failed during dry run", pipe_failures=dry_run_pipe_failures)
 
 
 async def reconstruct_bundle_with_pipe_fixes(working_memory: WorkingMemory) -> PipelexBundleSpec:

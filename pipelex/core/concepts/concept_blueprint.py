@@ -114,6 +114,7 @@ class ConceptStructureBlueprint(BaseModel):
 class ConceptBlueprint(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    source: str | None = None
     definition: str
     # TODO (non-blockiing): define a type for Union[str, ConceptStructureBlueprint] (ConceptChoice to be consistent with LLMChoice)
     structure: str | dict[str, str | ConceptStructureBlueprint] | None = None

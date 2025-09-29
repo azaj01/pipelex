@@ -265,215 +265,215 @@ And here are the concepts you can use:
 # PIPE FIXERS — one per pipe type, all fixing specific pipe type issues
 # ────────────────────────────────────────────────────────────────────────────────
 
-[pipe.fix_failing_pipe]
-type = "PipeCondition"
-description = "Route to specific pipe fixer based on the failing pipe type."
-inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
-output = "Dynamic"
-expression = "failed_pipe.pipe.type"
+# [pipe.fix_failing_pipe]
+# type = "PipeCondition"
+# description = "Route to specific pipe fixer based on the failing pipe type."
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
+# output = "Dynamic"
+# expression = "failed_pipe.pipe.type"
 
-[pipe.fix_failing_pipe.pipe_map]
-PipeLLM = "fix_failing_llm_pipe"
-PipeImgGen = "fix_failing_imggen_pipe"
-PipeOcr = "fix_failing_ocr_pipe"
-PipeFunc = "fix_failing_func_pipe"
-PipeCompose = "fix_failing_jinja2_pipe"
-PipeSequence = "fix_failing_sequence_pipe"
-PipeParallel = "fix_failing_parallel_pipe"
-PipeCondition = "fix_failing_condition_pipe"
-PipeBatch = "fix_failing_batch_pipe"
+# [pipe.fix_failing_pipe.pipe_map]
+# PipeLLM = "fix_failing_llm_pipe"
+# PipeImgGen = "fix_failing_imggen_pipe"
+# PipeOcr = "fix_failing_ocr_pipe"
+# PipeFunc = "fix_failing_func_pipe"
+# PipeCompose = "fix_failing_jinja2_pipe"
+# PipeSequence = "fix_failing_sequence_pipe"
+# PipeParallel = "fix_failing_parallel_pipe"
+# PipeCondition = "fix_failing_condition_pipe"
+# PipeBatch = "fix_failing_batch_pipe"
 
-[pipe.fix_failing_llm_pipe]
-type = "PipeLLM"
-description = "Fix a failing PipeLLM spec based on its specific error."
-inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
-output = "PipeLLMSpec"
-llm = "llm_to_engineer"
-prompt_template = """
-Fix this failing PipeLLM spec.
+# [pipe.fix_failing_llm_pipe]
+# type = "PipeLLM"
+# description = "Fix a failing PipeLLM spec based on its specific error."
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
+# output = "PipeLLMSpec"
+# llm = "llm_to_engineer"
+# prompt_template = """
+# Fix this failing PipeLLM spec.
 
-Failing pipe:
-@failed_pipe.pipe
+# Failing pipe:
+# @failed_pipe.pipe
 
-Error message:
-@failed_pipe.error_message
+# Error message:
+# @failed_pipe.error_message
 
-Please provide only the corrected PipeLLMSpec. Common LLM pipe issues to fix:
-- Missing input variables in the pipe inputs that are referenced in prompt_template
-- Incorrect variable names in prompt templates (use $ for inline, @ for blocks)
-- Wrong concept types for inputs/outputs
-- Missing llm configuration
-- Invalid prompt template syntax
-"""
+# Please provide only the corrected PipeLLMSpec. Common LLM pipe issues to fix:
+# - Missing input variables in the pipe inputs that are referenced in prompt_template
+# - Incorrect variable names in prompt templates (use $ for inline, @ for blocks)
+# - Wrong concept types for inputs/outputs
+# - Missing llm configuration
+# - Invalid prompt template syntax
+# """
 
-[pipe.fix_failing_imggen_pipe]
-type = "PipeLLM"
-description = "Fix a failing PipeImgGen spec based on its specific error."
-inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
-output = "PipeImgGenSpec"
-llm = "llm_to_engineer"
-prompt_template = """
-Fix this failing PipeImgGen spec.
+# [pipe.fix_failing_imggen_pipe]
+# type = "PipeLLM"
+# description = "Fix a failing PipeImgGen spec based on its specific error."
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
+# output = "PipeImgGenSpec"
+# llm = "llm_to_engineer"
+# prompt_template = """
+# Fix this failing PipeImgGen spec.
 
-Failing pipe:
-@failed_pipe.pipe
+# Failing pipe:
+# @failed_pipe.pipe
 
-Error message:
-@failed_pipe.error_message
+# Error message:
+# @failed_pipe.error_message
 
-Please provide only the corrected PipeImgGenSpec. Common ImgGen pipe issues to fix:
-- Missing or incorrect prompt input (should be text concept)
-- Invalid img_gen
-- Missing required inputs for dynamic prompt generation
-"""
+# Please provide only the corrected PipeImgGenSpec. Common ImgGen pipe issues to fix:
+# - Missing or incorrect prompt input (should be text concept)
+# - Invalid img_gen
+# - Missing required inputs for dynamic prompt generation
+# """
 
-[pipe.fix_failing_ocr_pipe]
-type = "PipeLLM"
-description = "Fix a failing PipeOcr spec based on its specific error."
-inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
-output = "PipeOcrSpec"
-llm = "llm_to_engineer"
-prompt_template = """
-Fix this failing PipeOcr spec.
+# [pipe.fix_failing_ocr_pipe]
+# type = "PipeLLM"
+# description = "Fix a failing PipeOcr spec based on its specific error."
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
+# output = "PipeOcrSpec"
+# llm = "llm_to_engineer"
+# prompt_template = """
+# Fix this failing PipeOcr spec.
 
-VERY IMPORTANT: THE INPUT OF THE PIPEOCR must be either an image or a pdf or a concept which refines one of them.
-Failing pipe:
-@failed_pipe.pipe
+# VERY IMPORTANT: THE INPUT OF THE PIPEOCR must be either an image or a pdf or a concept which refines one of them.
+# Failing pipe:
+# @failed_pipe.pipe
 
-Error message:
-@failed_pipe.error_message
+# Error message:
+# @failed_pipe.error_message
 
-Please provide only the corrected PipeOcrSpec. Common OCR pipe issues to fix:
-- Input must be of type Image or PDF
-- Output should typically be Page (native concept)
-- Missing or incorrect input concept types
-"""
+# Please provide only the corrected PipeOcrSpec. Common OCR pipe issues to fix:
+# - Input must be of type Image or PDF
+# - Output should typically be Page (native concept)
+# - Missing or incorrect input concept types
+# """
 
-[pipe.fix_failing_func_pipe]
-type = "PipeLLM"
-description = "Fix a failing PipeFunc spec based on its specific error."
-inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
-output = "PipeFuncSpec"
-llm = "llm_to_engineer"
-prompt_template = """
-Fix this failing PipeFunc spec.
+# [pipe.fix_failing_func_pipe]
+# type = "PipeLLM"
+# description = "Fix a failing PipeFunc spec based on its specific error."
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
+# output = "PipeFuncSpec"
+# llm = "llm_to_engineer"
+# prompt_template = """
+# Fix this failing PipeFunc spec.
 
-Failing pipe:
-@failed_pipe.pipe
+# Failing pipe:
+# @failed_pipe.pipe
 
-Error message:
-@failed_pipe.error_message
+# Error message:
+# @failed_pipe.error_message
 
-Please provide only the corrected PipeFuncSpec. Common Func pipe issues to fix:
-- Missing or incorrect function_name
-- Wrong input/output concept types for the function
-- Function not available in registry
-"""
+# Please provide only the corrected PipeFuncSpec. Common Func pipe issues to fix:
+# - Missing or incorrect function_name
+# - Wrong input/output concept types for the function
+# - Function not available in registry
+# """
 
-[pipe.fix_failing_jinja2_pipe]
-type = "PipeLLM"
-description = "Fix a failing PipeCompose spec based on its specific error."
-inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
-output = "PipeComposeSpec"
-llm = "llm_to_engineer"
-prompt_template = """
-Fix this failing PipeCompose spec.
+# [pipe.fix_failing_jinja2_pipe]
+# type = "PipeLLM"
+# description = "Fix a failing PipeCompose spec based on its specific error."
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
+# output = "PipeComposeSpec"
+# llm = "llm_to_engineer"
+# prompt_template = """
+# Fix this failing PipeCompose spec.
 
-Failing pipe:
-@failed_pipe.pipe
+# Failing pipe:
+# @failed_pipe.pipe
 
-Error message:
-@failed_pipe.error_message
+# Error message:
+# @failed_pipe.error_message
 
-Please provide only the corrected PipeComposeSpec. Common Jinja2 pipe issues to fix:
-- Invalid Jinja2 template syntax
-- Missing input variables referenced in template
-- Wrong concept types for inputs/outputs
-"""
+# Please provide only the corrected PipeComposeSpec. Common Jinja2 pipe issues to fix:
+# - Invalid Jinja2 template syntax
+# - Missing input variables referenced in template
+# - Wrong concept types for inputs/outputs
+# """
 
-[pipe.fix_failing_sequence_pipe]
-type = "PipeLLM"
-description = "Fix a failing PipeSequence spec based on its specific error."
-inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
-output = "PipeSequenceSpec"
-llm = "llm_to_engineer"
-prompt_template = """
-Fix this failing PipeSequence spec.
+# [pipe.fix_failing_sequence_pipe]
+# type = "PipeLLM"
+# description = "Fix a failing PipeSequence spec based on its specific error."
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
+# output = "PipeSequenceSpec"
+# llm = "llm_to_engineer"
+# prompt_template = """
+# Fix this failing PipeSequence spec.
 
-Failing pipe:
-@failed_pipe.pipe
+# Failing pipe:
+# @failed_pipe.pipe
 
-Error message:
-@failed_pipe.error_message
+# Error message:
+# @failed_pipe.error_message
 
-Please provide only the corrected PipeSequenceSpec. Common Sequence pipe issues to fix:
-- Missing input variables needed by sub-pipes in steps
-- Referenced pipe codes in steps that don't exist
-- Circular dependencies in step order
-- Wrong result names in steps
-"""
+# Please provide only the corrected PipeSequenceSpec. Common Sequence pipe issues to fix:
+# - Missing input variables needed by sub-pipes in steps
+# - Referenced pipe codes in steps that don't exist
+# - Circular dependencies in step order
+# - Wrong result names in steps
+# """
 
-[pipe.fix_failing_parallel_pipe]
-type = "PipeLLM"
-description = "Fix a failing PipeParallel spec based on its specific error."
-inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
-output = "PipeParallelSpec"
-llm = "llm_to_engineer"
-prompt_template = """
-Fix this failing PipeParallel spec.
+# [pipe.fix_failing_parallel_pipe]
+# type = "PipeLLM"
+# description = "Fix a failing PipeParallel spec based on its specific error."
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
+# output = "PipeParallelSpec"
+# llm = "llm_to_engineer"
+# prompt_template = """
+# Fix this failing PipeParallel spec.
 
-Failing pipe:
-@failed_pipe.pipe
+# Failing pipe:
+# @failed_pipe.pipe
 
-Error message:
-@failed_pipe.error_message
+# Error message:
+# @failed_pipe.error_message
 
-Please provide only the corrected PipeParallelSpec. Common Parallel pipe issues to fix:
-- Missing input variables needed by parallel sub-pipes
-- Referenced pipe codes that don't exist
-- Incompatible output types from parallel branches
-"""
+# Please provide only the corrected PipeParallelSpec. Common Parallel pipe issues to fix:
+# - Missing input variables needed by parallel sub-pipes
+# - Referenced pipe codes that don't exist
+# - Incompatible output types from parallel branches
+# """
 
-[pipe.fix_failing_condition_pipe]
-type = "PipeLLM"
-description = "Fix a failing PipeCondition spec based on its specific error."
-inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
-output = "PipeConditionSpec"
-llm = "llm_to_engineer"
-prompt_template = """
-Fix this failing PipeCondition spec.
+# [pipe.fix_failing_condition_pipe]
+# type = "PipeLLM"
+# description = "Fix a failing PipeCondition spec based on its specific error."
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
+# output = "PipeConditionSpec"
+# llm = "llm_to_engineer"
+# prompt_template = """
+# Fix this failing PipeCondition spec.
 
-Failing pipe:
-@failed_pipe.pipe
+# Failing pipe:
+# @failed_pipe.pipe
 
-Error message:
-@failed_pipe.error_message
+# Error message:
+# @failed_pipe.error_message
 
-Please provide only the corrected PipeConditionSpec. Common Condition pipe issues to fix:
-- Invalid expression or expression_template syntax
-- Referenced pipe codes in pipe_map that don't exist
-- Missing input variables referenced in expression
-- Incompatible output types from different condition branches
-"""
+# Please provide only the corrected PipeConditionSpec. Common Condition pipe issues to fix:
+# - Invalid expression or expression_template syntax
+# - Referenced pipe codes in pipe_map that don't exist
+# - Missing input variables referenced in expression
+# - Incompatible output types from different condition branches
+# """
 
-[pipe.fix_failing_batch_pipe]
-type = "PipeLLM"
-description = "Fix a failing PipeBatch spec based on its specific error."
-inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
-output = "PipeBatchSpec"
-llm = "llm_to_engineer"
-prompt_template = """
-Fix this failing PipeBatch spec.
+# [pipe.fix_failing_batch_pipe]
+# type = "PipeLLM"
+# description = "Fix a failing PipeBatch spec based on its specific error."
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
+# output = "PipeBatchSpec"
+# llm = "llm_to_engineer"
+# prompt_template = """
+# Fix this failing PipeBatch spec.
 
-Failing pipe:
-@failed_pipe.pipe
+# Failing pipe:
+# @failed_pipe.pipe
 
-Error message:
-@failed_pipe.error_message
+# Error message:
+# @failed_pipe.error_message
 
-Please provide only the corrected PipeBatchSpec. Common Batch pipe issues to fix:
-- Missing branch_pipe_code or referenced pipe that doesn't exist
-- Wrong input types for batch processing (should be ListContent)
-- Missing batch parameters configuration
-"""
+# Please provide only the corrected PipeBatchSpec. Common Batch pipe issues to fix:
+# - Missing branch_pipe_code or referenced pipe that doesn't exist
+# - Wrong input types for batch processing (should be ListContent)
+# - Missing batch parameters configuration
+# """
 

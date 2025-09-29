@@ -224,7 +224,7 @@ function_name = "compile_in_pipelex_bundle_spec"
 # inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_concepts = "ConceptFailure", fixed_concepts = "ConceptSpec", fixed_pipes = "PipeSpec", failed_pipes = "PipeFailure" }
 # output = "PipelexBundleSpec"
 # steps = [
-#     { pipe = "validate_dry_run", result = "validation_result" },
+#     { pipe = "validate_bundle_spec", result = "validation_result" },
 #     { pipe = "handle_validation_result", result = "pipelex_bundle_spec" }
 # ]
 
@@ -272,12 +272,12 @@ function_name = "compile_in_pipelex_bundle_spec"
 # output = "ValidationResult"
 # function_name = "validate_loading"
 
-# [pipe.validate_dry_run]
+# [pipe.validate_bundle_spec]
 # type = "PipeFunc"
 # description = "Validate the dry running the bundle's pipes and report only failed pipes."
 # inputs = { pipelex_bundle_spec = "PipelexBundleSpec" }
 # output = "ValidationResult"
-# function_name = "validate_dry_run"
+# function_name = "validate_bundle_spec"
 
 # [pipe.continue]
 # type = "PipeCompose"
