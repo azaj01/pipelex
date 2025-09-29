@@ -3,6 +3,12 @@ description:
 globs: tests/**/*.py
 alwaysApply: false
 ---
+# Writing unit tests
+
+## Unit test generalities
+
+NEVER USE unittest.mock or MagicMock. YOU MUST USE pytest-mock instead.
+
 These rules apply when writing unit tests.
 - Always use pytest
 
@@ -30,9 +36,9 @@ Apply the appropriate markers:
 
 Several markers may be applied. For instance, if the test uses an LLM, then it uses inference, so you must mark with both `inference`and `llm`.
 
-## Tips
+### Important rules
 
-- Never use the unittest.mock. Use pytest-mock
+- Never use the unittest.mock. Use pytest-mock.
 
 ## Test Class Structure
 
@@ -61,9 +67,9 @@ class TestFooBar:
 
 Sometimes it can be convenient to access the test's name in its body, for instance to include into a job_id. To achieve that, add the argument `request: FixtureRequest` into the signature and then you can get the test name using `cast(str, request.node.originalname),  # type: ignore`. 
 
-# Pipe tests
+## Writing integration test to test pipes
 
-## Required imports for pipe tests
+### Required imports for pipe tests
 
 ```python
 import pytest
@@ -82,7 +88,7 @@ from pipelex.core.pipes.pipe_run_params import PipeRunParams
 from pipelex.pipe_works.pipe_router_protocol import PipeRouterProtocol
 ```
 
-## Pipe test implementation steps
+### Pipe test implementation steps
 
 1. Create Stuff from blueprint:
 
@@ -112,14 +118,7 @@ pipe_output = await pipe_router.run_pipe(
 )
 ```
 
-4. Log output and generate report:
-
-```python
-pretty_print(pipe_output, title=f"Pipe output")
-get_report_delegate().generate_report()
-```
-
-5. Basic assertions:
+4. Basic assertions:
 
 ```python
 assert pipe_output is not None
@@ -127,7 +126,7 @@ assert pipe_output.working_memory is not None
 assert pipe_output.main_stuff is not None
 ```
 
-## Test Data Organization
+### Test Data Organization
 
 - If it's not already there, create a `test_data.py` file in the test directory
 - Define test cases using `StuffBlueprint`:

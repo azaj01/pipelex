@@ -6,7 +6,7 @@ from pipelex.core.pipes.exceptions import PipeBlueprintError
 from pipelex.core.pipes.pipe_blueprint import AllowedPipeCategories, AllowedPipeTypes, PipeBlueprint
 from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
 from pipelex.core.stuffs.stuff_content import StructuredContent
-from pipelex.libraries.pipelines.builder.concept.concept_spec import ConceptBlueprint, ConceptSpecDraft
+from pipelex.libraries.pipelines.builder.concept.concept_spec import ConceptSpec, ConceptSpecDraft
 from pipelex.libraries.pipelines.builder.pipe.inputs_spec import InputRequirementSpec
 from pipelex.tools.misc.string_utils import is_snake_case
 
@@ -77,7 +77,7 @@ class PipeSpec(StructuredContent):
     @field_validator("output", mode="before")
     @staticmethod
     def validate_concept_string_or_code(output: str) -> str:
-        ConceptBlueprint.validate_concept_string_or_code(concept_string_or_code=output)
+        ConceptSpec.validate_concept_string_or_code(concept_string_or_code=output)
         return output
 
     @classmethod

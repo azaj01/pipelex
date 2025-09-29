@@ -182,7 +182,7 @@ output = "PipeOcrSpec"
 prompt_template = """
 Return a PipeOcrSpec for this signature.
 
-VERY IMPORTANT: THE INPUT OF THE PIPEOCR MUST BE NAMED "ocr_input" and it must be either an image or a pdf or a concept which refines one of them.
+VERY IMPORTANT: THE INPUT OF THE PIPEOCR MUST BE either an image or a pdf or a concept which refines one of them.
 Signature:
 @pipe_signature
 
@@ -337,7 +337,7 @@ llm = "llm_to_engineer"
 prompt_template = """
 Fix this failing PipeOcr spec.
 
-VERY IMPORTANT: THE INPUT OF THE PIPEOCR MUST BE NAMED "ocr_input" and it must be either an image or a pdf or a concept which refines one of them.
+VERY IMPORTANT: THE INPUT OF THE PIPEOCR must be either an image or a pdf or a concept which refines one of them.
 Failing pipe:
 @failed_pipe.pipe
 
@@ -345,7 +345,7 @@ Error message:
 @failed_pipe.error_message
 
 Please provide only the corrected PipeOcrSpec. Common OCR pipe issues to fix:
-- Input must be named 'ocr_input' and be of type Image or PDF
+- Input must be of type Image or PDF
 - Output should typically be Page (native concept)
 - Missing or incorrect input concept types
 """

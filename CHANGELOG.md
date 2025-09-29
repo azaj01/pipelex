@@ -430,7 +430,6 @@ Simplified input memory:
 
 ### Changed
 
-- **OCR Input Standardization**: Changed OCR pipe input parameter naming to consistently use `ocr_input` for both image and PDF inputs, improving consistency across the API
 - **Error Message Improvements**: Updated PipeCondition error messages to reference `expression_template` instead of deprecated `expression_jinja2`
 
 ## [v0.4.11] - 2025-06-30

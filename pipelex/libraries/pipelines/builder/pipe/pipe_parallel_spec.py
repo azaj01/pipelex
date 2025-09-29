@@ -4,7 +4,7 @@ from pydantic import Field, field_validator, model_validator
 from typing_extensions import override
 
 from pipelex.exceptions import PipeDefinitionError
-from pipelex.libraries.pipelines.builder.concept.concept_spec import ConceptBlueprint
+from pipelex.libraries.pipelines.builder.concept.concept_spec import ConceptSpec
 from pipelex.libraries.pipelines.builder.pipe.pipe_signature import PipeSpec
 from pipelex.libraries.pipelines.builder.pipe.sub_pipe_spec import SubPipeSpec
 from pipelex.pipe_controllers.parallel.pipe_parallel_blueprint import PipeParallelBlueprint
@@ -47,7 +47,7 @@ class PipeParallelSpec(PipeSpec):
     @staticmethod
     def validate_combined_output(combined_output: str) -> str:
         if combined_output:
-            ConceptBlueprint.validate_concept_string_or_code(concept_string_or_code=combined_output)
+            ConceptSpec.validate_concept_string_or_code(concept_string_or_code=combined_output)
         return combined_output
 
     @model_validator(mode="after")

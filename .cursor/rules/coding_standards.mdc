@@ -10,10 +10,16 @@ This document outlines the core coding standards, best practices, and quality co
 ## Type Hints
 
 1. **Always Use Type Hints**
-   - Every function parameter must be typed
-   - Every function return must be typed
-   - Use type hints for all variables where type is not obvious
-   - Use types with Uppercase first letter (Dict[], List[], etc.)
+
+    - Every function parameter must be typed
+    - Every function return must be typed
+    - Use type hints for all variables where type is not obvious
+    - Use dict, list, tupele types with lowercase first letter: dict[], list[], tuple[]
+    - Use type hints for all fields
+    - Use the `|` syntax for union types (e.g `str | int`) and `| None` for optionals
+    - Use Field(default_factory=...) for mutable defaults and if it's a list of something else than str, use `empty_list_factory_of()` to make a factory: `number_list: list[int] = Field(default_factory=empty_list_factory_of(int), description="A list of numbers")`
+    - Use `BaseModel` and respect Pydantic v2 standards, in particular use the modern `ConfigDict` when needed, e.g. `model_config = ConfigDict(extra="forbid", strict=True)`
+    - Keep models focused and single-purpose
 
 2. **StrEnum**
    - Import from `pipelex.types`:
@@ -21,19 +27,34 @@ This document outlines the core coding standards, best practices, and quality co
    from pipelex.types import StrEnum
    ```
 
-## BaseModel Standards
-
-- Respect Pydantic v2 standards
-- Keep models focused and single-purpose
-- Use descriptive field names
-- Use type hints for all fields
-- Document complex validations
-- Use Optional[] for nullable fields
-- Use Field(default_factory=...) for mutable defaults
+3. **Self type**
+   - Import from `pipelex.types`:
+   ```python
+   from pipelex.types import Self
+   ```
 
 ## Factory Pattern
 
-- Use Factory Pattern for object creation when dealing with multiple implementations
+    - Use Factory Pattern for object creation when dealing with multiple implementations
+    - Our factory methods are named `make_from_...` and such
+
+## Error Handling
+
+    - Always catch exceptions at the place where you can add useful context to it.
+    - Use try/except blocks with specific exceptions
+    - Convert third-party exceptions to our custom ones
+    - Never catch Exception, only catch specific exceptions
+    - Always add `from exc` to the exception
+   
+   ```python
+   try:
+       self.models_manager.setup()
+   except RoutingProfileLibraryNotFoundError as exc:
+       msg = "The routing library could not be found, please call `pipelex init config` to create it"
+       raise PipelexSetupError(msg) from exc
+   ```
+
+   **Note**: Following Ruff rules, we set the error message as a variable before raising it, for cleaner error traces.
 
 ## Documentation
 
@@ -59,21 +80,6 @@ This document outlines the core coding standards, best practices, and quality co
        
        Provides methods for resizing, converting, and optimizing images.
        """
-   ```
-
-## Error Handling
-
-1. **Graceful Error Handling**
-   - Use try/except blocks with specific exceptions
-   - Convert third-party exceptions to custom ones
-   ```python
-   try:
-       from fal_client import AsyncClient as FalAsyncClient
-   except ImportError as exc:
-       raise MissingDependencyError(
-           "fal-client", "fal", 
-           "The fal-client SDK is required to use FAL models."
-       ) from exc
    ```
 
 ## Code Quality Checks

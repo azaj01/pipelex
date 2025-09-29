@@ -61,10 +61,6 @@ class ConceptFactory:
         )
 
     @classmethod
-    def construct_concept_string_with_domain(cls, domain: str, concept_code: str) -> str:
-        return f"{domain}.{concept_code}"
-
-    @classmethod
     def make(cls, concept_code: str, domain: str, definition: str, structure_class_name: str, refines: str | None = None) -> Concept:
         return Concept(
             code=concept_code,
@@ -103,6 +99,25 @@ class ConceptFactory:
         ):  # Is a concept code from the same domain
             return DomainAndConceptCode(domain=domain, concept_code=concept_string_or_code)
         return DomainAndConceptCode(domain=SpecialDomain.IMPLICIT, concept_code=concept_string_or_code)
+
+    @classmethod
+    def make_concept_string_with_domain(cls, domain: str, concept_code: str) -> str:
+        return f"{domain}.{concept_code}"
+
+    @classmethod
+    def make_concept_string_with_domain_from_concept_string_or_code(
+        cls, domain: str, concept_sring_or_code: str, concept_codes_from_the_same_domain: list[str] | None = None
+    ) -> str:
+        input_domain_and_code = cls.make_domain_and_concept_code_from_concept_string_or_code(
+            domain=domain,
+            concept_string_or_code=concept_sring_or_code,
+            concept_codes_from_the_same_domain=concept_codes_from_the_same_domain,
+        )
+
+        return cls.make_concept_string_with_domain(
+            domain=input_domain_and_code.domain,
+            concept_code=input_domain_and_code.concept_code,
+        )
 
     @classmethod
     def make_refine(cls, refine: str) -> str:

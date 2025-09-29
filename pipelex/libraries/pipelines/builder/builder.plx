@@ -77,10 +77,7 @@ We have pipe controllers:
 - PipeImgGen: A pipe that uses an LLM to generate an image. VERY IMPORTANT: IF YOU DECIDE TO CREATE A PIPEIMGEN, YOU ALSO HAVE TO CREATE A PIPELLM THAT WILL WRITE THE PROMPT, AND THAT NEEDS TO PRECEED THE PIPEIMGEN, based on the necessary elements.
 That means that in the MAIN pipeline, the prompt should NOT be an input. It should be a step that generates the prompt.
 - PipeOcr: A pipe that uses an OCR technology to extract text from an image.
-VERY IMPORTANT: THE INPUT OF THE PIPEOCR MUST BE NAMED "ocr_input" and it must be either an image or a pdf or a concept which refines one of them.
-Usually there is no need to rename a variable or create a new concept, just call it ocr_input, and we'll use the basic PDF concept.
-Thats mean that in the sequence, the input should be ocr_input.
-So the input of PipeOcr is {ocr_input: "PDF"} or {ocr_input: "Image"} or a concept which refines one of them.
+VERY IMPORTANT: THE INPUT OF THE PIPEOCR MUST BE either an image or a pdf or a concept which refines one of them.
 
 Be very detailed, process by steps.
 
@@ -225,9 +222,7 @@ THERFORE, the OUTPUT OF THIS PIPELLM should be a VARIABLE NAMED "prompt" that wi
 That means that in the MAIN pipeline, the prompt should NOT be an input. It should be a step that generates the prompt.
 
 **PipeOcr**: A pipe that uses an LLM to extract text from an image.
-- The INPUTS of this pipe is only "ocr_input" and it must be either an image or a pdf or a concept which refines one of them.
-- Usually there is no need to rename a variable or create a new concept, just call it ocr_input, and we'll use the basic PDF concept. Thats mean that in the sequence, the input should be ocr_input.
-So the input of PipeOcr is {ocr_input: "PDF"} or {ocr_input: "Image"} or a concept which refines one of them.
+- The INPUTS of PipeOcr must be either an image or a pdf or a concept which refines one of them.
 
 **PipeFunc**: A pipe that executes a custom Python function.
 - function_name: Name of the Python function to call

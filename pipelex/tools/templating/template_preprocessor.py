@@ -38,12 +38,20 @@ def _detect_non_existent_filters(template_str: str) -> None:
 # Handle @variable patterns
 def replace_at_variable(match: Match[str]) -> str:
     variable: str = match.group(1)
+    if variable.endswith("."):
+        # trailing dot can't be in a variable name so it must be a punctuation in the template sentence, so we remove it
+        variable = variable[:-1]
+        return f'{{{{ {variable}|tag("{variable}") }}}}.'
     return f'{{{{ {variable}|tag("{variable}") }}}}'
 
 
 # Handle @?variable patterns (optional insertion)
 def replace_optional_at_variable(match: Match[str]) -> str:
     variable: str = match.group(1)
+    if variable.endswith("."):
+        # trailing dot can't be in a variable name so it must be a punctuation in the template sentence, so we remove it
+        variable = variable[:-1]
+        return f'{{% if {variable} %}}{{{{ {variable}|tag("{variable}") }}}}{{% endif %}}.'
     return f'{{% if {variable} %}}{{{{ {variable}|tag("{variable}") }}}}{{% endif %}}'
 
 

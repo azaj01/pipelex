@@ -21,10 +21,10 @@ An llm_handle can be either:
 
 ```toml
 [aliases]
-best-claude = "claude-4.1-opus"
-best-gemini = "gemini-2.5-pro"
-best-mistral = "mistral-large"
+base-claude = "claude-4-sonnet"
 base-gpt = "gpt-5"
+base-gemini = "gemini-2.5-flash"
+base-mistral = "mistral-medium"
 ```
 
 The system first looks for direct model names, then checks aliases if no direct match is found. The system handles model routing through backends automatically.
@@ -38,7 +38,7 @@ Here is an example of using an llm_handle to specify which LLM to use in a PipeL
 type = "PipeLLM"
 definition = "Write text about Hello World."
 output = "Text"
-llm = { llm_handle = "gpt-4o-mini", temperature = 0.9, max_tokens = "auto" }
+llm = { llm_handle = "gpt-5", temperature = 0.9 }
 prompt_template = """
 Write a haiku about Hello World.
 """
@@ -52,7 +52,7 @@ Presets are meant to record the choice of an llm with its hyper parameters (temp
 
 Examples:
 ```toml
-llm_to_reason = { llm_handle = "o4-mini", temperature = 1, max_tokens = "auto" }
+llm_to_reason = { llm_handle = "base-claude", temperature = 1 }
 llm_to_extract_invoice = { llm_handle = "claude-3-7-sonnet", temperature = 0.1, max_tokens = "auto" }
 ```
 
@@ -78,4 +78,4 @@ The setting here `llm = "llm_to_extract_invoice"` works because "llm_to_extract_
 You must not use an LLM preset in a PipeLLM that does not exist in the deck. If needed, you can add llm presets.
 
 
-You can override the predefined llm presets in `.pipelex/inference/deck/overrides.toml`.
+You can override the predefined llm presets by setting them in `.pipelex/inference/deck/overrides.toml`.
