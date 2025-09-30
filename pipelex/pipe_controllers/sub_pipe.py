@@ -122,7 +122,6 @@ class SubPipe(BaseModel):
             log.verbose(required_stuffs, title=f"Required stuffs for {self.pipe_code}")
             # This is the only line that changes between run and dry_run
             if sub_pipe_run_params.run_mode == PipeRunMode.DRY:
-                sub_pipe_run_params.run_mode = PipeRunMode.DRY
                 pipe_output = await sub_pipe.run_pipe(
                     job_metadata=job_metadata,
                     working_memory=working_memory,

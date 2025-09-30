@@ -155,13 +155,6 @@ llm = "llm_to_engineer"
 prompt_template = """
 Your job is to design a PipeComposeSpec to render a jinja2 template.
 
-For now, the only 2 jinja2 filters that are supported are:
-- `tag`
-- `format`
-
-The `tag` filter is used to add tags to the output.
-The `format` filter is used to format the output.
-
 This PipeCompose is part of a larger pipeline:
 @plan_draft
 
