@@ -21,7 +21,7 @@ PipeFailure = "Details of a single pipe failure during dry run."
 
 [pipe.detail_pipe_spec]
 type = "PipeCondition"
-description = "Route by signature.type to the correct spec emitter."
+definition = "Route by signature.type to the correct spec emitter."
 inputs = { plan_draft = "PlanDraft", pipe_signature = "PipeSignature", concept_specs = "ConceptSpec" }
 output = "Dynamic"
 expression = "pipe_signature.type"
@@ -41,7 +41,7 @@ PipeCompose   = "detail_pipe_compose"
 
 [pipe.detail_pipe_sequence]
 type = "PipeLLM"
-description = "Build a PipeSequenceSpec from the signature (children referenced by code)."
+definition = "Build a PipeSequenceSpec from the signature (children referenced by code)."
 inputs = { plan_draft = "PlanDraft", pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec" }
 output = "PipeSequenceSpec"
 llm = "llm_to_engineer"
@@ -57,7 +57,7 @@ You will specifically generate the PipeSequence related to this signature:
 
 [pipe.detail_pipe_parallel]
 type = "PipeLLM"
-description = "Build a PipeParallelSpec from the signature."
+definition = "Build a PipeParallelSpec from the signature."
 inputs = { plan_draft = "PlanDraft", pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec" }
 output = "PipeParallelSpec"
 llm = "llm_to_engineer"
@@ -73,7 +73,7 @@ You will specifically generate the PipeParallel related to this signature:
 
 [pipe.detail_pipe_condition]
 type = "PipeLLM"
-description = "Build a PipeConditionSpec from the signature (provide expression/pipe_map consistent with children)."
+definition = "Build a PipeConditionSpec from the signature (provide expression/pipe_map consistent with children)."
 inputs = { plan_draft = "PlanDraft", pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec" }
 output = "PipeConditionSpec"
 llm = "llm_to_engineer"
@@ -93,7 +93,7 @@ You will specifically generate the PipeCondition related to this signature:
 
 [pipe.detail_pipe_llm]
 type = "PipeLLM"
-description = "Build a PipeLLMSpec from the signature."
+definition = "Build a PipeLLMSpec from the signature."
 inputs = { plan_draft = "PlanDraft", pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec" }
 output = "PipeLLMSpec"
 llm = "llm_to_engineer"
@@ -114,7 +114,7 @@ If it's to generate an image generation, the prompt_template should indicate to 
 
 [pipe.detail_pipe_ocr]
 type = "PipeLLM"
-description = "Build a PipeOcrSpec from the signature."
+definition = "Build a PipeOcrSpec from the signature."
 inputs = { plan_draft = "PlanDraft", pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec" }
 output = "PipeOcrSpec"
 llm = "llm_to_engineer"
@@ -130,7 +130,7 @@ You will specifically generate the PipeOcr related to this signature:
 
 [pipe.detail_pipe_img_gen]
 type = "PipeLLM"
-description = "Build a PipeImgGenSpec from the signature."
+definition = "Build a PipeImgGenSpec from the signature."
 inputs = { plan_draft = "PlanDraft", pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec" }
 output = "PipeImgGenSpec"
 llm = "llm_to_engineer"
@@ -148,7 +148,7 @@ The inputs for the image has to be a single input which must be a Text or anothe
 
 [pipe.detail_pipe_compose]
 type = "PipeLLM"
-description = "Build a PipeComposeSpec from the signature."
+definition = "Build a PipeComposeSpec from the signature."
 inputs = { plan_draft = "PlanDraft", pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec" }
 output = "PipeComposeSpec"
 llm = "llm_to_engineer"
@@ -168,7 +168,7 @@ You will specifically generate the PipeCompose related to this signature:
 
 # [pipe.fix_failing_pipe]
 # type = "PipeCondition"
-# description = "Route to specific pipe fixer based on the failing pipe type."
+# definition = "Route to specific pipe fixer based on the failing pipe type."
 # inputs = { pipelex_bundle_spec = "PipelexBundleSpec", pipe_failure = "PipeFailure" }
 # output = "Dynamic"
 # expression = "pipe_failure.pipe.type"
@@ -186,7 +186,7 @@ You will specifically generate the PipeCompose related to this signature:
 
 # [pipe.fix_failing_llm_pipe]
 # type = "PipeLLM"
-# description = "Fix a failing PipeLLM spec based on its specific error."
+# definition = "Fix a failing PipeLLM spec based on its specific error."
 # inputs = { pipelex_bundle_spec = "PipelexBundleSpec", pipe_failure = "PipeFailure" }
 # output = "PipeLLMSpec"
 # llm = "llm_to_engineer"
@@ -209,7 +209,7 @@ You will specifically generate the PipeCompose related to this signature:
 
 # [pipe.fix_failing_imggen_pipe]
 # type = "PipeLLM"
-# description = "Fix a failing PipeImgGen spec based on its specific error."
+# definition = "Fix a failing PipeImgGen spec based on its specific error."
 # inputs = { pipelex_bundle_spec = "PipelexBundleSpec", pipe_failure = "PipeFailure" }
 # output = "PipeImgGenSpec"
 # llm = "llm_to_engineer"
@@ -230,7 +230,7 @@ You will specifically generate the PipeCompose related to this signature:
 
 # [pipe.fix_failing_ocr_pipe]
 # type = "PipeLLM"
-# description = "Fix a failing PipeOcr spec based on its specific error."
+# definition = "Fix a failing PipeOcr spec based on its specific error."
 # inputs = { pipelex_bundle_spec = "PipelexBundleSpec", pipe_failure = "PipeFailure" }
 # output = "PipeOcrSpec"
 # llm = "llm_to_engineer"
@@ -252,7 +252,7 @@ You will specifically generate the PipeCompose related to this signature:
 
 # [pipe.fix_failing_func_pipe]
 # type = "PipeLLM"
-# description = "Fix a failing PipeFunc spec based on its specific error."
+# definition = "Fix a failing PipeFunc spec based on its specific error."
 # inputs = { pipelex_bundle_spec = "PipelexBundleSpec", pipe_failure = "PipeFailure" }
 # output = "PipeFuncSpec"
 # llm = "llm_to_engineer"
@@ -273,7 +273,7 @@ You will specifically generate the PipeCompose related to this signature:
 
 # [pipe.fix_failing_jinja2_pipe]
 # type = "PipeLLM"
-# description = "Fix a failing PipeCompose spec based on its specific error."
+# definition = "Fix a failing PipeCompose spec based on its specific error."
 # inputs = { pipelex_bundle_spec = "PipelexBundleSpec", pipe_failure = "PipeFailure" }
 # output = "PipeComposeSpec"
 # llm = "llm_to_engineer"
@@ -294,7 +294,7 @@ You will specifically generate the PipeCompose related to this signature:
 
 # [pipe.fix_failing_sequence_pipe]
 # type = "PipeLLM"
-# description = "Fix a failing PipeSequence spec based on its specific error."
+# definition = "Fix a failing PipeSequence spec based on its specific error."
 # inputs = { pipelex_bundle_spec = "PipelexBundleSpec", pipe_failure = "PipeFailure" }
 # output = "PipeSequenceSpec"
 # llm = "llm_to_engineer"
@@ -316,7 +316,7 @@ You will specifically generate the PipeCompose related to this signature:
 
 # [pipe.fix_failing_parallel_pipe]
 # type = "PipeLLM"
-# description = "Fix a failing PipeParallel spec based on its specific error."
+# definition = "Fix a failing PipeParallel spec based on its specific error."
 # inputs = { pipelex_bundle_spec = "PipelexBundleSpec", pipe_failure = "PipeFailure" }
 # output = "PipeParallelSpec"
 # llm = "llm_to_engineer"
@@ -337,7 +337,7 @@ You will specifically generate the PipeCompose related to this signature:
 
 # [pipe.fix_failing_condition_pipe]
 # type = "PipeLLM"
-# description = "Fix a failing PipeCondition spec based on its specific error."
+# definition = "Fix a failing PipeCondition spec based on its specific error."
 # inputs = { pipelex_bundle_spec = "PipelexBundleSpec", pipe_failure = "PipeFailure" }
 # output = "PipeConditionSpec"
 # llm = "llm_to_engineer"
@@ -359,7 +359,7 @@ You will specifically generate the PipeCompose related to this signature:
 
 # [pipe.fix_failing_batch_pipe]
 # type = "PipeLLM"
-# description = "Fix a failing PipeBatch spec based on its specific error."
+# definition = "Fix a failing PipeBatch spec based on its specific error."
 # inputs = { pipelex_bundle_spec = "PipelexBundleSpec", pipe_failure = "PipeFailure" }
 # output = "PipeBatchSpec"
 # llm = "llm_to_engineer"
