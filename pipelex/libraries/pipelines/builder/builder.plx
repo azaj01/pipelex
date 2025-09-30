@@ -83,7 +83,6 @@ Available pipe operators:
   That means that in the MAIN pipeline, the prompt MUST NOT be considered as an input. It should be the output of a step that generates the prompt.
 - PipeOcr: A pipe that uses an OCR technology to extract text from an image or a pdf.
   VERY IMPORTANT: THE INPUT OF THE PIPEOCR MUST BE either an image or a pdf or a concept which refines one of them.
-- PipeCompose: A pipe that uses Jinja2 to render a template.
 
 
 Be smart about splitting the workflow into steps (sequence or parallel):
@@ -205,7 +204,6 @@ Available pipe operators:
 - PipeImgGen: A pipe that uses an AI model to generate an image.
   VERY IMPORTANT: IF YOU DECIDE TO CREATE A PipeImgGen, YOU ALSO HAVE TO CREATE A PIPELLM THAT WILL WRITE THE PROMPT, AND THAT NEEDS TO PRECEED THE PIPEIMGEN, based on the necessary elements.
   That means that in the MAIN pipeline, the prompt MUST NOT be considered as an input. It should be the output of a step that generates the prompt.
-- PipeCompose: A pipe that renders a Jinja2 template.
 - PipeOcr: A pipe that extracts text from an image or a pdf. PipeOcr must have a exactly one input which must be either an `Image` or a `PDF`.
 
 Be smart about splitting the workflow into steps (sequence or parallel):
