@@ -1,13 +1,13 @@
-from pipelex import pretty_print
+from pipelex import log, pretty_print
 from pipelex.client.protocol import ImplicitMemory
 from pipelex.language.plx_factory import PlxFactory
 from pipelex.libraries.pipelines.builder.builder import (
-    PipelexBundleError,
     PipelexBundleSpec,
     PipeSpecUnion,
     reconstruct_bundle_with_pipe_fixes,
     validate_bundle_spec,
 )
+from pipelex.libraries.pipelines.builder.builder_errors import PipelexBundleError
 from pipelex.pipeline.execute import execute_pipeline
 from pipelex.tools.misc.file_utils import save_text_to_path
 
@@ -28,8 +28,9 @@ class BuilderLoop:
 
         try:
             await validate_bundle_spec(pipelex_bundle_spec=pipelex_bundle_spec)
-        except PipelexBundleError as exc:
-            pretty_print(exc, title="Pipelex Bundle Error")
+        except PipelexBundleError as bundle_error:
+            pretty_print(bundle_error.as_structured_content(), title="Pipelex Bundle Error")
+            log.error("Some pipes are failing, we should fix them but it's not implemented yet...")
 
             fixed_pipes: list[PipeSpecUnion] = []
             # TODO: fixe the pipes)
