@@ -1,7 +1,7 @@
 from typing import ClassVar
 
 from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
-from pipelex.libraries.pipelines.builder.pipe.inputs_spec import InputRequirementSpec
+
 from pipelex.libraries.pipelines.builder.pipe.pipe_compose_spec import PipeComposeSpec
 from pipelex.pipe_operators.compose.pipe_compose_blueprint import PipeComposeBlueprint
 from pipelex.tools.templating.jinja2_template_category import Jinja2TemplateCategory
@@ -14,7 +14,7 @@ class PipeComposeTestCases:
         PipeComposeSpec(
             the_pipe_code="template_renderer",
             definition="Render a template",
-            inputs={"data": InputRequirementSpec(concept="Data")},
+            inputs={"data": "Data"},
             output="RenderedText",
             jinja2="Hello {{ data.name }}!",
             target_format="markdown",

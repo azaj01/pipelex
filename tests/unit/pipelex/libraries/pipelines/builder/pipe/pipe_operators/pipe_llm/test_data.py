@@ -2,7 +2,7 @@ from typing import ClassVar
 
 from pipelex.cogt.llm.llm_setting import LLMSetting
 from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
-from pipelex.libraries.pipelines.builder.pipe.inputs_spec import InputRequirementSpec
+
 from pipelex.libraries.pipelines.builder.pipe.pipe_llm_spec import PipeLLMSpec
 from pipelex.pipe_operators.llm.pipe_llm_blueprint import PipeLLMBlueprint, StructuringMethod
 
@@ -13,7 +13,7 @@ class PipeLLMTestCases:
         PipeLLMSpec(
             the_pipe_code="test_pipe",
             definition="Generate text",
-            inputs={"topic": InputRequirementSpec(concept="Text")},
+            inputs={"topic": "Text"},
             output="Text",
             llm="llm_for_creative_writing",
             prompt_template="Write about $topic",
@@ -99,7 +99,7 @@ class PipeLLMTestCases:
         PipeLLMSpec(
             the_pipe_code="analyze",
             definition="Generate with system prompt",
-            inputs={"data": InputRequirementSpec(concept="Data")},
+            inputs={"data": "Data"},
             output="Analysis",
             system_prompt="You are a data analyst",
             prompt_template="Analyze: @data",

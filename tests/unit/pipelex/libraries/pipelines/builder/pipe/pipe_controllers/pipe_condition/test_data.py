@@ -1,7 +1,7 @@
 from typing import ClassVar
 
 from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
-from pipelex.libraries.pipelines.builder.pipe.inputs_spec import InputRequirementSpec
+
 from pipelex.libraries.pipelines.builder.pipe.pipe_condition_spec import  PipeConditionSpec
 from pipelex.pipe_controllers.condition.pipe_condition_blueprint import PipeConditionBlueprint, PipeConditionPipeMapBlueprint
 
@@ -13,7 +13,7 @@ class PipeConditionTestCases:
         PipeConditionSpec(
             the_pipe_code="template_condition",
             definition="Conditional with template",
-            inputs={"item": InputRequirementSpec(concept="Item")},
+            inputs={"item": "Item"},
             output="ProcessedItem",
             jinja2_expression_template="{{ item.category }}",
             pipe_map={

@@ -7,7 +7,6 @@ from pipelex.core.pipes.pipe_blueprint import AllowedPipeCategories, AllowedPipe
 from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
 from pipelex.core.stuffs.stuff_content import StructuredContent
 from pipelex.libraries.pipelines.builder.concept.concept_spec import ConceptSpec
-from pipelex.libraries.pipelines.builder.pipe.inputs_spec import InputRequirementSpec
 from pipelex.tools.misc.string_utils import is_snake_case
 
 
@@ -41,11 +40,8 @@ class PipeSpec(StructuredContent):
         description=f"Pipe category. It is defined with type `Any` but validated at runtime and it must be one of: {AllowedPipeCategories}"
     )
     definition: str | None = Field(description="Natural language description of what the pipe does.")
-    inputs: dict[str, str | InputRequirementSpec] | None = Field(
-        description=(
-            "Input concept specifications. The keys are input names in snake_case. "
-            "Each value is aither the ConceptCode in PascalCase or an InputRequirementSpec with additional constraints"
-        ),
+    inputs: dict[str, str] | None = Field(
+        description=("Input concept specifications. The keys are input names in snake_case. Each value must be a ConceptCode in PascalCase"),
     )
     output: str = Field(description="Output concept code in PascalCase format!! Very important")
 
@@ -65,18 +61,13 @@ class PipeSpec(StructuredContent):
 
     @field_validator("inputs", mode="after")
     @staticmethod
-    def validate_inputs(inputs: dict[str, str | InputRequirementSpec] | None) -> dict[str, str | InputRequirementSpec] | None:
+    def validate_inputs(inputs: dict[str, str] | None) -> dict[str, str] | None:
         if inputs is None:
             return None
-        for input_name, input_spec in inputs.items():
+        for input_name, concept_code in inputs.items():
             if not is_snake_case(input_name):
                 msg = f"Invalid input name syntax '{input_name}'. Must be in snake_case."
                 raise PipeBlueprintError(msg)
-            concept_code: str
-            if isinstance(input_spec, InputRequirementSpec):
-                concept_code = input_spec.concept
-            else:
-                concept_code = input_spec
             ConceptSpec.validate_concept_string_or_code(concept_string_or_code=concept_code)
         return inputs
 
@@ -91,11 +82,8 @@ class PipeSpec(StructuredContent):
         converted_inputs: dict[str, str | InputRequirementBlueprint] | None = None
         if self.inputs is not None:
             converted_inputs = {}
-            for input_name, input_spec in self.inputs.items():
-                if isinstance(input_spec, InputRequirementSpec):
-                    converted_inputs[input_name] = input_spec.to_blueprint()
-                else:
-                    converted_inputs[input_name] = InputRequirementBlueprint(concept=input_spec)
+            for input_name, concept_code in self.inputs.items():
+                converted_inputs[input_name] = InputRequirementBlueprint(concept=concept_code)
 
         return PipeBlueprint(
             definition=self.definition,

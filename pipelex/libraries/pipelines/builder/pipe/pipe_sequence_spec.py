@@ -13,12 +13,6 @@ class PipeSequenceSpec(PipeSpec):
     """PipeSequenceSpec orchestrates the execution of multiple pipes in a defined order,
     where each pipe's output can be used as input for subsequent pipes. This enables
     building complex data processing workflows with step-by-step transformations.
-
-    Validation Rules:
-        1. Steps list must not be empty.
-        2. Each step must be a valid SubPipeBlueprint instance.
-        3. Pipe codes referenced in steps must exist in the pipeline.
-
     """
 
     type: SkipJsonSchema[Literal["PipeSequence"]] = "PipeSequence"

@@ -27,9 +27,8 @@ steps = [
     { pipe = "design_pipe_signatures", result = "pipe_signatures" },
     { pipe = "detail_pipe_spec", batch_over = "pipe_signatures", batch_as = "pipe_signature", result = "pipe_specs" },
     { pipe = "pipe_builder_domain_information", result = "domain_information" },
-    { pipe = "compile_in_pipelex_bundle_spec", result = "pipelex_bundle_spec" }
-    # { pipe = "validate_pipelex_bundle_loading", result = "pipelex_bundle_spec" }
-    # { pipe = "validate_pipelex_bundle_dry_run", result = "pipelex_bundle_spec" }
+    { pipe = "assemble_pipelex_bundle_spec", result = "pipelex_bundle_spec" }
+    { pipe = "assemble_pipelex_bundle_spec", result = "pipelex_bundle_spec" }
 ]
 
 [pipe.pipe_builder_domain_information]
@@ -59,8 +58,9 @@ Return a draft of a plan that narrates the pipeline as pseudo-steps (no code):
   or in parallel (several independant steps in parallel),
   or in batch (same operation applied to N elements of a list)
   or based on a condition
-- For each pipe: state the pipe's description, inputs (by name), and the output (by name), DO NOT indicate the inputs or output type. Just name them.
-- Be aware of the steps where you want structures: either structured objects as outputs or inputs. Make sense of it but be concise.
+- For each pipe: state the pipe's description, inputs (by name using snake_case), and the output (by name using snake_case),
+DO NOT indicate the inputs or output type. Just name them.
+- Be aware of the steps where you will want structured outputs or inputs. Make sense of it but be concise.
 
 Available pipe controllers:
 - PipeSequence: A pipe that executes a sequence of pipes: it needs to reference the pipes it will execute.
@@ -68,8 +68,7 @@ Available pipe controllers:
   The results of each pipe will be in the working memory. The output MUST BE "Dynamic".
 - PipeCondition: A pipe that based on a conditional expression, branches to a specific pipe.
   You have to explain what the expression of the condition is,
-  and what the different pipes are that can be executed based on the condition.
-  It needs to reference the pipes it will execute.
+  and reference the different pipes that well be executed according to the condition.
 
 When describing the task of a pipe controller, be concise, don't detail all the sub-pipes.
 
@@ -84,6 +83,11 @@ Available pipe operators:
 - PipeOcr: A pipe that uses an OCR technology to extract text from an image or a pdf.
   VERY IMPORTANT: THE INPUT OF THE PIPEOCR MUST BE either an image or a pdf or a concept which refines one of them.
 - PipeCompose: A pipe that uses Jinja2 to render a template.
+
+
+Be smart about splitting the workflow into steps (sequence or parallel):
+- You can use an LLM to extract or analyze several things at the same time, they can be output as a single concept which will be structured with attributes etc.
+- But don't ask the LLM for many things which are unrelated, it would lose reliability.
 
 Keep your style concise, no need to write tags such as "Description:", just write what you need to write.
 Do not write any intro or outro, just write the plan.
@@ -159,33 +163,12 @@ inputs = { plan_draft = "PlanDraft", brief = "UserBrief", concept_specs = "conce
 output = "pipe_design.PipeSignature"
 multiple_output = true
 llm = "llm_to_engineer"
+system_prompt = """
+You are a Senior engineer, very well versed in creating pipelines.
+You are very thorough about naming stuff, structured and rigorous in your planning.
+"""
 prompt_template = """
-Define the contracts of the pipes to build:
-- For each pipe: give a unique snake_case pipe_code, a type and description, specify inputs (one or more) and output (one)
-- Add as much details as possible for the description.
-
-Available pipe controllers:
-- PipeSequence: A pipe that executes a sequence of pipes: it needs to reference the pipes it will execute.
-- PipeParallel: A pipe that executes a few pipes in parallel. It needs to reference the pipes it will execute.
-  The results of each pipe will be in the working memory. The output MUST BE "Dynamic".
-- PipeCondition: A pipe that based on a conditional expression, branches to a specific pipe.
-  You have to explain what the expression of the condition is,
-  and what the different pipes are that can be executed based on the condition.
-  It needs to reference the pipes it will execute.
-
-When describing the task of a pipe controller, be concise, don't detail all the sub-pipes.
-
-Available pipe operators:
-- PipeLLM: A pipe that uses an LLM to generate a text, or a structured object. It is a vision LLM so it can also use images.
-  CRITICAL: When extracting MULTIPLE items (articles, employees, products), use multiple_output = true with SINGULAR concepts!
-  - Create concept "Article" (not "Articles") with fields "item_name", "quantity" (not "item_names", "quantities")
-  - Then set multiple_output = true to get a list of Article objects
-- PipeImgGen: A pipe that uses an AI model to generate an image.
-  VERY IMPORTANT: IF YOU DECIDE TO CREATE A PipeImgGen, YOU ALSO HAVE TO CREATE A PIPELLM THAT WILL WRITE THE PROMPT, AND THAT NEEDS TO PRECEED THE PIPEIMGEN, based on the necessary elements.
-  That means that in the MAIN pipeline, the prompt MUST NOT be considered as an input. It should be the output of a step that generates the prompt.
-- PipeOcr: A pipe that uses an OCR technology to extract text from an image or a pdf.
-  VERY IMPORTANT: THE INPUT OF THE PIPEOCR MUST BE either an image or a pdf or a concept which refines one of them.
-- PipeCompose: A pipe that uses Jinja2 to render a template.
+Your job is to structure the required PipeSignatures for defining a pipeline which has already been drafted.
 
 @brief
 
@@ -198,14 +181,43 @@ And of course you still have the native concepts if required: Text, Image, PDF, 
 {% else %}
 You can use the native concepts for inputs/outputs as required: Text, Image, PDF, Number, Page.
 {% endif %}
+
+Define the contracts of the pipes to build:
+- For each pipe: give a unique snake_case pipe_code, a type and description, specify inputs (one or more) and output (one)
+- Add as much details as possible for the description.
+
+Available pipe controllers:
+- PipeSequence: A pipe that executes a sequence of pipes: it needs to reference the pipes it will execute.
+- PipeParallel: A pipe that executes a few pipes in parallel. It needs to reference the pipes it will execute.
+  The results of each pipe will be in the working memory. The output MUST BE "Dynamic".
+- PipeCondition: A pipe that based on a conditional expression, branches to a specific pipe.
+  You have to explain what the expression of the condition is,
+  and reference the different pipes that well be executed according to the condition.
+
+When describing the task of a pipe controller, be concise, don't detail all the sub-pipes.
+
+Available pipe operators:
+- PipeLLM: A pipe that uses an LLM to generate a text, or a structured object. It is a vision LLM so it can also use images.
+  CRITICAL: When extracting MULTIPLE items (articles, employees, products), use multiple_output = true with SINGULAR concepts!
+  - Create concept "Article" (not "Articles") with fields "item_name", "quantity" (not "item_names", "quantities")
+  - Then set multiple_output = true to get a list of Article objects
+- PipeImgGen: A pipe that uses an AI model to generate an image.
+  VERY IMPORTANT: IF YOU DECIDE TO CREATE A PipeImgGen, YOU ALSO HAVE TO CREATE A PIPELLM THAT WILL WRITE THE PROMPT, AND THAT NEEDS TO PRECEED THE PIPEIMGEN, based on the necessary elements.
+  That means that in the MAIN pipeline, the prompt MUST NOT be considered as an input. It should be the output of a step that generates the prompt.
+- PipeCompose: A pipe that renders a Jinja2 template.
+- PipeOcr: A pipe that extracts text from an image or a pdf. PipeOcr must have a exactly one input which must be either an `Image` or a `PDF`.
+
+Be smart about splitting the workflow into steps (sequence or parallel):
+- You can use an LLM to extract or analyze several things at the same time, they can be output as a single concept which will be structured with attributes etc.
+- But don't ask the LLM for many things which are unrelated, it would lose reliability.
 """
 
-[pipe.compile_in_pipelex_bundle_spec]
+[pipe.assemble_pipelex_bundle_spec]
 type = "PipeFunc"
 description = "Compile the pipelex bundle spec."
 inputs = { pipe_specs = "PipeSpec", concept_specs = "ConceptSpec", domain_information = "DomainInformation" }
 output = "PipelexBundleSpec"
-function_name = "compile_in_pipelex_bundle_spec"
+function_name = "assemble_pipelex_bundle_spec"
 
 # [pipe.validate_pipelex_bundle_loading]
 # type = "PipeSequence"

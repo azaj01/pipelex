@@ -28,6 +28,8 @@ class LLMSkill(StrEnum):
     LLM_TO_RETRIEVE = "llm_to_retrieve"
     LLM_CHEAP_FOR_EASY_QUESTIONS = "llm_cheap_for_easy_questions"
     LLM_TO_ANSWER_HARD_QUESTIONS = "llm_to_answer_hard_questions"
+    LLM_FOR_VISUAL_ANALYSIS = "llm_for_visual_analysis"
+    LLM_FOR_VISUAL_DESIGN = "llm_for_visual_design"
     LLM_FOR_CREATIVE_WRITING = "llm_for_creative_writing"
     LLM_TO_REASON = "llm_to_reason"
     LLM_TO_REASON_ON_DIAGRAM = "llm_to_reason_on_diagram"
@@ -44,6 +46,10 @@ class LLMSkill(StrEnum):
                 return AvailableLLM.GPT_5_MINI
             case LLMSkill.LLM_TO_ANSWER_HARD_QUESTIONS:
                 return AvailableLLM.GPT_5
+            case LLMSkill.LLM_FOR_VISUAL_ANALYSIS:
+                return AvailableLLM.GEMINI_2_5_FLASH
+            case LLMSkill.LLM_FOR_VISUAL_DESIGN:
+                return AvailableLLM.GEMINI_2_5_FLASH
             case LLMSkill.LLM_FOR_CREATIVE_WRITING:
                 return AvailableLLM.CLAUDE_4_1_OPUS
             case LLMSkill.LLM_TO_REASON:
@@ -75,18 +81,19 @@ class PipeLLMSpec(PipeSpec):
     type: SkipJsonSchema[Literal["PipeLLM"]] = "PipeLLM"
     category: SkipJsonSchema[Literal["PipeOperator"]] = "PipeOperator"
     the_pipe_code: str = Field(description="Pipe code identifying the pipe. Must be snake_case.")
-    system_prompt: str | None = Field(default=None, description="A system-level prompt to guide the LLM's behavior, style and skills.")
 
+    llm: LLMSkill | str = Field(description="The required skill of the LLM according to the task to be performed.")
+    temperature: float | None = Field(default=None, ge=0, le=1)
+    system_prompt: str | None = Field(default=None, description="A system-level prompt to guide the LLM's behavior, style and skills.")
     prompt_template: str | None = Field(
         description=(
             "A template for the user prompt. Use `$` prefix for inline variables (e.g., `$topic`) and `@` prefix "
             "to insert the content of an entire input (e.g., `@extracted_text`). "
-            "**Note**: Do not use `@` or `$` for image variables, declaring them as inputs is enough."
+            "**Notes**: • Do not use `@` or `$` for image variables, declaring them as inputs is enough."
+            "• You can also use jinja2 syntax for conditional logic and for loops, but prefer `$` and `@` for simple variable insertions."
         )
     )
 
-    llm: LLMSkill | str = Field(description="The required skill of the LLM according to the task to be performed.")
-    temperature: float | None = Field(default=None, ge=0, le=1)
     nb_output: int | None = Field(
         default=None,
         description=(

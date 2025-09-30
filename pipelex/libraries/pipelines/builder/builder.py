@@ -27,7 +27,6 @@ from pipelex.libraries.pipelines.builder.pipe.pipe_llm_spec import PipeLLMSpec
 from pipelex.libraries.pipelines.builder.pipe.pipe_ocr_spec import PipeOcrSpec
 from pipelex.libraries.pipelines.builder.pipe.pipe_parallel_spec import PipeParallelSpec
 from pipelex.libraries.pipelines.builder.pipe.pipe_sequence_spec import PipeSequenceSpec
-from pipelex.libraries.pipelines.builder.pipe.pipe_signature import PipeSignature
 from pipelex.pipe_works.pipe_dry import dry_run_pipes
 from pipelex.tools.typing.pydantic_utils import format_pydantic_validation_error
 
@@ -39,17 +38,6 @@ class DomainInformation(StructuredContent):
 
 class PipeBuilderError(Exception):
     pass
-
-
-class PipelexBundleSpecDraft(StructuredContent):
-    """Complete spec of a pipeline library TOML file."""
-
-    domain: str = Field(description="The domain of the pipeline library.")
-    definition: str = Field(description="The definition of the pipeline library.")
-
-    concept: dict[str, ConceptSpec] = Field(default_factory=dict, description="The concepts of the pipeline library.")
-
-    pipe: dict[str, PipeSignature] = Field(default_factory=dict, description="The pipes of the pipeline library.")
 
 
 PipeSpecUnion = Annotated[
@@ -169,8 +157,6 @@ class PipelexBundleSpec(StructuredContent):
     domain: str
     definition: str | None = None
     system_prompt: str | None = None
-    system_prompt_to_structure: str | None = None
-    prompt_template_to_structure: str | None = None
 
     concept: dict[str, ConceptSpec | str] | None = Field(default_factory=dict)
 
@@ -212,9 +198,9 @@ class PipelexBundleSpec(StructuredContent):
         return PipelexBundleBlueprint(
             domain=self.domain,
             definition=self.definition,
-            prompt_template_to_structure=self.prompt_template_to_structure,
+            prompt_template_to_structure=None,
             system_prompt=self.system_prompt,
-            system_prompt_to_structure=self.system_prompt_to_structure,
+            system_prompt_to_structure=None,
             pipe=pipe,
             concept=concept,
         )
@@ -241,7 +227,7 @@ def _convert_pipe_spec(pipe_spec: PipeSpecUnion) -> PipeSpecUnion:
     return cast("PipeSpecUnion", pipe_class(**pipe_spec.model_dump(serialize_as_any=True)))
 
 
-async def compile_in_pipelex_bundle_spec(working_memory: WorkingMemory) -> PipelexBundleSpec:
+async def assemble_pipelex_bundle_spec(working_memory: WorkingMemory) -> PipelexBundleSpec:
     """Construct a PipelexBundleSpec from working memory containing concept and pipe blueprints.
 
     Args:
@@ -281,33 +267,13 @@ async def compile_in_pipelex_bundle_spec(working_memory: WorkingMemory) -> Pipel
     )
 
 
-# TODO: rename or merge with PipeDry.DryRunStatus
-# class DryRunStatus(StrEnum):
-#     SUCCESS = "SUCCESS"
-#     FAILURE = "FAILURE"
-
-
-# class Status(StrEnum):
-#     SUCCESS = "SUCCESS"
-#     FAILURE = "FAILURE"
-
-
-# class ValidationFollowUp(StrEnum):
-#     CONTINUE = "continue"
-#     FIX_PIPES = "fix_pipes"
-#     FIX_CONCEPTS = "fix_concepts"
-
-
-# class ValidationResult(StructuredContent):
-#     status: Status
-#     error_message: str | None = Field(default=None, description="The error message for the failure if applicable")
-#     failed_pipes: ListContent[PipeSpecFailure] | None = Field(default=None, description="The error details for the failure if applicable")
-#     failed_concepts: ListContent[ConceptSpecFailure] | None = Field(default=None, description="The error details for the failure if applicable")
-
-
-async def validate_bundle_spec(working_memory: WorkingMemory):
-    library_manager = get_library_manager()
+async def validate_bundle_spec_from_memory(working_memory: WorkingMemory):
     pipelex_bundle_spec = working_memory.get_stuff_as(name="pipelex_bundle_spec", content_type=PipelexBundleSpec)
+    await validate_bundle_spec(pipelex_bundle_spec=pipelex_bundle_spec)
+
+
+async def validate_bundle_spec(pipelex_bundle_spec: PipelexBundleSpec):
+    library_manager = get_library_manager()
     try:
         pipelex_bundle_blueprint = pipelex_bundle_spec.to_blueprint()
     except ConceptSpecError as concept_spec_error:

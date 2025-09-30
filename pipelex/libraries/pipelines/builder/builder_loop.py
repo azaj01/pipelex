@@ -1,7 +1,9 @@
 from pipelex import pretty_print
 from pipelex.client.protocol import ImplicitMemory
-from pipelex.libraries.pipelines.builder.builder import PipelexBundleSpec
+from pipelex.language.plx_factory import PlxFactory
+from pipelex.libraries.pipelines.builder.builder import PipelexBundleSpec, validate_bundle_spec
 from pipelex.pipeline.execute import execute_pipeline
+from pipelex.tools.misc.file_utils import save_text_to_path
 
 
 class BuilderLoop:
@@ -14,5 +16,10 @@ class BuilderLoop:
         pretty_print(pipe_output, title="Pipe Output")
 
         pipelex_bundle_spec = pipe_output.working_memory.get_stuff_as(name="pipelex_bundle_spec", content_type=PipelexBundleSpec)
-        pretty_print(pipelex_bundle_spec, title="Pipelex Bundle Spec")
+        pretty_print(pipelex_bundle_spec, title="Pipelex Bundle Spec • 1st iteration")
+        plx_content = PlxFactory.make_plx_content(blueprint=pipelex_bundle_spec.to_blueprint())
+        save_text_to_path(text=plx_content, path="results/generated_pipeline_1st_iteration.plx")
+
+        await validate_bundle_spec(pipelex_bundle_spec=pipelex_bundle_spec)
+
         return pipelex_bundle_spec

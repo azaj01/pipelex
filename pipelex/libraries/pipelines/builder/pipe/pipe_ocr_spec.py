@@ -4,6 +4,7 @@ from pydantic import Field, field_validator
 from pydantic.json_schema import SkipJsonSchema
 from typing_extensions import override
 
+from pipelex.exceptions import PipeDefinitionError
 from pipelex.libraries.pipelines.builder.pipe.pipe_signature import PipeSpec
 from pipelex.pipe_operators.ocr.pipe_ocr_blueprint import PipeOcrBlueprint
 from pipelex.types import StrEnum
@@ -37,7 +38,8 @@ class PipeOcrSpec(PipeSpec):
     Supports various OCR platforms and output configurations including image detection,
     caption generation, and page rendering.
 
-    VERY IMPORTANT: THE INPUT OF THE PIPEOCR MUST BE either an image or a pdf or a concept which refines one of them.
+    Validation Rules:
+        - inputs dict must have exactly one input entry, and the value must be either `Image` or `PDF`.
     """
 
     type: SkipJsonSchema[Literal["PipeOcr"]] = "PipeOcr"
@@ -52,6 +54,17 @@ class PipeOcrSpec(PipeSpec):
     @classmethod
     def validate_ocr(cls, ocr_value: str) -> OcrSkill:
         return OcrSkill(ocr_value)
+
+    @field_validator("inputs", mode="before")
+    @classmethod
+    def validate_ocr_inputs(cls, inputs_value: dict[str, str] | None) -> dict[str, str] | None:
+        if inputs_value is None:
+            msg = "PipeOcr must have exactly one input which must be either`Image` or `PDF`."
+            raise PipeDefinitionError(msg)
+        if len(inputs_value) != 1:
+            msg = "PipeOcr must have exactly one input which must be either`Image` or `PDF`."
+            raise PipeDefinitionError(msg)
+        return inputs_value
 
     @override
     def to_blueprint(self) -> PipeOcrBlueprint:
