@@ -42,19 +42,19 @@ output = "ConceptSpec"
 function_name = "create_concept_spec"
 
 
-[pipe.fix_failing_concept]
-type = "PipeLLM"
-description = "Fix a failing ConceptSpec based on its specific error."
-inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_concept = "ConceptFailure" }
-output = "ConceptSpec"
-llm = "llm_to_engineer"
-prompt_template = """
-Fix this failing ConceptSpec.
+# [pipe.fix_failing_concept]
+# type = "PipeLLM"
+# description = "Fix a failing ConceptSpec based on its specific error."
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_concept = "ConceptFailure" }
+# output = "ConceptSpec"
+# llm = "llm_to_engineer"
+# prompt_template = """
+# Fix this failing ConceptSpec.
 
-Failing concept:
-@failed_concept.concept
+# Failing concept:
+# @failed_concept.concept
 
-Error message:
-@failed_concept.error_message
-"""
+# Error message:
+# @failed_concept.error_message
+# """
 

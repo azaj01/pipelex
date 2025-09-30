@@ -17,6 +17,10 @@ class StructuringMethod(StrEnum):
 class PipeLLMBlueprint(PipeBlueprint):
     type: Literal["PipeLLM"] = "PipeLLM"
     category: Literal["PipeOperator"] = "PipeOperator"
+
+    llm: LLMChoice | None = None
+    llm_to_structure: LLMChoice | None = None
+
     system_prompt_template: str | None = None
     system_prompt_template_name: str | None = None
     system_prompt_name: str | None = None
@@ -26,9 +30,6 @@ class PipeLLMBlueprint(PipeBlueprint):
     template_name: str | None = None
     prompt_name: str | None = None
     prompt: str | None = None
-
-    llm: LLMChoice | None = None
-    llm_to_structure: LLMChoice | None = None
 
     structuring_method: StructuringMethod | None = None
     prompt_template_to_structure: str | None = None
