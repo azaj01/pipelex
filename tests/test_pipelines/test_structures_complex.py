@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from pydantic import Field
 
 from pipelex.core.stuffs.stuff_content import StructuredContent
-
-if TYPE_CHECKING:
-    from tests.test_pipelines.test_structures_basic import ConceptWithOptionals, ConceptWithSimpleStructure
+from pipelex.tools.typing.pydantic_utils import empty_list_factory_of
+from tests.test_pipelines.test_structures_basic import ConceptWithOptionals, ConceptWithSimpleStructure
 
 
 class ConceptWithDicts(StructuredContent):
@@ -40,6 +37,7 @@ class ConceptWithNestedUnions(StructuredContent):
 
     simple_or_complex: ConceptWithSimpleStructure | ConceptWithOptionals = Field(..., description="Simple or complex structure")
     list_of_union_structures: list[ConceptWithSimpleStructure | ConceptWithUnions] = Field(
+        default_factory=empty_list_factory_of(ConceptWithSimpleStructure),
         description="List of different structure types",
     )
     optional_nested_union: ConceptWithUnions | ConceptWithComplexUnions | None = Field(
