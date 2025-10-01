@@ -99,9 +99,9 @@ definition = "Domain with pipe definitions"
 type = "PipeLLM"
 definition = "Expert analysis with system prompt"
 output = "Text"
-prompt_template = """Extract all articles/items from this invoice text: $extracted_text.
-For each item find: item name, quantity, unit price, total price, description,
-and product code if available. Return each article as separate structured data.
+prompt_template = """
+Extract all articles/items from this invoice text: $extracted_text. For each item find: item name, quantity, unit price, total price, description, and product code if
+ available. Return each article as separate structured data.
 """
 ''',
     PipelexBundleBlueprint(
@@ -112,9 +112,8 @@ and product code if available. Return each article as separate structured data.
                 type="PipeLLM",
                 definition="Expert analysis with system prompt",
                 output=NativeConceptEnum.TEXT,
-                prompt_template="""Extract all articles/items from this invoice text: $extracted_text.
-For each item find: item name, quantity, unit price, total price, description,
-and product code if available. Return each article as separate structured data.
+                prompt_template="""Extract all articles/items from this invoice text: $extracted_text. For each item find: item name, quantity, unit price, total price, description, and product code if
+ available. Return each article as separate structured data.
 """,
             ),
         },
