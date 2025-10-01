@@ -10,9 +10,11 @@ from pipelex.cogt.llm.llm_job import LLMJob
 from pipelex.cogt.llm.llm_worker_internal_abstract import LLMWorkerInternalAbstract
 from pipelex.cogt.llm.structured_output import StructureMethod
 from pipelex.cogt.model_backends.model_spec import InferenceModelSpec
+from pipelex.config import get_config
 from pipelex.plugins.anthropic.anthropic_exceptions import AnthropicWorkerConfigurationError
 from pipelex.plugins.anthropic.anthropic_factory import AnthropicFactory, AnthropicSdkVariant
 from pipelex.reporting.reporting_protocol import ReportingProtocol
+from pipelex.tools.misc.instructor_utils import dump_error, dump_kwargs, dump_response
 from pipelex.tools.typing.pydantic_utils import BaseModelTypeVar
 from pipelex.types import StrEnum
 
@@ -74,6 +76,14 @@ class AnthropicLLMWorker(LLMWorkerInternalAbstract):
             self.instructor_for_objects = instructor.from_anthropic(client=sdk_instance, mode=instructor_mode)
         else:
             self.instructor_for_objects = instructor.from_anthropic(client=sdk_instance)
+
+        instructor_config = get_config().cogt.llm_config.instructor_config
+        if instructor_config.is_dump_kwargs_enabled:
+            self.instructor_for_objects.on(hook_name="completion:kwargs", handler=dump_kwargs)
+        if instructor_config.is_dump_response_enabled:
+            self.instructor_for_objects.on(hook_name="completion:response", handler=dump_response)
+        if instructor_config.is_dump_error_enabled:
+            self.instructor_for_objects.on(hook_name="completion:error", handler=dump_error)
 
     #########################################################
     # Instance methods

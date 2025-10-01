@@ -34,7 +34,7 @@ class OutputMultiplicityResolution(BaseModel):
 
     resolved_multiplicity: PipeOutputMultiplicity | None = Field(description="The final multiplicity value to use after resolution")
 
-    enable_multiple_outputs: bool = Field(description="Whether multiple outputs should be generated")
+    is_multiple_outputs_enabled: bool = Field(description="Whether multiple outputs should be generated")
 
     specific_output_count: int | None = Field(default=None, description="Exact number of outputs to generate, if specified")
 
@@ -126,19 +126,21 @@ def output_multiplicity_to_apply(
             log.debug("base_multiplicity is bool")
             return OutputMultiplicityResolution(
                 resolved_multiplicity=base_multiplicity,
-                enable_multiple_outputs=base_multiplicity,
+                is_multiple_outputs_enabled=base_multiplicity,
                 specific_output_count=None,
             )
         elif isinstance(base_multiplicity, int):
             log.debug("base_multiplicity is int")
             return OutputMultiplicityResolution(
                 resolved_multiplicity=base_multiplicity,
-                enable_multiple_outputs=True,
+                is_multiple_outputs_enabled=True,
                 specific_output_count=base_multiplicity,
             )
         else:
             log.debug("base_multiplicity is None")
-            return OutputMultiplicityResolution(resolved_multiplicity=base_multiplicity, enable_multiple_outputs=False, specific_output_count=None)
+            return OutputMultiplicityResolution(
+                resolved_multiplicity=base_multiplicity, is_multiple_outputs_enabled=False, specific_output_count=None
+            )
 
     # Case 2: Override is a boolean
     elif isinstance(override_multiplicity, bool):
@@ -149,24 +151,24 @@ def output_multiplicity_to_apply(
 
             if isinstance(base_multiplicity, bool):
                 log.debug("base_multiplicity is bool - disregarding base, using True")
-                return OutputMultiplicityResolution(resolved_multiplicity=True, enable_multiple_outputs=True, specific_output_count=None)
+                return OutputMultiplicityResolution(resolved_multiplicity=True, is_multiple_outputs_enabled=True, specific_output_count=None)
             else:
                 log.debug("base_multiplicity is int or None - preserving base value")
                 return OutputMultiplicityResolution(
                     resolved_multiplicity=base_multiplicity,
-                    enable_multiple_outputs=True,
+                    is_multiple_outputs_enabled=True,
                     specific_output_count=base_multiplicity if isinstance(base_multiplicity, int) else None,
                 )
         else:
             log.debug("override_multiplicity is False - forcing single output")
-            return OutputMultiplicityResolution(resolved_multiplicity=False, enable_multiple_outputs=False, specific_output_count=None)
+            return OutputMultiplicityResolution(resolved_multiplicity=False, is_multiple_outputs_enabled=False, specific_output_count=None)
 
     else:
         # Case 3: Override is an integer
         log.debug("override_multiplicity is int - using override value")
         return OutputMultiplicityResolution(
             resolved_multiplicity=override_multiplicity,
-            enable_multiple_outputs=True,
+            is_multiple_outputs_enabled=True,
             specific_output_count=override_multiplicity,
         )
 

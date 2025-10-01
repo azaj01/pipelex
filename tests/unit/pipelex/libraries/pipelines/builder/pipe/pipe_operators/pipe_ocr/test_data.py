@@ -1,7 +1,7 @@
 from typing import ClassVar
 
 from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
-from pipelex.libraries.pipelines.builder.pipe.inputs_spec import InputRequirementSpec
+
 from pipelex.libraries.pipelines.builder.pipe.pipe_ocr_spec import PipeOcrSpec
 from pipelex.pipe_operators.ocr.pipe_ocr_blueprint import PipeOcrBlueprint
 
@@ -12,17 +12,18 @@ class PipeOcrTestCases:
         PipeOcrSpec(
             the_pipe_code="ocr_extractor",
             definition="Extract text from image",
-            inputs={"ocr_input": InputRequirementSpec(concept="Image")},
+            inputs={"image": "Image"},
             output="ExtractedText",
-            ocr="mistral-pixtral",
+            ocr="extract_text_from_visuals",
         ),
         PipeOcrBlueprint(
+            source=None,
             definition="Extract text from image",
-            inputs={"ocr_input": InputRequirementBlueprint(concept="Image")},
+            inputs={"image": InputRequirementBlueprint(concept="Image")},
             output="ExtractedText",
             type="PipeOcr",
             category="PipeOperator",
-            ocr="mistral-pixtral",
+            ocr="base_ocr_mistral",
         ),
     )
 
@@ -31,21 +32,25 @@ class PipeOcrTestCases:
         PipeOcrSpec(
             the_pipe_code="advanced_ocr",
             definition="OCR with page options",
-            inputs={"ocr_input": InputRequirementSpec(concept="PDF")},
+            inputs={"document": "PDF"},
             output="PageContent",
-            ocr="tesseract",
+            ocr="extract_text_from_pdf",
             page_images=True,
             page_image_captions=True,
             page_views=True,
-            page_views_dpi=300,
         ),
         PipeOcrBlueprint(
+            source=None,
             definition="OCR with page options",
-            inputs={"ocr_input": InputRequirementBlueprint(concept="PDF")},
+            inputs={"document": InputRequirementBlueprint(concept="PDF")},
             output="PageContent",
             type="PipeOcr",
             category="PipeOperator",
-            ocr="tesseract",
+            ocr="base_ocr_mistral",
+            page_images=True,
+            page_image_captions=True,
+            page_views=True,
+            page_views_dpi=None,
         ),
     )
 

@@ -13,7 +13,6 @@ from pipelex.core.stuffs.stuff_content import (
 )
 from pipelex.core.stuffs.stuff_factory import StuffBlueprint, StuffFactory
 from pipelex.exceptions import PipeStackOverflowError
-from pipelex.pipe_operators.ocr.pipe_ocr import PIPE_OCR_INPUT_NAME
 from tests.cases import ImageTestCases, PDFTestCases
 
 
@@ -60,7 +59,7 @@ class PipeTestCases:
         content=ImageContent(url=URL_IMG_FASHION_PHOTO_1),
     )
     SIMPLE_STUFF_PDF = StuffFactory.make_stuff(
-        name=PIPE_OCR_INPUT_NAME,
+        name="document",
         concept=ConceptFactory.make_native_concept(native_concept_data=NATIVE_CONCEPTS_DATA[NativeConceptEnum.PDF]),
         content=PDFContent(url=PDFTestCases.DOCUMENT_URLS[0]),
     )

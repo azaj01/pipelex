@@ -14,8 +14,6 @@ from pipelex.config import StaticValidationReaction, get_config
 from pipelex.core.concepts.concept_native import NativeConceptEnum
 from pipelex.core.memory.working_memory import WorkingMemory
 from pipelex.core.pipes.pipe_input import PipeInputSpec
-from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
-from pipelex.core.pipes.pipe_input_factory import PipeInputSpecFactory
 from pipelex.core.pipes.pipe_output import PipeOutput
 from pipelex.core.pipes.pipe_run_params import PipeRunMode, PipeRunParams
 from pipelex.core.stuffs.stuff_content import ImageContent, ListContent, PageContent, TextAndImagesContent, TextContent
@@ -38,9 +36,6 @@ from pipelex.types import Self
 
 class PipeOcrOutput(PipeOutput):
     pass
-
-
-PIPE_OCR_INPUT_NAME = "ocr_input"
 
 
 class PipeOcr(PipeOperator[PipeOcrOutput]):
@@ -67,7 +62,7 @@ class PipeOcr(PipeOperator[PipeOcrOutput]):
 
     @override
     def required_variables(self) -> set[str]:
-        return {PIPE_OCR_INPUT_NAME}
+        return set(self.inputs.required_names)
 
     @override
     def validate_output(self):
@@ -81,49 +76,14 @@ class PipeOcr(PipeOperator[PipeOcrOutput]):
         default_reaction = static_validation_config.default_reaction
         reactions = static_validation_config.reactions
 
-        # check that we have either an image or a pdf in inputs, at most one of them and nothing else
-        candidate_prompt_var_names: list[str] = []
-        for input_name, requirement in self.inputs.items:
-            log.debug(f"{input_name=}")
-            log.debug(f"{requirement=}")
-            log.debug(f"Validating input '{input_name}' with concept code '{requirement.concept.code}'")
-            if concept_provider.is_compatible(
-                tested_concept=requirement.concept,
-                wanted_concept=concept_provider.get_native_concept(native_concept=NativeConceptEnum.IMAGE),
-                strict=True,
-            ):
-                self.image_stuff_name = input_name
-                candidate_prompt_var_names.append(input_name)
-            elif concept_provider.is_compatible(
-                tested_concept=requirement.concept,
-                wanted_concept=concept_provider.get_native_concept(native_concept=NativeConceptEnum.PDF),
-                strict=True,
-            ):
-                self.pdf_stuff_name = input_name
-                candidate_prompt_var_names.append(input_name)
-            else:
-                inadequate_input_concept_error = StaticValidationError(
-                    error_type=StaticValidationErrorType.INADEQUATE_INPUT_CONCEPT,
-                    domain=self.domain,
-                    pipe_code=self.code,
-                    variable_names=[input_name],
-                    provided_concept_code=requirement.concept.code,
-                    explanation="For OCR you must provide either a pdf or an image or a concept that refines one of them",
-                )
-                match reactions.get(StaticValidationErrorType.INADEQUATE_INPUT_CONCEPT, default_reaction):
-                    case StaticValidationReaction.IGNORE:
-                        pass
-                    case StaticValidationReaction.LOG:
-                        log.error(inadequate_input_concept_error.desc())
-                    case StaticValidationReaction.RAISE:
-                        raise inadequate_input_concept_error
-
-        if len(candidate_prompt_var_names) > 1:
+        # check that we have exactly one input
+        nb_inputs = self.inputs.nb_inputs
+        if nb_inputs > 1:
             too_many_candidate_inputs_error = StaticValidationError(
                 error_type=StaticValidationErrorType.TOO_MANY_CANDIDATE_INPUTS,
                 domain=self.domain,
                 pipe_code=self.code,
-                variable_names=candidate_prompt_var_names,
+                variable_names=self.inputs.variables,
                 explanation="Only one image or pdf can be provided for OCR",
             )
             match reactions.get(StaticValidationErrorType.TOO_MANY_CANDIDATE_INPUTS, default_reaction):
@@ -133,7 +93,7 @@ class PipeOcr(PipeOperator[PipeOcrOutput]):
                     log.error(too_many_candidate_inputs_error.desc())
                 case StaticValidationReaction.RAISE:
                     raise too_many_candidate_inputs_error
-        elif len(candidate_prompt_var_names) == 0:
+        elif nb_inputs < 1:
             missing_input_var_error = StaticValidationError(
                 error_type=StaticValidationErrorType.MISSING_INPUT_VARIABLE,
                 domain=self.domain,
@@ -148,12 +108,42 @@ class PipeOcr(PipeOperator[PipeOcrOutput]):
                 case StaticValidationReaction.RAISE:
                     raise missing_input_var_error
 
+        # We have confirmed right above that we have exactly one input
+        # get input_name, requirement from single item in inputs
+        input_name, requirement = self.inputs.items[0]
+        log.debug(f"Validating input '{input_name}' with concept code '{requirement.concept.code}'")
+        if concept_provider.is_compatible(
+            tested_concept=requirement.concept,
+            wanted_concept=concept_provider.get_native_concept(native_concept=NativeConceptEnum.IMAGE),
+            strict=True,
+        ):
+            self.image_stuff_name = input_name
+        elif concept_provider.is_compatible(
+            tested_concept=requirement.concept,
+            wanted_concept=concept_provider.get_native_concept(native_concept=NativeConceptEnum.PDF),
+            strict=True,
+        ):
+            self.pdf_stuff_name = input_name
+        else:
+            inadequate_input_concept_error = StaticValidationError(
+                error_type=StaticValidationErrorType.INADEQUATE_INPUT_CONCEPT,
+                domain=self.domain,
+                pipe_code=self.code,
+                variable_names=[input_name],
+                provided_concept_code=requirement.concept.code,
+                explanation="For PipeOcr you must provide either a pdf or an image or a concept that refines one of them",
+            )
+            match reactions.get(StaticValidationErrorType.INADEQUATE_INPUT_CONCEPT, default_reaction):
+                case StaticValidationReaction.IGNORE:
+                    pass
+                case StaticValidationReaction.LOG:
+                    log.error(inadequate_input_concept_error.desc())
+                case StaticValidationReaction.RAISE:
+                    raise inadequate_input_concept_error
+
     @override
     def needed_inputs(self, visited_pipes: set[str] | None = None) -> PipeInputSpec:
-        return PipeInputSpecFactory.make_from_blueprint(
-            domain=self.domain,
-            blueprint={PIPE_OCR_INPUT_NAME: InputRequirementBlueprint(concept=self.inputs.root[PIPE_OCR_INPUT_NAME].concept.concept_string)},
-        )
+        return self.inputs
 
     @override
     async def _run_operator_pipe(

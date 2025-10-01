@@ -48,6 +48,7 @@ default = "google"
 [profiles.all_azure_openai]
 description = "Use Azure OpenAI backend for all its supported models"
 default = "azure_openai"
+
 [profiles.custom_routing]
 description = "Custom routing"
 default = "pipelex_inference"

@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from typing import ClassVar
 
@@ -9,7 +8,6 @@ from pipelex import log
 from pipelex.config import get_config
 from pipelex.core.bundles.pipelex_bundle_blueprint import PipelexBundleBlueprint
 from pipelex.core.concepts.concept import Concept
-from pipelex.core.concepts.concept_blueprint import ConceptBlueprint
 from pipelex.core.concepts.concept_factory import ConceptFactory
 from pipelex.core.concepts.concept_library import ConceptLibrary
 from pipelex.core.domains.domain import Domain
@@ -23,18 +21,20 @@ from pipelex.core.pipes.pipe_library import PipeLibrary
 from pipelex.exceptions import (
     ConceptDefinitionError,
     ConceptLibraryError,
+    ConceptLoadingError,
     DomainDefinitionError,
+    DomainLoadingError,
     LibraryError,
     LibraryLoadingError,
     PipeDefinitionError,
     PipeLibraryError,
+    PipeLoadingError,
 )
 from pipelex.libraries.library_config import LibraryConfig
 from pipelex.libraries.library_manager_abstract import LibraryManagerAbstract
 from pipelex.tools.class_registry_utils import ClassRegistryUtils
 from pipelex.tools.func_registry_utils import FuncRegistryUtils
 from pipelex.tools.misc.file_utils import find_files_in_dir
-from pipelex.tools.misc.toml_utils import TOMLValidationError, validate_toml_file
 from pipelex.tools.runtime_manager import runtime_manager
 from pipelex.tools.typing.pydantic_utils import format_pydantic_validation_error
 from pipelex.types import StrEnum
@@ -81,21 +81,6 @@ class LibraryManager(LibraryManagerAbstract):
         self.concept_library.validate_with_libraries()
         self.pipe_library.validate_with_libraries()
         self.domain_library.validate_with_libraries()
-
-    def _validate_toml_files(self):
-        """Validate all TOML files used by the library manager for formatting issues."""
-        log.debug("LibraryManager validating TOML file formatting")
-
-        # Validation of template paths
-        template_paths = self.library_config.get_templates_paths()
-        for template_path in template_paths:
-            if os.path.exists(template_path):
-                try:
-                    validate_toml_file(template_path)
-                except TOMLValidationError as exc:
-                    msg = f"PLX validation failed for template file '{template_path}': {exc}"
-                    log.error(msg)
-                    raise LibraryError(msg) from exc
 
     @override
     def setup(self) -> None:
@@ -151,7 +136,7 @@ class LibraryManager(LibraryManagerAbstract):
             domain = self._load_domain_from_blueprint(blueprint)
         except DomainDefinitionError as exc:
             msg = f"Could not load domain from PLX blueprint at '{blueprint.source}', domain code: '{blueprint.domain}': {exc}"
-            raise LibraryLoadingError(msg) from exc
+            raise DomainLoadingError(message=msg, domain_code=exc.domain_code, description=exc.description, source=exc.source) from exc
         self.domain_library.add_domain(domain=domain)
 
         # Create and load concepts
@@ -159,7 +144,9 @@ class LibraryManager(LibraryManagerAbstract):
             concepts = self._load_concepts_from_blueprint(blueprint)
         except ConceptDefinitionError as exc:
             msg = f"Could not load concepts from PLX blueprint at '{blueprint.source}', domain code: '{blueprint.domain}': {exc}"
-            raise LibraryLoadingError(msg) from exc
+            raise ConceptLoadingError(
+                message=msg, concept_definition_error=exc, concept_code=exc.concept_code, description=exc.description, source=exc.source
+            ) from exc
         self.concept_library.add_concepts(concepts=concepts)
 
         # Create and load pipes
@@ -167,7 +154,9 @@ class LibraryManager(LibraryManagerAbstract):
             pipes = self._load_pipes_from_blueprint(blueprint)
         except PipeDefinitionError as exc:
             msg = f"Could not load pipes from PLX blueprint at '{blueprint.source}', domain code: '{blueprint.domain}': {exc}"
-            raise LibraryLoadingError(msg) from exc
+            raise PipeLoadingError(
+                message=msg, pipe_definition_error=exc, pipe_code=exc.pipe_code or "", description=exc.description or "", source=exc.source
+            ) from exc
         self.pipe_library.add_pipes(pipes=pipes)
 
         return pipes
@@ -180,7 +169,7 @@ class LibraryManager(LibraryManagerAbstract):
         # Remove concepts (they may depend on domain)
         if blueprint.concept is not None:
             concept_codes_to_remove = [
-                ConceptFactory.construct_concept_string_with_domain(domain=blueprint.domain, concept_code=concept_code)
+                ConceptFactory.make_concept_string_with_domain(domain=blueprint.domain, concept_code=concept_code)
                 for concept_code in blueprint.concept
             ]
             self.concept_library.remove_concepts_by_codes(concept_codes=concept_codes_to_remove)
@@ -190,8 +179,9 @@ class LibraryManager(LibraryManagerAbstract):
     def _load_domain_from_blueprint(self, blueprint: PipelexBundleBlueprint) -> Domain:
         return DomainFactory.make_from_blueprint(
             blueprint=DomainBlueprint(
+                source=blueprint.source,
                 code=blueprint.domain,
-                definition=blueprint.definition,
+                definition=blueprint.definition or "",
                 system_prompt=blueprint.system_prompt,
                 system_prompt_to_structure=blueprint.system_prompt_to_structure,
                 prompt_template_to_structure=blueprint.prompt_template_to_structure,
@@ -203,17 +193,12 @@ class LibraryManager(LibraryManagerAbstract):
             return []
 
         concepts: list[Concept] = []
-        for concept_code, concept_blueprint_or_str in blueprint.concept.items():
-            concept_blueprint: ConceptBlueprint
-            if isinstance(concept_blueprint_or_str, str):
-                concept_blueprint = ConceptBlueprint(definition=concept_blueprint_or_str)
-            else:
-                concept_blueprint = concept_blueprint_or_str
-            concept = ConceptFactory.make_from_blueprint(
+        for concept_code, concept_blueprint_or_description in blueprint.concept.items():
+            concept = ConceptFactory.make_from_blueprint_or_description(
                 domain=blueprint.domain,
                 concept_code=concept_code,
                 concept_codes_from_the_same_domain=list(blueprint.concept.keys()),
-                blueprint=concept_blueprint,
+                concept_blueprint_or_description=concept_blueprint_or_description,
             )
             concepts.append(concept)
         return concepts

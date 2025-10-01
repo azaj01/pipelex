@@ -12,7 +12,6 @@ from pipelex.core.pipes.pipe_run_params import PipeRunMode
 from pipelex.core.pipes.pipe_run_params_factory import PipeRunParamsFactory
 from pipelex.core.stuffs.stuff_content import PageContent
 from pipelex.hub import get_concept_provider, get_pipe_router
-from pipelex.pipe_operators.ocr.pipe_ocr import PIPE_OCR_INPUT_NAME
 from pipelex.pipe_operators.ocr.pipe_ocr_blueprint import PipeOcrBlueprint
 from pipelex.pipe_operators.ocr.pipe_ocr_factory import PipeOcrFactory
 from pipelex.pipe_works.pipe_job_factory import PipeJobFactory
@@ -84,9 +83,10 @@ class TestPipeOCR:
         pipe_run_mode: PipeRunMode,
         pdf_url: str,
     ):
+        input_name = "arbitrary_name"
         pipe_ocr_blueprint = PipeOcrBlueprint(
             definition="OCR test for PDF processing",
-            inputs={PIPE_OCR_INPUT_NAME: InputRequirementBlueprint(concept=NativeConceptEnum.PDF)},
+            inputs={input_name: InputRequirementBlueprint(concept=NativeConceptEnum.PDF)},
             output=NativeConceptEnum.TEXT_AND_IMAGES,
             ocr=ocr_choice_for_pdf,
             page_images=True,
@@ -104,7 +104,7 @@ class TestPipeOCR:
             pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
             working_memory=WorkingMemoryFactory.make_from_pdf(
                 pdf_url=pdf_url,
-                name=PIPE_OCR_INPUT_NAME,
+                name=input_name,
             ),
         )
         pipe_ocr_output = await get_pipe_router().run(

@@ -257,9 +257,7 @@ class ContentGenerator(ContentGeneratorProtocol):
             prompting_style=prompting_style,
             template_category=template_category,
         )
-        jinja2_text = await jinja2_gen_text(jinja2_assignment=jinja2_assignment)
-        log.dev(f"{self.__class__.__name__} jinja2: {jinja2_text}")
-        return jinja2_text
+        return await jinja2_gen_text(jinja2_assignment=jinja2_assignment)
 
     @override
     async def make_ocr_extract_pages(

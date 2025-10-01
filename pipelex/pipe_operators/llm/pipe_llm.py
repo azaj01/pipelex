@@ -49,6 +49,7 @@ from pipelex.hub import (
 from pipelex.pipe_operators.llm.pipe_llm_blueprint import StructuringMethod
 from pipelex.pipe_operators.pipe_operator import PipeOperator
 from pipelex.pipeline.job_metadata import JobMetadata
+from pipelex.tools.templating.jinja2_template_category import Jinja2TemplateCategory
 from pipelex.tools.typing.structure_printer import StructurePrinter
 from pipelex.types import Self
 
@@ -248,15 +249,16 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
                 output_concept_code = SpecialDomain.NATIVE + "." + NativeConceptEnum.TEXT
             else:
                 output_concept = get_concept_provider().get_required_concept(
-                    concept_string=ConceptFactory.construct_concept_string_with_domain(domain=self.domain, concept_code=output_concept_code),
+                    concept_string=ConceptFactory.make_concept_string_with_domain(domain=self.domain, concept_code=output_concept_code),
                 )
 
         multiplicity_resolution = output_multiplicity_to_apply(
             base_multiplicity=self.output_multiplicity,
             override_multiplicity=pipe_run_params.output_multiplicity,
         )
+        log.debug(f"multiplicity_resolution: {multiplicity_resolution}")
         applied_output_multiplicity = multiplicity_resolution.resolved_multiplicity
-        is_multiple_output = multiplicity_resolution.enable_multiple_outputs
+        is_multiple_output = multiplicity_resolution.is_multiple_outputs_enabled
         fixed_nb_output = multiplicity_resolution.specific_output_count
 
         # Collect what LLM settings we have for this particular PipeLLM
@@ -299,32 +301,31 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
         log.verbose(
             f"is_with_preliminary_text: {is_with_preliminary_text} for pipe {self.code} because the structuring_method is {self.structuring_method}",
         )
-        # Append output structure prompt if needed
-        output_structure_prompt: str | None = PipeLLM.get_output_structure_prompt(
-            concept_string=pipe_run_params.dynamic_output_concept_code or output_concept.concept_string,
-            is_with_preliminary_text=is_with_preliminary_text,
-        )
 
         llm_prompt_run_params = PipeRunParams.copy_by_injecting_multiplicity(
             pipe_run_params=pipe_run_params,
             applied_output_multiplicity=applied_output_multiplicity,
             is_with_preliminary_text=is_with_preliminary_text,
         )
+
         # TODO: we need a better solution for structuring_method (text then object), meanwhile,
         # we acknowledge the code here with llm_prompt_1 and llm_prompt_2 is overly complex and should be refactored.
-        llm_prompt_1 = await self.llm_prompt_spec.make_llm_prompt(
-            output_concept_string=output_concept.concept_string,
-            context_provider=working_memory,
-            output_structure_prompt=output_structure_prompt,
-            extra_params=llm_prompt_run_params.params,
-        )
 
         the_content: StuffContent
-        if output_concept.structure_class_name == NativeConceptEnum.TEXT and not is_multiple_output:
-            log.debug(f"PipeLLM generating a single text output: {self.class_name}_gen_text")
+        log.debug(f"output_concept.structure_class_name: {output_concept.structure_class_name}")
+        log.debug(f"TextContent.__class__.__name__: {TextContent.__class__.__name__}")
+        log.debug(f"is_multiple_output: {is_multiple_output}")
+        if output_concept.structure_class_name == "TextContent" and not is_multiple_output:
+            log.debug(f"PipeLLM generating a single text output: {self.__class__.__name__}_gen_text")
+            llm_prompt_1_for_text = await self.llm_prompt_spec.make_llm_prompt(
+                output_concept_string=output_concept.concept_string,
+                context_provider=working_memory,
+                output_structure_prompt=None,
+                extra_params=llm_prompt_run_params.params,
+            )
             generated_text: str = await content_generator.make_llm_text(
                 job_metadata=job_metadata,
-                llm_prompt_for_text=llm_prompt_1,
+                llm_prompt_for_text=llm_prompt_1_for_text,
                 llm_setting_main=llm_setting_main,
             )
 
@@ -335,7 +336,7 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
             if is_multiple_output:
                 log.debug(f"PipeLLM generating {fixed_nb_output} output(s)" if fixed_nb_output else "PipeLLM generating a list of output(s)")
             else:
-                log.debug("PipeLLM generating a single output")
+                log.debug(f"PipeLLM generating a single object output, class name: '{output_concept.structure_class_name}'")
 
             # TODO: we need a better solution for structuring_method (text then object), meanwhile,
             # we acknowledge the code here with llm_prompt_1 and llm_prompt_2 is overly complex and should be refactored.
@@ -388,6 +389,18 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
             else:
                 llm_prompt_2_factory = None
 
+            output_structure_prompt: str | None = None
+            if get_config().cogt.llm_config.is_structure_prompt_enabled:
+                output_structure_prompt = await PipeLLM.get_output_structure_prompt(
+                    concept_string=pipe_run_params.dynamic_output_concept_code or output_concept.concept_string,
+                    is_with_preliminary_text=is_with_preliminary_text,
+                )
+            llm_prompt_1_for_object = await self.llm_prompt_spec.make_llm_prompt(
+                output_concept_string=output_concept.concept_string,
+                context_provider=working_memory,
+                output_structure_prompt=output_structure_prompt,
+                extra_params=llm_prompt_run_params.params,
+            )
             the_content = await self._llm_gen_object_stuff_content(
                 job_metadata=job_metadata,
                 is_multiple_output=is_multiple_output,
@@ -395,7 +408,7 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
                 output_class_name=output_concept.structure_class_name,
                 llm_setting_main=llm_setting_main,
                 llm_setting_for_object=llm_setting_for_object,
-                llm_prompt_1=llm_prompt_1,
+                llm_prompt_1=llm_prompt_1_for_object,
                 llm_prompt_2_factory=llm_prompt_2_factory,
                 content_generator=content_generator,
             )
@@ -435,9 +448,9 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
         if is_multiple_output:
             # We're generating a list of (possibly multiple) objects
             if fixed_nb_output:
-                task_desc = f"{self.class_name}_gen_{fixed_nb_output}x{content_class.__class__.__name__}"
+                task_desc = f"{self.__class__.__name__}_gen_{fixed_nb_output}x{content_class.__class__.__name__}"
             else:
-                task_desc = f"{self.class_name}_gen_list_{content_class.__class__.__name__}"
+                task_desc = f"{self.__class__.__name__}_gen_list_{content_class.__class__.__name__}"
             log.dev(task_desc)
             generated_objects: list[StuffContent]
             if llm_prompt_2_factory is not None:
@@ -470,7 +483,7 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
             the_content = ListContent(items=generated_objects)
         else:
             # We're generating a single object
-            task_desc = f"{self.class_name}_gen_single_{content_class.__name__}"
+            task_desc = f"{self.__class__.__name__}_gen_single_{content_class.__name__}"
             log.verbose(task_desc)
             if llm_prompt_2_factory is not None:
                 # We're generating a single object using preliminary text
@@ -517,40 +530,24 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
         )
 
     @staticmethod
-    def get_output_structure_prompt(concept_string: str, is_with_preliminary_text: bool) -> str:
+    async def get_output_structure_prompt(concept_string: str, is_with_preliminary_text: bool) -> str | None:
         concept = get_required_concept(concept_string=concept_string)
-        class_name = concept.structure_class_name
-        output_class = get_class_registry().get_class(class_name)
+        output_class = get_class_registry().get_class(concept.structure_class_name)
+        log.debug(f"get_output_structure_prompt for {concept_string} with {is_with_preliminary_text=}")
+        log.debug(f"output_class: {output_class}")
         if not output_class:
-            return ""
+            return None
 
         class_structure = StructurePrinter().get_type_structure(tp=output_class, base_class=StuffContent)
 
         if not class_structure:
-            return ""
+            return None
         class_structure_str = "\n".join(class_structure)
 
-        # TODO: use proper prompt templating for this
-        if is_with_preliminary_text:
-            output_structure_prompt = f"""
-
----
-The instance we want to generate will be for the following class:
-{class_structure_str}
-
-Don't bother with JSON formatting, we'll do that as a second step.
-For now, just output markdown with the details of the instance.
-DO NOT create information.
-If some information is not present for an attribute, output the default value or None according to the attribute definition.
-"""
-        else:
-            output_structure_prompt = f"""
-
----
-The instance we want to generate will be for the following class:
-{class_structure_str}
-
-DO NOT create information.
-If some information is not present for an attribute, output the default value or None according to the attribute definition.
-"""
-        return output_structure_prompt
+        return await get_content_generator().make_jinja2_text(
+            context={
+                "class_structure_str": class_structure_str,
+            },
+            template_category=Jinja2TemplateCategory.LLM_PROMPT,
+            jinja2_name="output_structure_prompt" if is_with_preliminary_text else "output_structure_prompt_no_preliminary_text",
+        )

@@ -129,8 +129,9 @@ class LLMPromptSpec(BaseModel):
             extra_params=extra_params,
         )
         if not user_text:
-            msg = "For user_text we need either a pipe_jinja2, a text_verbatim_name or a fixed user_text"
-            raise ValueError(msg)
+            # TODO: link to docs
+            msg = "Could not unravel user_text, we need either a jinja2_blueprint, a text_verbatim_name or a fixed user_text"
+            raise LLMPromptSpecError(msg)
 
         if output_structure_prompt:
             user_text += output_structure_prompt
@@ -172,7 +173,7 @@ class LLMPromptSpec(BaseModel):
                 jinja2_blueprint.prompting_style = prompting_style
                 log.verbose(f"Setting prompting style to {prompting_style}")
 
-            context: dict[str, Any] = context_provider.generate_context()
+            context: dict[str, Any] = context_provider.generate_jinja2_context()
             if extra_params:
                 context.update(**extra_params)
             if jinja2_blueprint.extra_context:
@@ -191,7 +192,7 @@ class LLMPromptSpec(BaseModel):
             )
             if not user_text_verbatim:
                 msg = f"Could not find text_verbatim template '{text_verbatim_name}'"
-                raise ValueError(msg)
+                raise LLMPromptSpecError(msg)
             the_text = user_text_verbatim
         elif fixed_text:
             the_text = fixed_text

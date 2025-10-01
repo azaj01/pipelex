@@ -48,10 +48,11 @@ class DryRunOutput(BaseModel):
 async def dry_run_pipe(pipe: PipeAbstract, raise_on_failure: bool = False) -> DryRunOutput:
     """Dry run a single pipe directly without parallelization."""
     allowed_to_fail_pipes = get_config().pipelex.dry_run_config.allowed_to_fail_pipes
-    needed_inputs_for_factory = _convert_to_working_memory_format(needed_inputs_spec=pipe.needed_inputs())
-
-    working_memory = WorkingMemoryFactory.make_for_dry_run(needed_inputs=needed_inputs_for_factory)
+    # TODO: fail and raise properly
     try:
+        needed_inputs_for_factory = _convert_to_working_memory_format(needed_inputs_spec=pipe.needed_inputs())
+
+        working_memory = WorkingMemoryFactory.make_for_dry_run(needed_inputs=needed_inputs_for_factory)
         pipe.validate_with_libraries()
         await pipe.run_pipe(
             job_metadata=JobMetadata(job_name=f"dry_run_{pipe.code}"),
@@ -89,6 +90,9 @@ async def dry_run_pipes(pipes: list[PipeAbstract], run_in_parallel: bool = True,
 
     Returns:
         Dict mapping pipe codes to their dry run status ("SUCCESS" or error message)
+
+    Raises:
+        DryRunError: If raise_on_failure is True and any pipe fails.
 
     """
     start_time = time.time()
@@ -145,6 +149,7 @@ def _convert_to_working_memory_format(needed_inputs_spec: PipeInputSpec) -> list
     needed_inputs_for_factory: list[TypedNamedInputRequirement] = []
     class_registry = get_class_registry()
 
+    # TODO: fail and raise properly
     for named_input_requirement in needed_inputs_spec.named_input_requirements:
         try:
             # Get the concept and its structure class

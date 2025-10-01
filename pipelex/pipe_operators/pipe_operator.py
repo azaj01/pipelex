@@ -19,6 +19,10 @@ PipeOperatorOutputType = TypeVar("PipeOperatorOutputType", bound=PipeOutput)
 class PipeOperator(PipeAbstract, Generic[PipeOperatorOutputType]):
     category: Literal["PipeOperator"] = "PipeOperator"
 
+    @property
+    def class_name(self) -> str:
+        return self.__class__.__name__
+
     @override
     async def run_pipe(
         self,
@@ -38,7 +42,7 @@ class PipeOperator(PipeAbstract, Generic[PipeOperatorOutputType]):
 
         match pipe_run_params.run_mode:
             case PipeRunMode.LIVE:
-                if self.class_name not in ["PipeJinja2", "PipeLLMPrompt"]:
+                if self.class_name not in ["PipeCompose", "PipeLLMPrompt"]:
                     name = f"Running [cyan]{self.class_name}[/cyan]"
                     indent_level = len(pipe_run_params.pipe_stack) - 1
                     indent = "   " * indent_level

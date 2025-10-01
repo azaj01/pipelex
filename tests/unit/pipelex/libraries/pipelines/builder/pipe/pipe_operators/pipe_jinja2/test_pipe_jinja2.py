@@ -1,21 +1,21 @@
 import pytest
 
-from pipelex.libraries.pipelines.builder.pipe.pipe_jinja2_spec import PipeJinja2Spec
-from pipelex.pipe_operators.jinja2.pipe_jinja2_blueprint import PipeJinja2Blueprint
+from pipelex.libraries.pipelines.builder.pipe.pipe_compose_spec import PipeComposeSpec
+from pipelex.pipe_operators.compose.pipe_compose_blueprint import PipeComposeBlueprint
 
-from .test_data import PipeJinja2TestCases
+from tests.unit.pipelex.libraries.pipelines.builder.pipe.pipe_operators.pipe_jinja2.test_data import PipeComposeTestCases
 
 
-class TestPipeJinja2BlueprintConversion:
+class TestPipeComposeBlueprintConversion:
     @pytest.mark.parametrize(
         "test_name,pipe_spec,expected_blueprint",
-        PipeJinja2TestCases.TEST_CASES,
+        PipeComposeTestCases.TEST_CASES,
     )
-    def test_pipe_jinja2_spec_to_blueprint(
+    def test_pipe_compose_spec_to_blueprint(
         self,
         test_name: str,
-        pipe_spec: PipeJinja2Spec,
-        expected_blueprint: PipeJinja2Blueprint,
+        pipe_spec: PipeComposeSpec,
+        expected_blueprint: PipeComposeBlueprint,
     ):
         result = pipe_spec.to_blueprint()
         assert result == expected_blueprint

@@ -36,7 +36,7 @@ class TestPipeParallelValidation:
                 "context": InputRequirementBlueprint(concept=concept_2.concept_string),
             },
             definition="Analysis pipe for document processing",
-            output=ConceptFactory.construct_concept_string_with_domain(domain=domain, concept_code=concept_3.code),
+            output=ConceptFactory.make_concept_string_with_domain(domain=domain, concept_code=concept_3.code),
             prompt_template="Analyze this document:  \n@context\n@document",
         )
 
@@ -61,7 +61,7 @@ class TestPipeParallelValidation:
                 "document": InputRequirementBlueprint(concept=concept_1.code),
                 "context": InputRequirementBlueprint(concept=concept_2.code),
             },
-            output=ConceptFactory.construct_concept_string_with_domain(domain=domain, concept_code=concept_3.code),
+            output=ConceptFactory.make_concept_string_with_domain(domain=domain, concept_code=concept_3.code),
             parallels=[SubPipeBlueprint(pipe=real_pipe.code, result="analysis_result")],
             add_each_output=True,
             combined_output=None,
@@ -105,7 +105,7 @@ class TestPipeParallelValidation:
         pipe_parallel_blueprint = PipeParallelBlueprint(
             definition="Basic parallel pipe for testing",
             inputs={"input_var": InputRequirementBlueprint(concept=concept_1.concept_string)},
-            output=ConceptFactory.construct_concept_string_with_domain(domain=domain, concept_code=concept_3.code),
+            output=ConceptFactory.make_concept_string_with_domain(domain=domain, concept_code=concept_3.code),
             parallels=[SubPipeBlueprint(pipe="test_pipe_1", result="result_1")],
             add_each_output=True,
             combined_output=None,
@@ -152,7 +152,7 @@ class TestPipeParallelValidation:
                 "document": InputRequirementBlueprint(concept=concept_1.concept_string),
                 "context": InputRequirementBlueprint(concept=concept_2.concept_string),
             },
-            output=ConceptFactory.construct_concept_string_with_domain(domain=domain, concept_code=concept_3.code),
+            output=ConceptFactory.make_concept_string_with_domain(domain=domain, concept_code=concept_3.code),
             parallels=[],  # No sub-pipes to avoid dependency issues
             add_each_output=True,
             combined_output=None,

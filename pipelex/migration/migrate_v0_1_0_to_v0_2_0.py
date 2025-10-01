@@ -18,7 +18,7 @@ class TOMLMigrator:
         "PipeOcr",
         "PipeImgGen",
         "PipeFunc",
-        "PipeJinja2",
+        "PipeCompose",
         "PipeLLMPrompt",
         "PipeSequence",
         "PipeBatch",

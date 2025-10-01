@@ -119,3 +119,7 @@ class PipeInputSpec(RootModel[PipeInputSpecRoot]):
                 ),
             )
         return the_requirements
+
+    @property
+    def nb_inputs(self) -> int:
+        return len(self.root)

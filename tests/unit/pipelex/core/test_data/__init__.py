@@ -14,7 +14,7 @@ from .pipes.controllers.parallel.pipe_parallel import PIPE_PARALLEL_TEST_CASES
 from .pipes.controllers.sequence.pipe_sequence import PIPE_SEQUENCE_TEST_CASES
 from .pipes.operators.func.pipe_func import PIPE_FUNC_TEST_CASES
 from .pipes.operators.img_gen.pipe_img_gen import PIPE_IMG_GEN_TEST_CASES
-from .pipes.operators.jinja2.pipe_jinja2 import PIPE_JINJA2_TEST_CASES
+from .pipes.operators.compose.pipe_compose import PIPE_COMPOSE_TEST_CASES
 from .pipes.operators.llm.pipe_llm import PIPE_LLM_TEST_CASES
 from .pipes.operators.ocr.pipe_ocr import PIPE_OCR_TEST_CASES
 
@@ -35,7 +35,7 @@ class InterpreterTestCases:
         *PIPE_OCR_TEST_CASES,
         *PIPE_FUNC_TEST_CASES,
         *PIPE_IMG_GEN_TEST_CASES,
-        *PIPE_JINJA2_TEST_CASES,
+        *PIPE_COMPOSE_TEST_CASES,
         # Pipe controller tests
         *PIPE_SEQUENCE_TEST_CASES,
         *PIPE_CONDITION_TEST_CASES,

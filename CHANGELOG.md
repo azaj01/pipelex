@@ -26,6 +26,7 @@
  - Modified `any_env_var_is_placeholder()` to use new placeholder detection logic
  - Updated test environment setup to use dynamic placeholder generation instead of hardcoded values
  - Restructured test classes and methods in environment tests
+ - Lint and tests GHA should run on every PR
 
 ### Fixed
  - Fixed logic error in `any_env_var_is_placeholder()` function - now correctly returns False when no placeholders are found
@@ -35,6 +36,8 @@
  - Removed `get_rooted_path()` and `get_env_rooted_path()` utility functions
  - Removed hardcoded placeholder dictionary in test setup
  - Removed function `run_pipe_code` in pipe router because it was not relevant (used mostly in tests)
+ - Remove the use of `PipeCompose` in `PipeCondition`, to only use jinja2 with the `ContentGenerator`
+ - Remove the template libraries from the pipelex libraries.
 
 ## [v0.10.2] - 2025-09-18
 
@@ -219,7 +222,7 @@ For complete details, see the [Inference Backend Configuration](pages/configurat
 - Refactored the concepts: Blueprints are now more explicit, and hold only concept strings or code. Pipes hold concept instances.
 - Organized code: Created subfolders for controller and operator pipes.
 - Say goodbye to `PipeLLMPrompt`.
-- Removed the `PipeJinja2` and `PipeLLMPrompt` from the `PipeLLM`.
+- Removed the `PipeCompose` and `PipeLLMPrompt` from the `PipeLLM`.
 
 ### Added
 
@@ -314,7 +317,7 @@ Simplified input memory:
 - Refactored `PipeInputSpec` to use `InputRequirement` and `TypedNamedInputRequirement` classes instead of plain strings for input specifications.
 - Updated `WorkingMemoryFactory` to handle `ImplicitMemory` instead of `CompactMemory`.
 - Replaced `ExecutePipelineException` with `PipelineInputError` in `execute_pipeline` function.
-- Updated `PipeBatch`, `PipeCondition`, `PipeParallel`, `PipeSequence`, `PipeFunc`, `PipeImgGen`, `PipeJinja2`, `PipeLLM`, and `PipeOcr` classes to use `InputRequirement` for input handling.
+- Updated `PipeBatch`, `PipeCondition`, `PipeParallel`, `PipeSequence`, `PipeFunc`, `PipeImgGen`, `PipeCompose`, `PipeLLM`, and `PipeOcr` classes to use `InputRequirement` for input handling.
 - Updated `PipeInputSpec` creation in various test files to use `make_from_dict` method.
 - Updated `pyproject.toml` to exclude `pypdfium2` version `4.30.1`.
 - Updated `Jinja2TemplateCategory` to handle HTML and Markdown templates differently.
@@ -430,7 +433,6 @@ Simplified input memory:
 
 ### Changed
 
-- **OCR Input Standardization**: Changed OCR pipe input parameter naming to consistently use `ocr_input` for both image and PDF inputs, improving consistency across the API
 - **Error Message Improvements**: Updated PipeCondition error messages to reference `expression_template` instead of deprecated `expression_jinja2`
 
 ## [v0.4.11] - 2025-06-30

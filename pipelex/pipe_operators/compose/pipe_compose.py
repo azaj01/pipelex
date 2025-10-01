@@ -32,14 +32,12 @@ from pipelex.tools.typing.validation_utils import has_exactly_one_among_attribut
 from pipelex.types import Self
 
 
-class PipeJinja2Output(PipeOutput):
-    @property
-    def rendered_text(self) -> str:
-        return self.main_stuff_as_text.text
+class PipeComposeOutput(PipeOutput):
+    pass
 
 
-class PipeJinja2(PipeOperator[PipeJinja2Output]):
-    type: Literal["PipeJinja2"] = "PipeJinja2"
+class PipeCompose(PipeOperator[PipeComposeOutput]):
+    type: Literal["PipeCompose"] = "PipeCompose"
     model_config = ConfigDict(extra="forbid", strict=False)
 
     adhoc_pipe_code: ClassVar[str] = "jinja2_render"
@@ -56,13 +54,13 @@ class PipeJinja2(PipeOperator[PipeJinja2Output]):
     @model_validator(mode="after")
     def validate_jinja2(self) -> Self:
         if not has_exactly_one_among_attributes_from_list(self, attributes_list=["jinja2_name", "jinja2"]):
-            msg = "PipeJinja2 should have exactly one of jinja2_name or jinja2"
+            msg = "PipeCompose should have exactly one of jinja2_name or jinja2"
             raise PipeDefinitionError(msg)
         if self.jinja2:
             try:
                 check_jinja2_parsing(jinja2_template_source=self.jinja2, template_category=self.template_category)
             except TemplateSyntaxError as exc:
-                msg = f"Could not parse Jinja2 template included in PipeJinja2: {exc}"
+                msg = f"Could not parse Jinja2 template included in PipeCompose: {exc}"
                 raise Jinja2TemplateError(msg) from exc
         return self
 
@@ -128,13 +126,13 @@ class PipeJinja2(PipeOperator[PipeJinja2Output]):
         pipe_run_params: PipeRunParams,
         output_name: str | None = None,
         content_generator: ContentGeneratorProtocol | None = None,
-    ) -> PipeJinja2Output:
+    ) -> PipeComposeOutput:
         content_generator = content_generator or get_content_generator()
         if pipe_run_params.is_multiple_output_required:
-            msg = f"PipeJinja2 does not suppport multiple outputs, got output_multiplicity = {pipe_run_params.output_multiplicity}"
+            msg = f"PipeCompose does not suppport multiple outputs, got output_multiplicity = {pipe_run_params.output_multiplicity}"
             raise PipeRunParamsError(msg)
 
-        context: dict[str, Any] = working_memory.generate_context()
+        context: dict[str, Any] = working_memory.generate_jinja2_context()
         if pipe_run_params:
             context.update(**pipe_run_params.params)
         if self.extra_context:
@@ -158,7 +156,7 @@ class PipeJinja2(PipeOperator[PipeJinja2Output]):
             name=output_name,
         )
 
-        return PipeJinja2Output(
+        return PipeComposeOutput(
             working_memory=working_memory,
             pipeline_run_id=job_metadata.pipeline_run_id,
         )
@@ -170,13 +168,13 @@ class PipeJinja2(PipeOperator[PipeJinja2Output]):
         working_memory: WorkingMemory,
         pipe_run_params: PipeRunParams,
         output_name: str | None = None,
-    ) -> PipeJinja2Output:
+    ) -> PipeComposeOutput:
         content_generator_used: ContentGeneratorProtocol
         if get_config().pipelex.dry_run_config.apply_to_jinja2_rendering:
-            log.debug(f"PipeJinja2: using dry run operator pipe for jinja2 rendering: {self.code}")
+            log.debug(f"PipeCompose: using dry run operator pipe for jinja2 rendering: {self.code}")
             content_generator_used = ContentGeneratorDry()
         else:
-            log.debug(f"PipeJinja2: using regular operator pipe for jinja2 rendering (dry run not applied to jinja2): {self.code}")
+            log.debug(f"PipeCompose: using regular operator pipe for jinja2 rendering (dry run not applied to jinja2): {self.code}")
             content_generator_used = get_content_generator()
 
         return await self._run_operator_pipe(

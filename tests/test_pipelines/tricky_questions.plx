@@ -47,7 +47,7 @@ Answer in 4 parts:
 """
 
 [pipe.conclude_thoughtful_answer]
-type = "PipeJinja2"
+type = "PipeCompose"
 definition = "Conclude a thoughtful answer"
 inputs = { thoughtful_answer = "ThoughtfulAnswer" }
 output = "ThoughtfulAnswerConclusion"

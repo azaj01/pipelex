@@ -204,7 +204,7 @@ class TestConcept:
         """Test construct_concept_string_with_domain method."""
         valid_domain = "valid_domain"
         assert (
-            ConceptFactory.construct_concept_string_with_domain(domain=valid_domain, concept_code=NativeConceptEnum.TEXT)
+            ConceptFactory.make_concept_string_with_domain(domain=valid_domain, concept_code=NativeConceptEnum.TEXT)
             == f"{valid_domain}.{NativeConceptEnum.TEXT}"
         )
 

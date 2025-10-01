@@ -77,7 +77,7 @@ Keep it short: 200 characters.
 """
 
 [pipe.format_html_newsletter]
-type = "PipeJinja2"
+type = "PipeCompose"
 definition = "Combine weekly and channel summaries into a complete newsletter following specific formatting requirements"
 inputs = { weekly_summary = "Text", channel_summaries = "ChannelSummary" }
 output = "HtmlNewsletter"

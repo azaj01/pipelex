@@ -16,8 +16,10 @@ from pipelex.cogt.llm.llm_worker_internal_abstract import LLMWorkerInternalAbstr
 from pipelex.cogt.llm.structured_output import StructureMethod
 from pipelex.cogt.model_backends.model_constraints import ModelConstraints
 from pipelex.cogt.model_backends.model_spec import InferenceModelSpec
+from pipelex.config import get_config
 from pipelex.plugins.openai.openai_factory import OpenAIFactory
 from pipelex.reporting.reporting_protocol import ReportingProtocol
+from pipelex.tools.misc.instructor_utils import dump_error, dump_kwargs, dump_response
 from pipelex.tools.typing.pydantic_utils import BaseModelTypeVar
 
 
@@ -47,6 +49,14 @@ class OpenAILLMWorker(LLMWorkerInternalAbstract):
             self.instructor_for_objects = instructor.from_openai(client=sdk_instance, mode=instructor_mode)
         else:
             self.instructor_for_objects = instructor.from_openai(client=sdk_instance)
+
+        instructor_config = get_config().cogt.llm_config.instructor_config
+        if instructor_config.is_dump_kwargs_enabled:
+            self.instructor_for_objects.on(hook_name="completion:kwargs", handler=dump_kwargs)
+        if instructor_config.is_dump_response_enabled:
+            self.instructor_for_objects.on(hook_name="completion:response", handler=dump_response)
+        if instructor_config.is_dump_error_enabled:
+            self.instructor_for_objects.on(hook_name="completion:error", handler=dump_error)
 
     #########################################################
     @override

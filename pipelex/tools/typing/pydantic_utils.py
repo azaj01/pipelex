@@ -40,6 +40,14 @@ def format_pydantic_validation_error(exc: ValidationError) -> str:
     enum_errors = [
         f"{'.'.join(map(str, err['loc']))}: invalid enum value '{err.get('input', 'unknown')}'" for err in exc.errors() if err["type"] == "enum"
     ]
+    union_tag_errors: list[str] = []
+    for err in exc.errors():
+        if err["type"] == "union_tag_not_found":
+            field_path = ".".join(map(str, err["loc"]))
+            # Extract discriminator field name from context
+            discriminator = err.get("ctx", {}).get("discriminator", "type")
+            union_tag_errors.append(f"{field_path}: missing required discriminator field '{discriminator}'")
+
     model_type_errors: list[str] = []
     for err in exc.errors():
         if err["type"] == "model_type":
@@ -61,11 +69,13 @@ def format_pydantic_validation_error(exc: ValidationError) -> str:
         error_msg += f"\nValue errors: {value_errors}"
     if enum_errors:
         error_msg += f"\nEnum errors: {enum_errors}"
+    if union_tag_errors:
+        error_msg += f"\nUnion discriminator errors: {union_tag_errors}"
     if model_type_errors:
         error_msg += f"\nModel type errors: {model_type_errors}"
 
     # If none of the specific error types were found, add the raw error messages
-    if not any([missing_fields, extra_fields, type_errors, value_errors, enum_errors, model_type_errors]):
+    if not any([missing_fields, extra_fields, type_errors, value_errors, enum_errors, union_tag_errors, model_type_errors]):
         error_msg += "\nOther validation errors:"
         for err in exc.errors():
             error_msg += f"\n{'.'.join(map(str, err['loc']))}: {err['type']}: {err['msg']}"

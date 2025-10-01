@@ -25,18 +25,14 @@ class PipeAbstract(ABC, BaseModel):
     output: Concept
 
     @field_validator("code", mode="before")
-    @staticmethod
-    def validate_pipe_code_syntax(code: str) -> str:
+    @classmethod
+    def validate_pipe_code_syntax(cls, code: str) -> str:
         PipeBlueprint.validate_pipe_code_syntax(pipe_code=code)
         return code
 
     @abstractmethod
     def validate_output(self):
         """Validate the output for the pipe."""
-
-    @property
-    def class_name(self) -> str:
-        return self.__class__.__name__
 
     def validate_with_libraries(self):
         """Validate the pipe with the libraries, after the static validation"""

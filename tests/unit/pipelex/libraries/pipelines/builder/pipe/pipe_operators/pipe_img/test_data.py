@@ -2,8 +2,8 @@ from typing import ClassVar
 
 from pipelex.cogt.img_gen.img_gen_job_components import AspectRatio
 from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
-from pipelex.libraries.pipelines.builder.pipe.inputs_spec import InputRequirementSpec
-from pipelex.libraries.pipelines.builder.pipe.pipe_img_spec import PipeImgGenSpec
+
+from pipelex.libraries.pipelines.builder.pipe.pipe_img_spec import PipeImgGenSpec, RecommendedImgGen
 from pipelex.pipe_operators.img_gen.pipe_img_gen_blueprint import PipeImgGenBlueprint
 
 
@@ -13,9 +13,8 @@ class PipeImgGenTestCases:
         PipeImgGenSpec(
             the_pipe_code="img_generator",
             definition="Generate an image",
-            inputs=None,
+            inputs={},
             output="GeneratedImage",
-            img_gen_prompt="A beautiful sunset over mountains",
         ),
         PipeImgGenBlueprint(
             definition="Generate an image",
@@ -23,7 +22,8 @@ class PipeImgGenTestCases:
             output="GeneratedImage",
             type="PipeImgGen",
             category="PipeOperator",
-            img_gen_prompt="A beautiful sunset over mountains",
+            img_gen_prompt=None,
+            img_gen_prompt_var_name=None,
             img_gen=None,
             aspect_ratio=None,
             background=None,
@@ -31,7 +31,6 @@ class PipeImgGenTestCases:
             nb_output=None,
             is_raw=None,
             seed=None,
-            img_gen_prompt_var_name=None,
         ),
     )
 
@@ -40,11 +39,9 @@ class PipeImgGenTestCases:
         PipeImgGenSpec(
             the_pipe_code="advanced_img_gen",
             definition="Generate image with options",
-            inputs={"description": InputRequirementSpec(concept="Text")},
+            inputs={"description": "Text"},
             output="Image",
-            img_gen="gpt-image-1",
-            aspect_ratio=AspectRatio.SQUARE,
-            seed=42,
+            img_gen=RecommendedImgGen.BASE_IMG_GEN,
             nb_output=3,
         ),
         PipeImgGenBlueprint(
@@ -54,12 +51,12 @@ class PipeImgGenTestCases:
             type="PipeImgGen",
             category="PipeOperator",
             img_gen_prompt=None,
-            img_gen="gpt-image-1",
-            aspect_ratio=AspectRatio.SQUARE,
+            img_gen=RecommendedImgGen.BASE_IMG_GEN,
+            aspect_ratio=None,
             background=None,
             output_format=None,
             is_raw=None,
-            seed=42,
+            seed=None,
             nb_output=3,
             img_gen_prompt_var_name=None,
         ),
