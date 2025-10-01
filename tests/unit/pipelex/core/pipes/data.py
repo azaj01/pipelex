@@ -49,8 +49,18 @@ OUTPUT_MULTIPLICITY_TO_APPLY_TEST_CASES: list[
         OutputMultiplicityResolution(resolved_multiplicity=False, is_multiple_outputs_enabled=False, specific_output_count=None),
         "base=False, override=None",
     ),
-    (3, None, OutputMultiplicityResolution(resolved_multiplicity=3, is_multiple_outputs_enabled=True, specific_output_count=3), "base=3, override=None"),
-    (5, None, OutputMultiplicityResolution(resolved_multiplicity=5, is_multiple_outputs_enabled=True, specific_output_count=5), "base=5, override=None"),
+    (
+        3,
+        None,
+        OutputMultiplicityResolution(resolved_multiplicity=3, is_multiple_outputs_enabled=True, specific_output_count=3),
+        "base=3, override=None",
+    ),
+    (
+        5,
+        None,
+        OutputMultiplicityResolution(resolved_multiplicity=5, is_multiple_outputs_enabled=True, specific_output_count=5),
+        "base=5, override=None",
+    ),
     # Override is False - force single output regardless of base
     (
         None,
@@ -114,8 +124,18 @@ OUTPUT_MULTIPLICITY_TO_APPLY_TEST_CASES: list[
         "base=7, override=True - preserve base count",
     ),
     # Override is int - use override count, enable multiple outputs
-    (None, 2, OutputMultiplicityResolution(resolved_multiplicity=2, is_multiple_outputs_enabled=True, specific_output_count=2), "base=None, override=2"),
-    (True, 4, OutputMultiplicityResolution(resolved_multiplicity=4, is_multiple_outputs_enabled=True, specific_output_count=4), "base=True, override=4"),
+    (
+        None,
+        2,
+        OutputMultiplicityResolution(resolved_multiplicity=2, is_multiple_outputs_enabled=True, specific_output_count=2),
+        "base=None, override=2",
+    ),
+    (
+        True,
+        4,
+        OutputMultiplicityResolution(resolved_multiplicity=4, is_multiple_outputs_enabled=True, specific_output_count=4),
+        "base=True, override=4",
+    ),
     (
         False,
         6,
@@ -141,10 +161,25 @@ OUTPUT_MULTIPLICITY_TO_APPLY_TEST_CASES: list[
         OutputMultiplicityResolution(resolved_multiplicity=-1, is_multiple_outputs_enabled=True, specific_output_count=-1),
         "base=-1, override=None",
     ),
-    (3, -2, OutputMultiplicityResolution(resolved_multiplicity=-2, is_multiple_outputs_enabled=True, specific_output_count=-2), "base=3, override=-2"),
+    (
+        3,
+        -2,
+        OutputMultiplicityResolution(resolved_multiplicity=-2, is_multiple_outputs_enabled=True, specific_output_count=-2),
+        "base=3, override=-2",
+    ),
     # Edge cases with zero
-    (0, None, OutputMultiplicityResolution(resolved_multiplicity=0, is_multiple_outputs_enabled=True, specific_output_count=0), "base=0, override=None"),
-    (True, 0, OutputMultiplicityResolution(resolved_multiplicity=0, is_multiple_outputs_enabled=True, specific_output_count=0), "base=True, override=0"),
+    (
+        0,
+        None,
+        OutputMultiplicityResolution(resolved_multiplicity=0, is_multiple_outputs_enabled=True, specific_output_count=0),
+        "base=0, override=None",
+    ),
+    (
+        True,
+        0,
+        OutputMultiplicityResolution(resolved_multiplicity=0, is_multiple_outputs_enabled=True, specific_output_count=0),
+        "base=True, override=0",
+    ),
     # Large numbers
     (
         1000,

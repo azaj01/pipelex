@@ -1,4 +1,4 @@
-"""Simple integration test for PipeBatch controller."""
+from __future__ import annotations
 
 from typing import cast
 
@@ -95,7 +95,7 @@ class TestPipeBatchSimple:
         assert isinstance(text_list.content, ListContent)
 
         # Cast the content to the proper type for type checking
-        list_content = cast("ListContent[TextContent]", text_list.content)  # type: ignore
+        list_content = cast("ListContent[TextContent]", text_list.content)
         assert len(list_content.items) == 3
 
         # Verify each item in the list
@@ -108,8 +108,8 @@ class TestPipeBatchSimple:
         pretty_print(working_memory, title="Initial working memory with text list")
 
         # Actually run the PipeBatch pipe
-        pipe_output = await pipe_batch._run_controller_pipe(  # pyright: ignore[reportPrivateUsage]
-            job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # type: ignore
+        pipe_output = await pipe_batch.run_pipe(  # pyright: ignore[reportPrivateUsage]
+            job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
             working_memory=working_memory,
             pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
             output_name="batch_result",
@@ -141,7 +141,7 @@ class TestPipeBatchSimple:
         original_list = final_working_memory.get_stuff("text_list")
         assert original_list is not None
         assert isinstance(original_list.content, ListContent)
-        original_items = cast("ListContent[TextContent]", original_list.content)  # type: ignore
+        original_items = cast("ListContent[TextContent]", original_list.content)
         assert len(original_items.items) == 3
         assert original_items.items[0].text == "hello"
         assert original_items.items[1].text == "world"
@@ -155,7 +155,7 @@ class TestPipeBatchSimple:
 
         # Verify the batch result content matches exactly
         assert isinstance(batch_result.content, ListContent)
-        result_list = cast("ListContent[TextContent]", batch_result.content)  # type: ignore
+        result_list = cast("ListContent[TextContent]", batch_result.content)
         assert len(result_list.items) == 3
         if pipe_run_mode != PipeRunMode.DRY:
             assert result_list.items[0].text == "UPPER: HELLO"

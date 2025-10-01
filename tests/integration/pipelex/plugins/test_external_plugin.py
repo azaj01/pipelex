@@ -1,4 +1,3 @@
-
 import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 from typing_extensions import override
@@ -49,14 +48,13 @@ class MockExternalLLMWorker(LLMWorkerAbstract):
         llm_job: LLMJob,
         schema: type[BaseModelTypeVar],
     ) -> BaseModelTypeVar:
-        class ObjectFactory(ModelFactory[schema]):  # type: ignore
+        class ObjectFactory(ModelFactory[schema]):  # type: ignore[valid-type]
             __model__ = schema
             __check_model__ = True
             __use_examples__ = True
             __allow_none_optionals__ = False  # Ensure Optional fields always get values
 
-        obj = ObjectFactory.build()
-        return obj
+        return ObjectFactory.build()
 
 
 @pytest.mark.asyncio(loop_scope="class")

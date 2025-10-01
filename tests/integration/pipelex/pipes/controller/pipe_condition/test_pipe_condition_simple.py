@@ -28,8 +28,6 @@ from tests.test_pipelines.pipe_controllers.pipe_condition.pipe_condition import 
 @pytest.mark.inference
 @pytest.mark.asyncio(loop_scope="class")
 class TestPipeConditionSimple:
-    """Simple integration test for PipeCondition controller."""
-
     async def test_condition_long_text_processing(self, request: FixtureRequest, pipe_run_mode: PipeRunMode):
         """Test PipeCondition with long text that should trigger capitalize_long_text pipe."""
         pipe_condition_blueprint = PipeConditionBlueprint(
@@ -66,7 +64,7 @@ class TestPipeConditionSimple:
         assert input_text.content.text == "hello world"
 
         pipe_output = await pipe_condition.run_pipe(
-            job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # type: ignore
+            job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
             working_memory=working_memory,
             pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
         )
@@ -135,7 +133,7 @@ class TestPipeConditionSimple:
 
         # Actually run the PipeCondition pipe
         pipe_output = await pipe_condition.run_pipe(
-            job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # type: ignore
+            job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
             working_memory=working_memory,
             pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
         )
@@ -193,7 +191,7 @@ class TestPipeConditionSimple:
                 pipe=get_required_pipe(pipe_code="basic_condition_by_category_2"),
                 pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=PipeRunMode.DRY),
                 working_memory=working_memory,
-                job_metadata=JobMetadata(job_name=cast(str, request.node.originalname)),  # type: ignore
+                job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
             ),
         )
         pretty_print(pipe_output)
@@ -228,7 +226,7 @@ class TestPipeConditionSimple:
                     pipe=get_required_pipe(pipe_code="basic_condition_by_category_2"),
                     pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=PipeRunMode.DRY),
                     working_memory=empty_working_memory,
-                    job_metadata=JobMetadata(job_name=cast(str, request.node.originalname)),  # type: ignore
+                    job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
                 ),
             )
 
@@ -262,7 +260,7 @@ class TestPipeConditionSimple:
                 pipe=get_required_pipe(pipe_code="basic_condition_by_category_2"),
                 pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=PipeRunMode.DRY),
                 working_memory=working_memory,
-                job_metadata=JobMetadata(job_name=cast(str, request.node.originalname)),  # type: ignore
+                job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
             ),
         )
 

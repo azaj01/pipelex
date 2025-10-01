@@ -17,9 +17,9 @@ class TestWorkingMemoryData:
     The Dawn of Ultra-Rapid Transit: NextGen High-Speed Trains Redefine Travel
     By Eliza Montgomery, Transportation Technology Reporter
 
-    In an era where time is increasingly precious, a revolution in rail transportation is quietly 
-    transforming how we connect cities and regions. The emergence of ultra-high-speed train 
-    networks, capable of speeds exceeding 350 mph, promises to render certain short-haul 
+    In an era where time is increasingly precious, a revolution in rail transportation is quietly
+    transforming how we connect cities and regions. The emergence of ultra-high-speed train
+    networks, capable of speeds exceeding 350 mph, promises to render certain short-haul
     flights obsolete while dramatically reducing carbon emissions.
     """
 
@@ -65,7 +65,9 @@ class TestWorkingMemory:
     def single_image_memory(self) -> WorkingMemory:
         """Create WorkingMemory with single image content."""
         return WorkingMemoryFactory.make_from_image(
-            image_url=TestWorkingMemoryData.SAMPLE_IMAGE_URL, concept_string="gantt.GanttImage", name="gantt_chart_image",
+            image_url=TestWorkingMemoryData.SAMPLE_IMAGE_URL,
+            concept_string="gantt.GanttImage",
+            name="gantt_chart_image",
         )
 
     @pytest.fixture
@@ -200,9 +202,8 @@ class TestWorkingMemory:
         assert stuff.content.text == TestWorkingMemoryData.SAMPLE_TEXT
 
     def test_working_memory_aliases(self, memory_with_aliases: WorkingMemory):
-        """Test WorkingMemory alias functionality."""
         # Should have two root items and two aliases other then the main stuff
-        assert MAIN_STUFF_NAME in memory_with_aliases.aliases.keys()
+        assert MAIN_STUFF_NAME in memory_with_aliases.aliases
         # Remove it from the aliases
         aliases = memory_with_aliases.aliases.copy()
         del aliases[MAIN_STUFF_NAME]

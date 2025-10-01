@@ -23,7 +23,7 @@ from tests.integration.pipelex.test_data import PipeTestCases
 @pytest.mark.inference
 @pytest.mark.asyncio(loop_scope="class")
 class TestPipeRunningVariants:
-    @pytest.mark.parametrize("topic, stuff, pipe_code", PipeTestCases.STUFF_AND_PIPE)
+    @pytest.mark.parametrize(("topic", "stuff", "pipe_code"), PipeTestCases.STUFF_AND_PIPE)
     async def test_pipe_from_stuff(
         self,
         pipe_run_mode: PipeRunMode,
@@ -41,7 +41,7 @@ class TestPipeRunningVariants:
                 pipe=get_required_pipe(pipe_code=pipe_code),
                 pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
                 working_memory=working_memory,
-                job_metadata=JobMetadata(job_name=request.node.originalname),  # type: ignore
+                job_metadata=JobMetadata(job_name=request.node.originalname),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
             ),
         )
 
@@ -49,7 +49,7 @@ class TestPipeRunningVariants:
         result_dir_path, _ = pipe_result_handler
         await save_working_memory(pipe_output, result_dir_path)
 
-    @pytest.mark.parametrize("topic, pipe_code", PipeTestCases.NO_INPUT)
+    @pytest.mark.parametrize(("topic", "pipe_code"), PipeTestCases.NO_INPUT)
     async def test_pipe_no_input(
         self,
         pipe_run_mode: PipeRunMode,
@@ -65,7 +65,7 @@ class TestPipeRunningVariants:
                 pipe=get_required_pipe(pipe_code=pipe_code),
                 pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
                 working_memory=WorkingMemoryFactory.make_empty(),
-                job_metadata=JobMetadata(job_name=request.node.originalname),  # type: ignore
+                job_metadata=JobMetadata(job_name=request.node.originalname),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
             ),
         )
 
@@ -78,7 +78,7 @@ class TestPipeRunningVariants:
         pretty_print(stuff.content.rendered_html(), title=f"{topic}: run pipe '{pipe_code}' in html")
         pretty_print(stuff.content.rendered_markdown(), title=f"{topic}: run pipe '{pipe_code}' in markdown")
 
-    @pytest.mark.parametrize("topic, pipe_code, output_multiplicity", PipeTestCases.NO_INPUT_PARALLEL1)
+    @pytest.mark.parametrize(("topic", "pipe_code", "output_multiplicity"), PipeTestCases.NO_INPUT_PARALLEL1)
     async def test_pipe_batch_no_input(
         self,
         pipe_run_mode: PipeRunMode,
@@ -97,7 +97,7 @@ class TestPipeRunningVariants:
                     pipe_run_mode=pipe_run_mode,
                     output_multiplicity=output_multiplicity,
                 ),
-                job_metadata=JobMetadata(job_name=request.node.originalname),  # type: ignore
+                job_metadata=JobMetadata(job_name=request.node.originalname),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
                 working_memory=WorkingMemoryFactory.make_empty(),
             ),
         )
@@ -111,7 +111,7 @@ class TestPipeRunningVariants:
         pretty_print(stuff.content.rendered_html(), title=f"{topic}: run pipe '{pipe_code}' in html")
         pretty_print(stuff.content.rendered_markdown(), title=f"{topic}: run pipe '{pipe_code}' in markdown")
 
-    @pytest.mark.parametrize("pipe_code, exception, expected_error_message", PipeTestCases.FAILURE_PIPES)
+    @pytest.mark.parametrize(("pipe_code", "exception", "expected_error_message"), PipeTestCases.FAILURE_PIPES)
     async def test_pipe_infinite_loop(
         self,
         pipe_run_mode: PipeRunMode,
@@ -135,7 +135,7 @@ class TestPipeRunningVariants:
                         pipe_stack_limit=6,
                         pipe_run_mode=pipe_run_mode,
                     ),
-                    job_metadata=JobMetadata(job_name=request.node.originalname),  # type: ignore
+                    job_metadata=JobMetadata(job_name=request.node.originalname),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
                 ),
             )
         pretty_print(exc.value, title="exception")

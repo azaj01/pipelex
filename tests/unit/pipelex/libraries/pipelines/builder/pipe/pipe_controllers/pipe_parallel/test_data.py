@@ -1,7 +1,6 @@
 from typing import ClassVar
 
 from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
-
 from pipelex.libraries.pipelines.builder.pipe.pipe_parallel_spec import PipeParallelSpec
 from pipelex.libraries.pipelines.builder.pipe.sub_pipe_spec import SubPipeSpec
 from pipelex.pipe_controllers.parallel.pipe_parallel_blueprint import PipeParallelBlueprint
@@ -36,7 +35,7 @@ class PipeParallelTestCases:
             ],
             add_each_output=True,
             combined_output=None,
-            source="tests/unit/pipelex/libraries/pipelines/builder/pipe/pipe_controllers/pipe_parallel/test_data.py PipeParallelTestCases.PARALLEL_WITH_EACH_OUTPUT",
+            source="tests/unit/pipelex/libraries/pipelines/builder/pipe/pipe_controllers/pipe_parallel/test_data.py PipeParallelTestCases.PARALLEL_WITH_EACH_OUTPUT",  # noqa: E501
         ),
     )
 
@@ -66,7 +65,7 @@ class PipeParallelTestCases:
             ],
             add_each_output=False,
             combined_output="MergedData",
-            source="tests/unit/pipelex/libraries/pipelines/builder/pipe/pipe_controllers/pipe_parallel/test_data.py PipeParallelTestCases.PARALLEL_WITH_COMBINED",
+            source="tests/unit/pipelex/libraries/pipelines/builder/pipe/pipe_controllers/pipe_parallel/test_data.py PipeParallelTestCases.PARALLEL_WITH_COMBINED",  # noqa: E501
         ),
     )
 
@@ -96,7 +95,7 @@ class PipeParallelTestCases:
             ],
             add_each_output=True,
             combined_output="MergedData",
-            source="tests/unit/pipelex/libraries/pipelines/builder/pipe/pipe_controllers/pipe_parallel/test_data.py PipeParallelTestCases.PARALLEL_WITH_BOTH_EACH_OUTPUT_AND_COMBINED",
+            source="tests/unit/pipelex/libraries/pipelines/builder/pipe/pipe_controllers/pipe_parallel/test_data.py PipeParallelTestCases.PARALLEL_WITH_BOTH_EACH_OUTPUT_AND_COMBINED",  # noqa: E501
         ),
     )
 

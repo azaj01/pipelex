@@ -37,7 +37,7 @@ def reset_pipelex_config_fixture():
     pipelex_instance.teardown()
 
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest.fixture(autouse=True)
 def pretty():
     # Code to run before each test
     return

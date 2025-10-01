@@ -24,7 +24,8 @@ class TestOpenAI:
             case "azure_openai":
                 required_env_vars = ["AZURE_API_KEY", "AZURE_API_BASE", "AZURE_API_VERSION"]
             case _:
-                raise ValueError(f"Plugin {plugin_for_openai} is not supported in this test")
+                msg = f"Plugin {plugin_for_openai} is not supported in this test"
+                raise ValueError(msg)
         if not all_env_vars_are_set(keys=required_env_vars):
             pytest.skip(f"Some key(s) missing amongst {required_env_vars}")
         if any_env_var_is_placeholder(required_env_vars):

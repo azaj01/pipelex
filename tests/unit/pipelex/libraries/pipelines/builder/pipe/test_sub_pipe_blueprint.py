@@ -8,9 +8,9 @@ from .test_data_sub_pipe import SubPipeTestCases
 
 class TestSubPipeBlueprintConversion:
     @pytest.mark.parametrize(
-        "test_name,sub_pipe_spec,expected_blueprint",
+        ("test_name", "sub_pipe_spec", "expected_blueprint"),
         SubPipeTestCases.TEST_CASES,
     )
-    def test_sub_pipe_to_core(self, test_name: str, sub_pipe_spec: SubPipeSpec, expected_blueprint: SubPipeBlueprint):
+    def test_sub_pipe_to_core(self, test_name: str, sub_pipe_spec: SubPipeSpec, expected_blueprint: SubPipeBlueprint):  # noqa: ARG002
         result = sub_pipe_spec.to_blueprint()
         assert result == expected_blueprint

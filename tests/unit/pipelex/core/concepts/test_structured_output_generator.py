@@ -14,7 +14,10 @@ class TestStructureGenerator:
             "name": ConceptStructureBlueprint(definition="Name field", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
             "age": ConceptStructureBlueprint(definition="Age field", type=ConceptStructureBlueprintFieldType.INTEGER, required=False),
             "active": ConceptStructureBlueprint(
-                definition="Active status", type=ConceptStructureBlueprintFieldType.BOOLEAN, required=False, default_value=True,
+                definition="Active status",
+                type=ConceptStructureBlueprintFieldType.BOOLEAN,
+                required=False,
+                default_value=True,
             ),
         }
 
@@ -43,13 +46,23 @@ class TestStructureGenerator:
         """Test generation with complex types like lists and dicts."""
         structure_blueprint = {
             "tags": ConceptStructureBlueprint(
-                definition="List of tags", type=ConceptStructureBlueprintFieldType.LIST, item_type="text", required=False,
+                definition="List of tags",
+                type=ConceptStructureBlueprintFieldType.LIST,
+                item_type="text",
+                required=False,
             ),
             "metadata": ConceptStructureBlueprint(
-                definition="Metadata dictionary", type=ConceptStructureBlueprintFieldType.DICT, key_type="text", value_type="text", required=False,
+                definition="Metadata dictionary",
+                type=ConceptStructureBlueprintFieldType.DICT,
+                key_type="text",
+                value_type="text",
+                required=False,
             ),
             "scores": ConceptStructureBlueprint(
-                definition="List of scores", type=ConceptStructureBlueprintFieldType.LIST, item_type="number", required=True,
+                definition="List of scores",
+                type=ConceptStructureBlueprintFieldType.LIST,
+                item_type="number",
+                required=True,
             ),
         }
 
@@ -186,10 +199,17 @@ class TestStructureGenerator:
             "integer_field": ConceptStructureBlueprint(definition="Integer field", type=ConceptStructureBlueprintFieldType.INTEGER, required=False),
             "boolean_field": ConceptStructureBlueprint(definition="Boolean field", type=ConceptStructureBlueprintFieldType.BOOLEAN, required=False),
             "list_field": ConceptStructureBlueprint(
-                definition="List field", type=ConceptStructureBlueprintFieldType.LIST, item_type="text", required=False,
+                definition="List field",
+                type=ConceptStructureBlueprintFieldType.LIST,
+                item_type="text",
+                required=False,
             ),
             "dict_field": ConceptStructureBlueprint(
-                definition="Dict field", type=ConceptStructureBlueprintFieldType.DICT, key_type="text", value_type="integer", required=False,
+                definition="Dict field",
+                type=ConceptStructureBlueprintFieldType.DICT,
+                key_type="text",
+                value_type="integer",
+                required=False,
             ),
         }
 
@@ -248,13 +268,22 @@ class TestStructureGenerator:
         """Test fields with default values."""
         structure_blueprint = {
             "name": ConceptStructureBlueprint(
-                definition="Person name", type=ConceptStructureBlueprintFieldType.TEXT, required=False, default_value="Anonymous",
+                definition="Person name",
+                type=ConceptStructureBlueprintFieldType.TEXT,
+                required=False,
+                default_value="Anonymous",
             ),
             "age": ConceptStructureBlueprint(
-                definition="Person age", type=ConceptStructureBlueprintFieldType.INTEGER, required=False, default_value=0,
+                definition="Person age",
+                type=ConceptStructureBlueprintFieldType.INTEGER,
+                required=False,
+                default_value=0,
             ),
             "active": ConceptStructureBlueprint(
-                definition="Is active", type=ConceptStructureBlueprintFieldType.BOOLEAN, required=False, default_value=True,
+                definition="Is active",
+                type=ConceptStructureBlueprintFieldType.BOOLEAN,
+                required=False,
+                default_value=True,
             ),
         }
 
@@ -283,13 +312,22 @@ class TestStructureGenerator:
         """Test nested list types with different item types."""
         structure_blueprint = {
             "text_list": ConceptStructureBlueprint(
-                definition="List of text items", type=ConceptStructureBlueprintFieldType.LIST, item_type="text", required=False,
+                definition="List of text items",
+                type=ConceptStructureBlueprintFieldType.LIST,
+                item_type="text",
+                required=False,
             ),
             "number_list": ConceptStructureBlueprint(
-                definition="List of numbers", type=ConceptStructureBlueprintFieldType.LIST, item_type="number", required=True,
+                definition="List of numbers",
+                type=ConceptStructureBlueprintFieldType.LIST,
+                item_type="number",
+                required=True,
             ),
             "integer_list": ConceptStructureBlueprint(
-                definition="List of integers", type=ConceptStructureBlueprintFieldType.LIST, item_type="integer", required=False,
+                definition="List of integers",
+                type=ConceptStructureBlueprintFieldType.LIST,
+                item_type="integer",
+                required=False,
             ),
         }
 
@@ -367,16 +405,29 @@ class TestStructureGenerator:
             "id": ConceptStructureBlueprint(definition="Unique identifier", type=ConceptStructureBlueprintFieldType.INTEGER, required=True),
             "name": ConceptStructureBlueprint(definition="Display name", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
             "tags": ConceptStructureBlueprint(
-                definition="Associated tags", type=ConceptStructureBlueprintFieldType.LIST, item_type="text", required=False,
+                definition="Associated tags",
+                type=ConceptStructureBlueprintFieldType.LIST,
+                item_type="text",
+                required=False,
             ),
             "metadata": ConceptStructureBlueprint(
-                definition="Additional metadata", type=ConceptStructureBlueprintFieldType.DICT, key_type="text", value_type="text", required=False,
+                definition="Additional metadata",
+                type=ConceptStructureBlueprintFieldType.DICT,
+                key_type="text",
+                value_type="text",
+                required=False,
             ),
             "active": ConceptStructureBlueprint(
-                definition="Whether item is active", type=ConceptStructureBlueprintFieldType.BOOLEAN, required=False, default_value=True,
+                definition="Whether item is active",
+                type=ConceptStructureBlueprintFieldType.BOOLEAN,
+                required=False,
+                default_value=True,
             ),
             "priority": ConceptStructureBlueprint(
-                definition="Priority level", choices=["low", "medium", "high", "urgent"], required=False, default_value="medium",
+                definition="Priority level",
+                choices=["low", "medium", "high", "urgent"],
+                required=False,
+                default_value="medium",
             ),
         }
 
@@ -411,7 +462,9 @@ class TestStructureGenerator:
             "name": "The name of the person",  # Simple string definition
             "age": ConceptStructureBlueprint(definition="The age of the person", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
             "birthdate": ConceptStructureBlueprint(
-                definition="The birthdate of the person", type=ConceptStructureBlueprintFieldType.DATE, required=True,
+                definition="The birthdate of the person",
+                type=ConceptStructureBlueprintFieldType.DATE,
+                required=True,
             ),
         }
 
@@ -489,4 +542,6 @@ class WrongClassName(StructuredContent):
 """
 
         with pytest.raises(ConceptStructureValidationError):
-            generator.validate_generated_code(python_code=code_without_expected_class, expected_class_name="ExpectedClassName", required_base_class=StructuredContent)
+            generator.validate_generated_code(
+                python_code=code_without_expected_class, expected_class_name="ExpectedClassName", required_base_class=StructuredContent
+            )

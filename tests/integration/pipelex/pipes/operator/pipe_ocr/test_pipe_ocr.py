@@ -1,5 +1,3 @@
-from typing import Any
-
 import pytest
 
 from pipelex import pretty_print
@@ -38,13 +36,13 @@ class TestPipeOCR:
 
         concept_provider.teardown()
 
+    @pytest.mark.usefixtures("setup")
     @pytest.mark.parametrize("image_url", PipeOcrTestCases.PIPE_OCR_IMAGE_TEST_CASES)
     async def test_pipe_ocr_image(
         self,
         ocr_choice_for_image: str,
         pipe_run_mode: PipeRunMode,
         image_url: str,
-        setup: Any,
     ):
         pipe_ocr_blueprint = PipeOcrBlueprint(
             definition="OCR test for image processing",

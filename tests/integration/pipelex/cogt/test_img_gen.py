@@ -10,7 +10,7 @@ from tests.integration.pipelex.test_data import ImageGenTestCases
 @pytest.mark.inference
 @pytest.mark.asyncio(loop_scope="class")
 class TestImageGeneration:
-    @pytest.mark.parametrize("topic, img_gen_prompt_text", ImageGenTestCases.IMAGE_DESC)
+    @pytest.mark.parametrize(("topic", "img_gen_prompt_text"), ImageGenTestCases.IMAGE_DESC)
     async def test_img_gen_using_handle(self, img_gen_handle: str, topic: str, img_gen_prompt_text: str):
         img_gen_worker_async = get_img_gen_worker(img_gen_handle=img_gen_handle)
         img_gen_job = ImgGenJobFactory.make_img_gen_job_from_prompt_contents(

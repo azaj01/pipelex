@@ -1,4 +1,3 @@
-
 import pytest
 
 from pipelex.cogt.llm.llm_job_components import LLMJobParams

@@ -1,5 +1,4 @@
-"""End-to-end tests for the migration functionality."""
-
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -329,8 +328,6 @@ Concept = "Test concept"
 
     def test_migration_from_test_data_file(self, tmp_path: Path) -> None:
         """Test migration using the official test data file with tricky edge cases."""
-        import shutil
-
         # Copy the test data file to our temp directory
         test_data_path = Path(__file__).parent.parent.parent.parent / "data" / "test_migrate_v0_1_0_to_v0_2_0.toml"
         test_file = tmp_path / "test_migrate.toml"

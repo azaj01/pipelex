@@ -1,9 +1,10 @@
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Literal
 
 import pytest
 from pydantic import BaseModel, Field, field_validator
 
+from pipelex import pretty_print
 from pipelex.core.stuffs.stuff_content import ListContent, StructuredContent, TextContent
 from pipelex.tools.typing.structure_printer import StructurePrinter
 from pipelex.types import StrEnum
@@ -33,7 +34,6 @@ class MusicGenre(StrEnum):
 # Simple Content Classes
 class SimpleTextContent(TextContent):
     """A simple text content class"""
-
 
 
 class MusicCategoryContent(StructuredContent):
@@ -191,7 +191,7 @@ class TestStructurePrinter:
             '    HIGH = "HIGH"',
             '    LOW = "LOW"',
         ]
-        from pipelex import pretty_print
+
         pretty_print(result, "results")
         pretty_print(expected, "expected")
         assert result == expected, f"Expected:\n{''.join(expected)}\n\nGot:\n{''.join(result)}"

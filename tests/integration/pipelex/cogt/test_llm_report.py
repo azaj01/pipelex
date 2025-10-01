@@ -17,8 +17,8 @@ async def test_llm_report_without_running_anything():
 @pytest.mark.inference
 @pytest.mark.asyncio(loop_scope="class")
 class TestLLMReport:
-    @pytest.mark.parametrize("topic, prompt_text", LLMTestCases.SINGLE_TEXT)
-    async def test_llm_report_single(self, llm_preset_id: str, topic: str, prompt_text: str):
+    @pytest.mark.parametrize(("topic", "prompt_text"), LLMTestCases.SINGLE_TEXT)
+    async def test_llm_report_single(self, llm_preset_id: str, topic: str, prompt_text: str):  # noqa: ARG002
         llm_worker, llm_job = self._get_async_worker_and_job(llm_preset_id=llm_preset_id, prompt_text=prompt_text)
         generated_text = await llm_worker.gen_text(llm_job=llm_job)
         assert generated_text

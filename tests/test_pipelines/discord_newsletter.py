@@ -1,8 +1,7 @@
-
 from pydantic import Field
 
 from pipelex.core.stuffs.stuff_content import StructuredContent
-from pipelex.tools.typing.pydantic_utils import CustomBaseModel, empty_list_factory_of
+from pipelex.tools.typing.pydantic_utils import empty_list_factory_of
 
 
 class Attachment(StructuredContent):
@@ -51,4 +50,6 @@ class Newsletter(StructuredContent):
     weekly_summary: str = Field(..., description="200 character summary of weekly Share channel content")
     new_members: list[str] = Field(default_factory=empty_list_factory_of(str), description="New member introductions in bullet points")
     channel_sections: list[ChannelSummary] = Field(default_factory=empty_list_factory_of(ChannelSummary), description="Ordered channel summaries")
-    geographic_hubs: list[ChannelSummary] = Field(default_factory=empty_list_factory_of(ChannelSummary), description="Geographic hub channels grouped at end")
+    geographic_hubs: list[ChannelSummary] = Field(
+        default_factory=empty_list_factory_of(ChannelSummary), description="Geographic hub channels grouped at end"
+    )

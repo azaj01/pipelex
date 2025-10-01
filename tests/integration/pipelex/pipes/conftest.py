@@ -20,9 +20,10 @@ async def pipe_result_handler(request: FixtureRequest) -> AsyncIterator[tuple[st
     calling test to save whatever it wants into that result directory.
     """
     # Setup result handler
-    pipe_code: str = request.node.callspec.params.get("pipe_code", "test_pipe") if hasattr(request.node, "callspec") else "test_pipe"  # type: ignore
+    pipe_code: str = request.node.callspec.params.get("pipe_code", "test_pipe") if hasattr(request.node, "callspec") else "test_pipe"  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType,reportUnknownVariableType]
     if not isinstance(pipe_code, str):
-        raise RuntimeError(f"pipe_code is not a string: {pipe_code}")
+        msg = f"pipe_code is not a string: {pipe_code}"
+        raise TypeError(msg)
     result_dir_path = get_incremental_directory_path(
         base_path=TEST_OUTPUTS_DIR,
         base_name=pipe_code,

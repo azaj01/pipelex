@@ -14,7 +14,7 @@ from tests.integration.pipelex.test_data import ImageGenTestCases
 @pytest.mark.inference
 @pytest.mark.asyncio(loop_scope="class")
 class TestImgGenByOpenAIGpt:
-    @pytest.mark.parametrize("topic, image_desc", ImageGenTestCases.IMAGE_DESC)
+    @pytest.mark.parametrize(("topic", "image_desc"), ImageGenTestCases.IMAGE_DESC)
     async def test_gpt_image_generation(self, topic: str, image_desc: str):
         backend = get_models_manager().get_required_inference_backend("openai")
         client = OpenAIFactory.make_openai_client(
@@ -33,12 +33,14 @@ class TestImgGenByOpenAIGpt:
             n=2,
         )
         if not result.data:
-            raise ImgGenGenerationError("No result from OpenAI")
+            msg = "No result from OpenAI"
+            raise ImgGenGenerationError(msg)
 
         for image_index, image_data in enumerate(result.data):
             image_base64 = image_data.b64_json
             if not image_base64:
-                raise ImgGenGenerationError("No base64 image data received from OpenAI")
+                msg = "No base64 image data received from OpenAI"
+                raise ImgGenGenerationError(msg)
 
             folder_path = f"{TEST_OUTPUTS_DIR}/img_gen_by_gpt_image"
             ensure_path(folder_path)

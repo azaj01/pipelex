@@ -1,6 +1,5 @@
 """Source code manipulation functions for testing."""
 
-
 from pipelex.core.memory.working_memory import WorkingMemory
 from pipelex.core.stuffs.stuff_content import TextContent
 

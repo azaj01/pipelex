@@ -22,7 +22,8 @@ class Employee(Person):
     @classmethod
     def validate_lowercase_job(cls, v: str) -> str:
         if not v.islower():
-            raise ValueError("job title must be lowercase")
+            msg = "job title must be lowercase"
+            raise ValueError(msg)
         return v
 
 

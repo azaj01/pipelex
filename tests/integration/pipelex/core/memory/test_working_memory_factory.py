@@ -1,12 +1,15 @@
-from pipelex.client.protocol import CompactMemory
+from typing import TYPE_CHECKING
+
 from pipelex.core.concepts.concept_native import NativeConceptEnum
 from pipelex.core.memory.working_memory_factory import WorkingMemoryFactory
 from pipelex.core.stuffs.stuff_content import ImageContent, PageContent, TextAndImagesContent, TextContent
 
+if TYPE_CHECKING:
+    from pipelex.client.protocol import CompactMemory
+
 
 class TestWorkingMemoryFactory:
     def test_make_from_compact_memory_with_text_content(self):
-        """Test deserialization of compact memory with text content."""
         compact_memory: CompactMemory = {
             "text_item": {
                 "concept_code": NativeConceptEnum.TEXT,

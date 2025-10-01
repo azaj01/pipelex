@@ -1,4 +1,4 @@
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import pytest
 
@@ -8,12 +8,14 @@ from pipelex.core.memory.working_memory_factory import WorkingMemoryFactory
 from pipelex.core.pipes.pipe_run_params import PipeRunMode
 from pipelex.core.pipes.pipe_run_params_factory import PipeRunParamsFactory
 from pipelex.hub import get_pipe_router
-from pipelex.pipe_operators.compose.pipe_compose import PipeComposeOutput
 from pipelex.pipe_operators.compose.pipe_compose_blueprint import PipeComposeBlueprint
 from pipelex.pipe_operators.compose.pipe_compose_factory import PipeComposeFactory
 from pipelex.pipe_works.pipe_job_factory import PipeJobFactory
 from pipelex.tools.templating.templating_models import PromptingStyle, TagStyle, TextFormat
 from tests.cases import JINJA2TestCases
+
+if TYPE_CHECKING:
+    from pipelex.pipe_operators.compose.pipe_compose import PipeComposeOutput
 
 
 @pytest.mark.dry_runnable
@@ -40,7 +42,7 @@ class TestPipeCompose:
             ),
             pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
         )
-        pipe_compose_output = cast(PipeComposeOutput, await get_pipe_router().run(pipe_job=pipe_job))
+        pipe_compose_output = cast("PipeComposeOutput", await get_pipe_router().run(pipe_job=pipe_job))
         rendered_text = pipe_compose_output.main_stuff_as_str
         pretty_print(rendered_text)
 
@@ -68,6 +70,6 @@ class TestPipeCompose:
             pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
             working_memory=working_memory,
         )
-        pipe_compose_output = cast(PipeComposeOutput, await get_pipe_router().run(pipe_job=pipe_job))
+        pipe_compose_output = cast("PipeComposeOutput", await get_pipe_router().run(pipe_job=pipe_job))
         rendered_text = pipe_compose_output.main_stuff_as_str
         pretty_print(rendered_text)

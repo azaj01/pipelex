@@ -187,7 +187,10 @@ class TestCases:
                     "name": "The person's name",
                     "age": ConceptStructureBlueprint(definition="The person's age", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
                     "active": ConceptStructureBlueprint(
-                        definition="Whether the person is active", type=ConceptStructureBlueprintFieldType.BOOLEAN, required=False, default_value=True,
+                        definition="Whether the person is active",
+                        type=ConceptStructureBlueprintFieldType.BOOLEAN,
+                        required=False,
+                        default_value=True,
                     ),
                 },
             ),
@@ -211,7 +214,10 @@ class TestCases:
                     "name": ConceptStructureBlueprint(definition="The person's name", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
                     "age": ConceptStructureBlueprint(definition="The person's age", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
                     "active": ConceptStructureBlueprint(
-                        definition="Whether the person is active", type=ConceptStructureBlueprintFieldType.BOOLEAN, required=False, default_value=True,
+                        definition="Whether the person is active",
+                        type=ConceptStructureBlueprintFieldType.BOOLEAN,
+                        required=False,
+                        default_value=True,
                     ),
                 },
             ),

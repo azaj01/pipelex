@@ -1,5 +1,4 @@
 import pytest
-from pytest import FixtureRequest
 
 from pipelex import log
 from pipelex.core.concepts.concept_factory import ConceptFactory
@@ -13,9 +12,9 @@ from tests.test_pipelines.tricky_questions import ThoughtfulAnswer
 @pytest.mark.dry_runnable
 @pytest.mark.asyncio(loop_scope="class")
 class TestDryWorkingMemory:
+    @pytest.mark.usefixtures("request")
     async def test_make_for_dry_run_with_page_content(
         self,
-        request: FixtureRequest,
     ):
         log.info("Testing dry run with PageContent")
 
@@ -54,9 +53,9 @@ class TestDryWorkingMemory:
         # Verify page_view field exists (it's Optional so could be None)
         assert hasattr(page_content, "page_view")
 
+    @pytest.mark.usefixtures("request")
     async def test_make_for_dry_run_with_structured_content(
         self,
-        request: FixtureRequest,
     ):
         log.info("Testing dry run with structured content (ThoughtfulAnswer)")
 
@@ -112,9 +111,9 @@ class TestDryWorkingMemory:
         log.info("Created mock working memory with structured content:")
         dry_memory.pretty_print_summary()
 
+    @pytest.mark.usefixtures("request")
     async def test_make_for_dry_run_with_text_content_fallback(
         self,
-        request: FixtureRequest,
     ):
         log.info("Testing dry run with TextContent fallback")
 
@@ -160,9 +159,9 @@ class TestDryWorkingMemory:
         log.info("Created mock working memory with TextContent fallback:")
         dry_memory.pretty_print_summary()
 
+    @pytest.mark.usefixtures("request")
     async def test_make_for_dry_run_mixed_content_types(
         self,
-        request: FixtureRequest,
     ):
         log.info("Testing dry run with mixed content types")
 
@@ -218,9 +217,9 @@ class TestDryWorkingMemory:
         log.info("Created mock working memory with mixed content types:")
         dry_memory.pretty_print_summary()
 
+    @pytest.mark.usefixtures("request")
     async def test_make_for_dry_run_empty_inputs(
         self,
-        request: FixtureRequest,
     ):
         log.info("Testing dry run with empty inputs")
 
@@ -234,10 +233,8 @@ class TestDryWorkingMemory:
 
         log.info("Created empty mock working memory")
 
-    async def test_make_for_dry_run_realistic_pipeline_scenario(
-        self,
-        request: FixtureRequest,
-    ):
+    @pytest.mark.usefixtures("request")
+    async def test_make_for_dry_run_realistic_pipeline_scenario(self):
         log.info("Testing dry run with realistic tricky questions pipeline scenario")
 
         # Simulate the conclude_tricky_question_by_steps pipeline needs
@@ -290,10 +287,14 @@ class TestDryWorkingMemory:
 
         # Verify the ThoughtfulAnswer has all required fields with mock data
         ta_content = thoughtful_answer_stuff.content
-        assert isinstance(ta_content.the_trap, str) and len(ta_content.the_trap) > 0
-        assert isinstance(ta_content.the_counter, str) and len(ta_content.the_counter) > 0
-        assert isinstance(ta_content.the_lesson, str) and len(ta_content.the_lesson) > 0
-        assert isinstance(ta_content.the_answer, str) and len(ta_content.the_answer) > 0
+        assert isinstance(ta_content.the_trap, str)
+        assert len(ta_content.the_trap) > 0
+        assert isinstance(ta_content.the_counter, str)
+        assert len(ta_content.the_counter) > 0
+        assert isinstance(ta_content.the_lesson, str)
+        assert len(ta_content.the_lesson) > 0
+        assert isinstance(ta_content.the_answer, str)
+        assert len(ta_content.the_answer) > 0
 
         log.info("Created realistic pipeline mock memory:")
         dry_memory.pretty_print_summary()

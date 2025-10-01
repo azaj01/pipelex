@@ -22,7 +22,7 @@ class BadStr:
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    ("value", "expected"),
     [
         (None, True),
         ("abc", True),
@@ -37,7 +37,7 @@ def test_is_none_or_has_text(value: str | None, expected: bool) -> None:
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    ("value", "expected"),
     [
         (None, False),
         ("abc", True),
@@ -52,7 +52,7 @@ def test_is_not_none_and_has_text(value: str | None, expected: bool) -> None:
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    ("value", "expected"),
     [
         ("abc", True),
         (0, False),
@@ -67,7 +67,7 @@ def test_can_inject_text(value: object, expected: bool) -> None:
 
 
 @pytest.mark.parametrize(
-    "camel, expected",
+    ("camel", "expected"),
     [
         ("thisIsATest", "this_is_a_test"),
         ("HTTPRequest", "http_request"),
@@ -80,7 +80,7 @@ def test_camel_to_snake_case(camel: str, expected: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "pascal, expected",
+    ("pascal", "expected"),
     [
         ("ThisIsATest", "this_is_a_test"),
         ("HTTPRequest", "http_request"),
@@ -92,7 +92,7 @@ def test_pascal_case_to_snake_case(pascal: str, expected: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "text, expected",
+    ("text", "expected"),
     [
         ("HelloWorld", "Hello world"),
         ("BOB LowKey", "Bob low key"),
@@ -106,7 +106,7 @@ def test_pascal_case_to_sentence(text: str, expected: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "snake, expected",
+    ("snake", "expected"),
     [
         ("hello_world", "HelloWorld"),
         ("my_name_is", "MyNameIs"),
@@ -119,7 +119,7 @@ def test_snake_to_pascal_case(snake: str, expected: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "snake, expected",
+    ("snake", "expected"),
     [
         ("hello_world", "Hello world"),
         ("this_is_a_test", "This is a test"),
@@ -132,7 +132,7 @@ def test_snake_to_capitalize_first_letter(snake: str, expected: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "word, expected",
+    ("word", "expected"),
     [
         # Valid snake_case
         ("hello", True),
@@ -165,7 +165,7 @@ def test_is_snake_case(word: str, expected: bool) -> None:
 
 
 @pytest.mark.parametrize(
-    "word, expected",
+    ("word", "expected"),
     [
         # Valid PascalCase
         ("Hello", True),
@@ -202,7 +202,7 @@ class TestMatchesWildcardPattern:
     """Test class for the matches_wildcard_pattern function."""
 
     @pytest.mark.parametrize(
-        "text, pattern, expected",
+        ("text", "pattern", "expected"),
         [
             # Universal wildcard
             ("any-text", "*", True),

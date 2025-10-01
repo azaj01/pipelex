@@ -2,7 +2,6 @@ from typing import ClassVar
 
 from pipelex.core.pipes.pipe_blueprint import PipeBlueprint
 from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
-
 from pipelex.libraries.pipelines.builder.pipe.pipe_signature import PipeSpec
 
 

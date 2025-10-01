@@ -1,15 +1,13 @@
-"""Dry run tests for PipeSequence controller with batching functionality."""
+from typing import TYPE_CHECKING
 
 import pytest
 from pytest import FixtureRequest
 
 from pipelex import pretty_print
 from pipelex.core.concepts.concept_factory import ConceptFactory
-from pipelex.core.memory.working_memory import WorkingMemory
 from pipelex.core.memory.working_memory_factory import WorkingMemoryFactory
 from pipelex.core.pipes.pipe_run_params import PipeRunMode
 from pipelex.core.pipes.pipe_run_params_factory import PipeRunParamsFactory
-from pipelex.core.stuffs.stuff import Stuff
 from pipelex.core.stuffs.stuff_content import ListContent
 from pipelex.core.stuffs.stuff_factory import StuffFactory
 from pipelex.hub import get_pipe_router, get_required_pipe
@@ -18,12 +16,14 @@ from pipelex.pipeline.job_metadata import JobMetadata
 from pipelex.tools.misc.json_utils import load_json_list_from_path
 from tests.test_pipelines.discord_newsletter import ChannelSummary, DiscordChannelUpdate
 
+if TYPE_CHECKING:
+    from pipelex.core.memory.working_memory import WorkingMemory
+    from pipelex.core.stuffs.stuff import Stuff
+
 
 @pytest.mark.dry_runnable
 @pytest.mark.asyncio(loop_scope="class")
 class TestPipeSequenceDryRun:
-    """Test PipeSequence dry run functionality with batching."""
-
     async def test_discord_newsletter_dry_run_working_memory(
         self,
         request: FixtureRequest,
@@ -31,8 +31,7 @@ class TestPipeSequenceDryRun:
     ) -> None:
         """Test that the Discord newsletter pipeline creates correct working memory with ListContent for batched inputs."""
         # Load the discord channel updates data from JSON
-        DISCORD_EXTRACT_PATH = "tests/data/discord_newsletter/discord_sample.json"
-        discord_channel_updates_data = load_json_list_from_path(DISCORD_EXTRACT_PATH)
+        discord_channel_updates_data = load_json_list_from_path(path="tests/data/discord_newsletter/discord_sample.json")
 
         # Create structured DiscordChannelUpdate objects
         discord_channel_updates = ListContent[DiscordChannelUpdate](
@@ -59,7 +58,7 @@ class TestPipeSequenceDryRun:
                 pipe=get_required_pipe(pipe_code="write_discord_newsletter"),
                 pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
                 working_memory=working_memory,
-                job_metadata=JobMetadata(job_name=request.node.originalname),  # type: ignore
+                job_metadata=JobMetadata(job_name=request.node.originalname),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
             ),
         )
 

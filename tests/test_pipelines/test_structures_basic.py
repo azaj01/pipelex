@@ -38,4 +38,6 @@ class ConceptWithNestedStructures(StructuredContent):
 
     simple_nested: ConceptWithSimpleStructure = Field(..., description="A nested simple structure")
     optional_nested: ConceptWithOptionals | None = Field(None, description="An optional nested structure")
-    list_of_nested: list[ConceptWithSimpleStructure] = Field(default_factory=empty_list_factory_of(ConceptWithSimpleStructure), description="A list of nested structures")
+    list_of_nested: list[ConceptWithSimpleStructure] = Field(
+        default_factory=empty_list_factory_of(ConceptWithSimpleStructure), description="A list of nested structures"
+    )

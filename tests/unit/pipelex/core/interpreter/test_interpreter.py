@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Type
 
 import pytest
 
@@ -20,7 +19,7 @@ class TestPipelexInterpreter:
         assert converter.file_path == test_file
         assert converter.file_content == content
 
-    @pytest.mark.parametrize("test_name,plx_content,expected_blueprint", InterpreterTestCases.VALID_TEST_CASES)
+    @pytest.mark.parametrize(("test_name", "plx_content", "expected_blueprint"), InterpreterTestCases.VALID_TEST_CASES)
     def test_make_pipelex_bundle_blueprint(self, test_name: str, plx_content: str, expected_blueprint: PipelexBundleBlueprint):
         """Test making blueprint from various valid PLX content."""
         converter = PipelexInterpreter(file_content=plx_content)
@@ -30,8 +29,8 @@ class TestPipelexInterpreter:
         pretty_print(expected_blueprint, title=f"Expected blueprint {test_name}")
         assert blueprint == expected_blueprint
 
-    @pytest.mark.parametrize("test_name,invalid_plx_content,expected_exception", InterpreterTestCases.ERROR_TEST_CASES)
-    def test_invalid_plx_should_raise_exception(self, test_name: str, invalid_plx_content: str, expected_exception: Type[Exception]):
+    @pytest.mark.parametrize(("test_name", "invalid_plx_content", "expected_exception"), InterpreterTestCases.ERROR_TEST_CASES)
+    def test_invalid_plx_should_raise_exception(self, test_name: str, invalid_plx_content: str, expected_exception: type[Exception]):
         """Test that invalid PLX content raises appropriate exceptions."""
         converter = PipelexInterpreter(file_content=invalid_plx_content)
         log.verbose(f"Testing invalid PLX content: {test_name}")

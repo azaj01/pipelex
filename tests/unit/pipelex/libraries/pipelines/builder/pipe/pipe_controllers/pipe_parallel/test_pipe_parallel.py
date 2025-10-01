@@ -1,14 +1,14 @@
 import pytest
 
+from pipelex import log
 from pipelex.libraries.pipelines.builder.pipe.pipe_parallel_spec import PipeParallelSpec
 from pipelex.pipe_controllers.parallel.pipe_parallel_blueprint import PipeParallelBlueprint
-
 from tests.unit.pipelex.libraries.pipelines.builder.pipe.pipe_controllers.pipe_parallel.test_data import PipeParallelTestCases
-from pipelex import log
+
 
 class TestPipeParallelBlueprintConversion:
     @pytest.mark.parametrize(
-        "test_name,pipe_spec,expected_blueprint",
+        ("test_name", "pipe_spec", "expected_blueprint"),
         PipeParallelTestCases.TEST_CASES,
     )
     def test_pipe_parallel_spec_to_blueprint(

@@ -107,7 +107,8 @@ class TestModelDeckGetOptionalInferenceModel:
         # Arrange
         model_spec = self._create_test_model_spec("claude-3")
         model_deck = self._create_test_model_deck(
-            inference_models={"claude-3": model_spec}, aliases={"best-model": ["nonexistent-model", "claude-3"]},
+            inference_models={"claude-3": model_spec},
+            aliases={"best-model": ["nonexistent-model", "claude-3"]},
         )
         mock_log = mocker.patch("pipelex.cogt.models.model_deck.log")
 
@@ -150,7 +151,8 @@ class TestModelDeckGetOptionalInferenceModel:
         # Arrange
         model_spec = self._create_test_model_spec("gpt-4")
         model_deck = self._create_test_model_deck(
-            inference_models={"gpt-4": model_spec}, aliases={"best-model": ["nonexistent", "best-gpt"], "best-gpt": "gpt-4"},
+            inference_models={"gpt-4": model_spec},
+            aliases={"best-model": ["nonexistent", "best-gpt"], "best-gpt": "gpt-4"},
         )
         mock_log = mocker.patch("pipelex.cogt.models.model_deck.log")
 

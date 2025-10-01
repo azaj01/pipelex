@@ -19,29 +19,29 @@ def another_function(x: int):
 
 
 # Valid function for testing
-def valid_function(working_memory: WorkingMemory) -> TextContent:
+def valid_function(working_memory: WorkingMemory) -> TextContent:  # noqa: ARG001 # pyright: ignore[reportUnknownParameterType,reportMissingParameterType, reportUnusedParameter]
     return TextContent(text="test")
 
 
 # Valid async function for testing (should also be eligible)
-async def valid_async_function(working_memory: WorkingMemory) -> TextContent:
+async def valid_async_function(working_memory: WorkingMemory) -> TextContent:  # noqa: ARG001 # pyright: ignore[reportUnknownParameterType,reportMissingParameterType, reportUnusedParameter]
     return TextContent(text="test")
 
 
 # Invalid functions for testing eligibility
-def wrong_param_name(other_param: WorkingMemory) -> TextContent:
+def wrong_param_name(other_param: WorkingMemory) -> TextContent:  # noqa: ARG001 # pyright: ignore[reportUnknownParameterType,reportMissingParameterType, reportUnusedParameter]
     return TextContent(text="test")
 
 
-def wrong_param_type(working_memory: str) -> TextContent:  # type: ignore
+def wrong_param_type(working_memory: str) -> TextContent:  # noqa: ARG001 # pyright: ignore[reportUnknownParameterType,reportMissingParameterType, reportUnusedParameter]
     return TextContent(text="test")
 
 
-def wrong_return_type(working_memory: WorkingMemory) -> str:
+def wrong_return_type(working_memory: WorkingMemory) -> str:  # noqa: ARG001 # pyright: ignore[reportUnknownParameterType,reportMissingParameterType, reportUnusedParameter]
     return "test"
 
 
-def too_many_params(working_memory: WorkingMemory, extra: str) -> TextContent:
+def too_many_params(working_memory: WorkingMemory, extra: str) -> TextContent:  # noqa: ARG001 # pyright: ignore[reportUnknownParameterType,reportMissingParameterType, reportUnusedParameter]
     return TextContent(text="test")
 
 
@@ -49,7 +49,7 @@ def no_params() -> TextContent:
     return TextContent(text="test")
 
 
-def no_type_hints(working_memory):  # type: ignore
+def no_type_hints(working_memory):  # noqa: ARG001, ANN001 # pyright: ignore[reportUnknownParameterType,reportMissingParameterType, reportUnusedParameter]
     return TextContent(text="test")
 
 
@@ -83,7 +83,7 @@ def registry():
 
 
 class TestFuncRegistry:
-    @pytest.mark.parametrize("test_name, func, is_eligible", TEST_CASES)
+    @pytest.mark.parametrize(("test_name", "func", "is_eligible"), TEST_CASES)
     def test_function_eligibility_and_registration(self, registry: FuncRegistry, test_name: str, func: Callable[..., Any], is_eligible: bool):
         # Test eligibility check directly
         actual_eligibility = registry.is_eligible_function(func)
@@ -171,7 +171,7 @@ class TestFuncRegistry:
             registry.get_required_function_with_signature("non_existent")
 
     def test_get_required_function_with_signature_not_callable(self, registry: FuncRegistry):
-        registry.root["not_a_function"] = "a string" # type: ignore
+        registry.root["not_a_function"] = "a string"  # type: ignore[assignment]
         with pytest.raises(FuncRegistryError, match="is not a callable function"):
             registry.get_required_function_with_signature("not_a_function")
 

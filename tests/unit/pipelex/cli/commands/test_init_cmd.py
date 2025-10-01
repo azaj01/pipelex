@@ -1,9 +1,14 @@
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
-from pytest_mock import MockerFixture
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from pytest_mock import MockerFixture
+
 
 from pipelex.cli.commands.init_cmd import do_init_config
 from pipelex.exceptions import PipelexCLIError

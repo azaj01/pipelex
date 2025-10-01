@@ -11,12 +11,16 @@ from tests.unit.pipelex.core.pipes.data import MAKE_OUTPUT_MULTIPLICITY_TEST_CAS
 
 class TestMakeOutputMultiplicity:
     @pytest.mark.parametrize(
-        "nb_output,multiple_output,expected_result,description",
+        ("nb_output", "multiple_output", "expected_result", "description"),
         MAKE_OUTPUT_MULTIPLICITY_TEST_CASES,
         ids=[case[3] for case in MAKE_OUTPUT_MULTIPLICITY_TEST_CASES],
     )
     def test_make_output_multiplicity_all_cases(
-        self, nb_output: int | None, multiple_output: bool | None, expected_result: PipeOutputMultiplicity | None, description: str,
+        self,
+        nb_output: int | None,
+        multiple_output: bool | None,
+        expected_result: PipeOutputMultiplicity | None,
+        description: str,
     ):
         """Test make_output_multiplicity with all parameter combinations."""
         result = make_output_multiplicity(nb_output=nb_output, multiple_output=multiple_output)
@@ -106,7 +110,7 @@ class TestOutputMultiplicityToApply:
     """Test cases for output_multiplicity_to_apply function."""
 
     @pytest.mark.parametrize(
-        "base,override,expected_result,description",
+        ("base", "override", "expected_result", "description"),
         OUTPUT_MULTIPLICITY_TO_APPLY_TEST_CASES,
         ids=[case[3] for case in OUTPUT_MULTIPLICITY_TO_APPLY_TEST_CASES],
     )
@@ -120,7 +124,9 @@ class TestOutputMultiplicityToApply:
         """Test output_multiplicity_to_apply with all parameter combinations."""
         result = output_multiplicity_to_apply(base, override)
         assert result.resolved_multiplicity == expected_result.resolved_multiplicity, f"Failed resolved_multiplicity for case: {description}"
-        assert result.is_multiple_outputs_enabled == expected_result.is_multiple_outputs_enabled, f"Failed enable_multiple_outputs for case: {description}"
+        assert result.is_multiple_outputs_enabled == expected_result.is_multiple_outputs_enabled, (
+            f"Failed enable_multiple_outputs for case: {description}"
+        )
         assert result.specific_output_count == expected_result.specific_output_count, f"Failed specific_output_count for case: {description}"
 
     def test_override_none_uses_base(self):

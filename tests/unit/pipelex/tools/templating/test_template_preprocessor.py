@@ -139,5 +139,6 @@ Optional notes:
         """Test multiple @variable patterns with trailing dots."""
         template = "Extract all articles from this invoice text: @invoice_text. Process the items: @item_list."
         result = preprocess_template(template)
-        expected = 'Extract all articles from this invoice text: {{ invoice_text|tag("invoice_text") }}. Process the items: {{ item_list|tag("item_list") }}.'
+        expected = """Extract all articles from this invoice text: {{ invoice_text|tag("invoice_text") }}.
+        Process the items: {{ item_list|tag("item_list") }}."""
         assert result == expected

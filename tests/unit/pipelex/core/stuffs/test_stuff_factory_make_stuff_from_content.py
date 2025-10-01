@@ -1,4 +1,4 @@
-from typing import Any, ClassVar, Dict
+from typing import Any, ClassVar
 
 import pytest
 from pytest_mock import MockerFixture
@@ -34,7 +34,7 @@ class TestData:
     EMPTY_LIST_CONTENT: ClassVar[ListContent[TextContent]] = ListContent(items=[])
 
     # Dictionary test data - native concept
-    NATIVE_TEXT_DICT: ClassVar[Dict[str, Any]] = {"concept": NativeConceptEnum.TEXT, "content": {"text": "Native text content"}}
+    NATIVE_TEXT_DICT: ClassVar[dict[str, Any]] = {"concept": NativeConceptEnum.TEXT, "content": {"text": "Native text content"}}
 
     # Dictionary test data - custom concept with concept field
     CUSTOM_CONCEPT_DICT: ClassVar[dict[str, Any]] = {
@@ -273,7 +273,8 @@ class TestMakeStuffFromStuffContentUsingSearchDomains:
         assert result == mock_stuff
         mock_provider.get_required_concept.assert_called_with(concept_string="test.CustomConcept")
         mock_content_factory.make_stuff_content_from_concept_with_fallback.assert_called_once_with(
-            concept=mock_concept, value={"title": "Test Title", "description": "Test Description"},
+            concept=mock_concept,
+            value={"title": "Test Title", "description": "Test Description"},
         )
 
     def test_dict_with_concept_code_field(self, mocker: MockerFixture):

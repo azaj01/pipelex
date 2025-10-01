@@ -56,7 +56,7 @@ class TestPipeParallelDocumentAnalysis:
                 pipe=get_required_pipe(pipe_code="parallel_document_analysis"),
                 pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
                 working_memory=working_memory,
-                job_metadata=JobMetadata(job_name=request.node.originalname),  # type: ignore
+                job_metadata=JobMetadata(job_name=request.node.originalname),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
             ),
         )
 

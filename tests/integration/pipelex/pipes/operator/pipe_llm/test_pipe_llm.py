@@ -1,4 +1,3 @@
-
 import pytest
 
 from pipelex import log, pretty_print
@@ -51,7 +50,7 @@ class TestPipeLLM:
         pretty_print(llm_generated_text, title="llm_generated_text")
 
     @pytest.mark.parametrize(
-        "topic,data,concept",
+        ("topic", "data", "concept"),
         BasicStructuredDataTestCases.STRUCTURE_TEST_CASES + ComplexStructuredDataTestCases.STRUCTURE_TEST_CASES,
     )
     @pytest.mark.parametrize(
@@ -62,7 +61,7 @@ class TestPipeLLM:
         ],
     )
     @pytest.mark.parametrize(
-        "llm,llm_to_structure",
+        ("llm", "llm_to_structure"),
         [
             # ("gpt-4o-mini", "gpt-4o-mini"),
             # ("gemini-2.5-flash-lite", "gemini-2.5-flash-lite"),
@@ -128,7 +127,7 @@ class TestPipeLLM:
         #     if preliminary_stuff:
         #         content = preliminary_stuff.content
         #         if hasattr(content, "text"):
-        #             pretty_print(content.text, title="Preliminary Text")  # type: ignore
+        #             pretty_print(content.text, title="Preliminary Text")
         #         else:
         #             pretty_print(str(content), title="Preliminary Text")
 
@@ -142,7 +141,7 @@ class TestPipeLLM:
     @pytest.mark.llm
     @pytest.mark.inference
     @pytest.mark.asyncio(loop_scope="class")
-    @pytest.mark.parametrize("stuff, attribute_paths", PipeTestCases.STUFFS_IMAGE_ATTRIBUTES)
+    @pytest.mark.parametrize(("stuff", "attribute_paths"), PipeTestCases.STUFFS_IMAGE_ATTRIBUTES)
     async def test_pipe_llm_attribute_image(
         self,
         stuff: Stuff,

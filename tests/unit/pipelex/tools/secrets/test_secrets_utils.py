@@ -3,6 +3,7 @@ from typing import Any
 
 import pytest
 from pytest_mock import MockerFixture
+
 from pipelex.tools.secrets.secrets_errors import SecretNotFoundError
 from pipelex.tools.secrets.secrets_provider_abstract import SecretsProviderAbstract
 from pipelex.tools.secrets.secrets_utils import UnknownVarPrefixError, VarFallbackPatternError, VarNotFoundError, substitute_vars
@@ -11,8 +12,7 @@ from pipelex.tools.secrets.secrets_utils import UnknownVarPrefixError, VarFallba
 @pytest.fixture
 def mock_secrets_provider(mocker: MockerFixture) -> Any:
     """Mock secrets provider for testing."""
-    mock_provider = mocker.Mock(spec=SecretsProviderAbstract)
-    return mock_provider
+    return mocker.Mock(spec=SecretsProviderAbstract)
 
 
 class TestSubstituteVars:
@@ -61,8 +61,6 @@ class TestSubstituteVars:
 
     def test_fallback_secret_to_env(self, mocker: MockerFixture, mock_secrets_provider: Any) -> None:
         """Test fallback from secret to env when secret doesn't exist."""
-        from pipelex.tools.secrets.secrets_errors import SecretNotFoundError
-
         mock_secrets_provider.get_secret.side_effect = SecretNotFoundError("Secret not found")
         mocker.patch.dict(os.environ, {"FALLBACK_ENV": "env_fallback"})
         mocker.patch("pipelex.tools.secrets.secrets_utils.get_secrets_provider", return_value=mock_secrets_provider)
@@ -85,7 +83,7 @@ class TestSubstituteVars:
 
     def test_multiple_substitutions(self, mocker: MockerFixture, mock_secrets_provider: Any) -> None:
         """Test multiple variable substitutions in the same content."""
-        mock_secrets_provider.get_secret.side_effect = lambda secret_id: f"secret_{secret_id}"  # type: ignore
+        mock_secrets_provider.get_secret.side_effect = lambda secret_id: f"secret_{secret_id}"  # pyright: ignore[reportUnknownLambdaType]
         mocker.patch.dict(os.environ, {"ENV_VAR": "env_value"})
         mocker.patch("pipelex.tools.secrets.secrets_utils.get_secrets_provider", return_value=mock_secrets_provider)
 
@@ -107,8 +105,6 @@ class TestSubstituteVars:
 
     def test_missing_secret_raises_error(self, mocker: MockerFixture, mock_secrets_provider: Any) -> None:
         """Test that missing required secret raises error."""
-        from pipelex.tools.secrets.secrets_errors import SecretNotFoundError
-
         mock_secrets_provider.get_secret.side_effect = SecretNotFoundError("Secret not found")
         mocker.patch("pipelex.tools.secrets.secrets_utils.get_secrets_provider", return_value=mock_secrets_provider)
 
@@ -117,8 +113,6 @@ class TestSubstituteVars:
 
     def test_missing_default_secret_raises_error(self, mocker: MockerFixture, mock_secrets_provider: Any) -> None:
         """Test that missing default secret (no prefix) raises error."""
-        from pipelex.tools.secrets.secrets_errors import SecretNotFoundError
-
         mock_secrets_provider.get_secret.side_effect = SecretNotFoundError("Secret not found")
         mocker.patch("pipelex.tools.secrets.secrets_utils.get_secrets_provider", return_value=mock_secrets_provider)
 
@@ -134,8 +128,6 @@ class TestSubstituteVars:
 
     def test_reverse_fallback_both_missing_raises_error(self, mocker: MockerFixture, mock_secrets_provider: Any) -> None:
         """Test that when both secret and env are missing in reverse order, error is raised."""
-        from pipelex.tools.secrets.secrets_errors import SecretNotFoundError
-
         mock_secrets_provider.get_secret.side_effect = SecretNotFoundError("Secret not found")
         mocker.patch("pipelex.tools.secrets.secrets_utils.get_secrets_provider", return_value=mock_secrets_provider)
 

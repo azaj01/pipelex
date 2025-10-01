@@ -2,9 +2,8 @@ from typing import ClassVar
 
 from pipelex.cogt.llm.llm_setting import LLMSetting
 from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
-
 from pipelex.libraries.pipelines.builder.pipe.pipe_llm_spec import PipeLLMSpec
-from pipelex.pipe_operators.llm.pipe_llm_blueprint import PipeLLMBlueprint, StructuringMethod
+from pipelex.pipe_operators.llm.pipe_llm_blueprint import PipeLLMBlueprint
 
 
 class PipeLLMTestCases:

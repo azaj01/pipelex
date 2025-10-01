@@ -1,8 +1,6 @@
 from typing import ClassVar
 
-from pipelex.cogt.img_gen.img_gen_job_components import AspectRatio
 from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
-
 from pipelex.libraries.pipelines.builder.pipe.pipe_img_spec import PipeImgGenSpec, RecommendedImgGen
 from pipelex.pipe_operators.img_gen.pipe_img_gen_blueprint import PipeImgGenBlueprint
 

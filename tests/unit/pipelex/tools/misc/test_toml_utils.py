@@ -3,8 +3,8 @@ from pathlib import Path
 import pytest
 
 from pipelex.tools.misc.toml_utils import (
-    load_toml_from_path_if_exists,
     load_toml_from_path,
+    load_toml_from_path_if_exists,
 )
 
 
@@ -23,7 +23,7 @@ type = "PipeLLM"
 definition = "Test pipe definition"
 prompt_template = '''
 This is a test prompt
-''' 
+'''
 """
         toml_file = tmp_path / "valid.toml"
         toml_file.write_text(toml_content)
@@ -38,8 +38,8 @@ This is a test prompt
 
     def test_validate_toml_file_trailing_whitespace(self, tmp_path: Path) -> None:
         """Test detection of trailing whitespace."""
-        toml_content = """domain = "test"   
-definition = "Test"	
+        toml_content = """domain = "test"
+definition = "Test"
 """
         toml_file = tmp_path / "trailing_space.toml"
         toml_file.write_text(toml_content)
@@ -53,7 +53,7 @@ type = "PipeLLM"
 definition = "Test"
 prompt_template = """
 Output this only: "test"
-"""   
+"""
 '''
         toml_file = tmp_path / "trailing_quotes.toml"
         toml_file.write_text(toml_content)
@@ -69,7 +69,7 @@ Output this only: "test"
 
     def test_load_toml_from_path_no_validation_by_default(self, tmp_path: Path) -> None:
         """Test that loading works normally without validation."""
-        toml_content = """domain = "test"   
+        toml_content = """domain = "test"
 definition = "Test with trailing space"
 """
         toml_file = tmp_path / "no_validation.toml"
@@ -101,7 +101,7 @@ definition = "Test definition"
 
     def test_load_toml_from_path_if_exists_with_whitespace_works(self, tmp_path: Path) -> None:
         """Test failable loading works normally with whitespace."""
-        toml_content = """domain = "test"   
+        toml_content = """domain = "test"
 """
         toml_file = tmp_path / "with_whitespace.toml"
         toml_file.write_text(toml_content)
@@ -124,24 +124,23 @@ TestConcept = "A test concept"
 
     def test_validate_toml_file_multiple_validation_issues(self, tmp_path: Path) -> None:
         """Test that multiple validation issues are all reported."""
-        toml_content = """domain = "test"   
-definition = "Test"	
+        toml_content = """domain = "test"
+definition = "Test"
 
 [pipe.test_pipe]
 prompt_template = \"\"\"
 Output: "test"
-\"\"\" 
+\"\"\"
 """
         toml_file = tmp_path / "multiple_issues.toml"
         toml_file.write_text(toml_content)
 
     def test_validate_toml_file_error_contains_file_path(self, tmp_path: Path) -> None:
         """Test that validation error includes the file path."""
-        toml_content = """domain = "test"   
+        toml_content = """domain = "test"
 """
         toml_file = tmp_path / "path_test.toml"
         toml_file.write_text(toml_content)
-
 
     def test_validate_toml_file_pipe_condition_real_case(self, tmp_path: Path) -> None:
         """Test the exact scenario from pipe_condition_2.toml with trailing space after triple quotes."""
@@ -161,7 +160,7 @@ expression = "input_data.category"
 
 [pipe.basic_condition_by_category_2.pipe_map]
 small = "process_small_2"
-medium = "process_medium_2" 
+medium = "process_medium_2"
 large = "process_large_2"
 
 [pipe.process_large_2]

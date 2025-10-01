@@ -1,6 +1,3 @@
-"""make t TEST=TestLibraries
-"""
-
 from pathlib import Path
 
 import pytest
@@ -83,7 +80,7 @@ def pretty_print_all_concepts(
 
 
 class TestLibraries:
-    @pytest.mark.parametrize("known_concept, known_pipe", LibraryTestCases.KNOWN_CONCEPTS_AND_PIPES)
+    @pytest.mark.parametrize(("known_concept", "known_pipe"), LibraryTestCases.KNOWN_CONCEPTS_AND_PIPES)
     def test_load_combo_libraries(
         self,
         known_concept: str,

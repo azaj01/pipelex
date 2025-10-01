@@ -100,7 +100,8 @@ type = "PipeLLM"
 definition = "Expert analysis with system prompt"
 output = "Text"
 prompt_template = """
-Extract all articles/items from this invoice text: $extracted_text. For each item find: item name, quantity, unit price, total price, description, and product code if available. Return each article as separate structured data.
+Extract all articles/items from this invoice text: $extracted_text. For each item find: item name, quantity, unit price
+, total price, description, and product code if available. Return each article as separate structured data.
 """
 ''',
     PipelexBundleBlueprint(
@@ -111,7 +112,9 @@ Extract all articles/items from this invoice text: $extracted_text. For each ite
                 type="PipeLLM",
                 definition="Expert analysis with system prompt",
                 output=NativeConceptEnum.TEXT,
-                prompt_template="Extract all articles/items from this invoice text: $extracted_text. For each item find: item name, quantity, unit price, total price, description, and product code if available. Return each article as separate structured data.\n",
+                prompt_template="""Extract all articles/items from this invoice text: $extracted_text.
+                For each item find: item name, quantity, unit price, total price, description,
+                and product code if available. Return each article as separate structured data.\n""",
             ),
         },
     ),
@@ -148,7 +151,7 @@ nb_output = 3
 # PipeLLM with dynamic multiple outputs
 PIPE_LLM_DYNAMIC_MULTIPLE = (
     "pipe_llm_dynamic_multiple",
-    '''domain = "test_pipes"
+    """domain = "test_pipes"
 definition = "Domain with pipe definitions"
 
 [pipe.brainstorm_solutions]
@@ -158,7 +161,7 @@ inputs = { problem = { concept = "Text" } }
 output = "Text"
 prompt_template = "Brainstorm solutions for this problem: $problem"
 multiple_output = true
-''',
+""",
     PipelexBundleBlueprint(
         domain="test_pipes",
         definition="Domain with pipe definitions",

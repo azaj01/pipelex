@@ -1,4 +1,3 @@
-
 import pytest
 
 from pipelex import log, pretty_print
@@ -16,7 +15,7 @@ from tests.integration.pipelex.cogt.test_data import LLMVisionTestCases
 @pytest.mark.inference
 @pytest.mark.asyncio(loop_scope="class")
 class TestLLMVision:
-    @pytest.mark.parametrize("topic, image_uri", LLMVisionTestCases.IMAGE_URLS)
+    @pytest.mark.parametrize(("topic", "image_uri"), LLMVisionTestCases.IMAGE_URLS)
     async def test_gen_text_from_vision_by_url(self, llm_handle_for_vision: str, topic: str, image_uri: str):
         prompt_image = PromptImageFactory.make_prompt_image_from_uri(uri=image_uri)
         llm_worker = get_llm_worker(llm_handle=llm_handle_for_vision)
@@ -35,7 +34,7 @@ class TestLLMVision:
         except PromptImageFormatError as exc:
             pytest.skip(f"Prompt Image format not supported for this LLM: {llm_handle_for_vision} because {exc}")
 
-    @pytest.mark.parametrize("topic, image_path", LLMVisionTestCases.IMAGE_PATHS)
+    @pytest.mark.parametrize(("topic", "image_path"), LLMVisionTestCases.IMAGE_PATHS)
     async def test_gen_text_from_vision_by_bytes(self, llm_handle_for_vision: str, topic: str, image_path: str):
         image_bytes = load_binary_as_base64(path=image_path)
         prompt_image = PromptImageBase64(base_64=image_bytes)
@@ -54,7 +53,7 @@ class TestLLMVision:
         except PromptImageFormatError as exc:
             pytest.skip(f"Prompt Image format not supported for this LLM: {llm_handle_for_vision} because {exc}")
 
-    @pytest.mark.parametrize("topic, image_path", LLMVisionTestCases.IMAGE_PATHS)
+    @pytest.mark.parametrize(("topic", "image_path"), LLMVisionTestCases.IMAGE_PATHS)
     async def test_gen_text_from_vision_by_path(self, llm_handle_for_vision: str, topic: str, image_path: str):
         prompt_image = PromptImagePath(file_path=image_path)
         llm_worker = get_llm_worker(llm_handle=llm_handle_for_vision)
@@ -72,7 +71,7 @@ class TestLLMVision:
         except PromptImageFormatError as exc:
             pytest.skip(f"Prompt Image format not supported for this LLM: {llm_handle_for_vision} because {exc}")
 
-    @pytest.mark.parametrize("topic, image_pair", LLMVisionTestCases.IMAGE_PATH_PAIRS)
+    @pytest.mark.parametrize(("topic", "image_pair"), LLMVisionTestCases.IMAGE_PATH_PAIRS)
     async def test_gen_text_from_vision_2_images(self, llm_handle_for_vision: str, topic: str, image_pair: tuple[str, str]):
         prompt_image1 = PromptImagePath(file_path=image_pair[0])
         prompt_image2 = PromptImagePath(file_path=image_pair[1])

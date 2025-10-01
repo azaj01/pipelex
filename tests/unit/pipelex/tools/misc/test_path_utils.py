@@ -71,9 +71,8 @@ class TestInterpretPathOrUrl:
         result = interpret_path_or_url("user\\file.txt")
         assert result == InterpretedPathOrUrl.FILE_NAME
 
-    def test_interpret_path_with_current_os_separator(self, mocker: MockerFixture):
+    def test_interpret_path_with_current_os_separator(self, mocker: MockerFixture):  # noqa: ARG002
         # Test with the current OS path separator
-
         path_with_sep = f"user{os.sep}file.txt"
         result = interpret_path_or_url(path_with_sep)
         assert result == InterpretedPathOrUrl.FILE_PATH
