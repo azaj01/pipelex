@@ -32,19 +32,6 @@ class OcrSkill(StrEnum):
                 return AvailableOcr.BASE_OCR_MISTRAL
 
 
-class OcrSkill(StrEnum):
-    EXTRACT_TEXT_FROM_VISUALS = "extract_text_from_visuals"
-    EXTARCT_TEXT_FROM_PDF = "extract_text_from_pdf"
-
-    @property
-    def ocr_recommendation(self) -> AvailableOcr:
-        match self:
-            case OcrSkill.EXTRACT_TEXT_FROM_VISUALS:
-                return AvailableOcr.BASE_OCR_MISTRAL
-            case OcrSkill.EXTARCT_TEXT_FROM_PDF:
-                return AvailableOcr.BASE_OCR_PYPDFIUM2
-
-
 class PipeOcrSpec(PipeSpec):
     """Spec for OCR (Optical Character Recognition) pipe operations in the Pipelex framework.
 
