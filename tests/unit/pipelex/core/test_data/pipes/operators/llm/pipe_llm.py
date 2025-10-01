@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 from pipelex.core.bundles.pipelex_bundle_blueprint import PipelexBundleBlueprint
 from pipelex.core.concepts.concept_native import NativeConceptEnum
 from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
@@ -119,7 +120,6 @@ Extract all articles/items from this invoice text: $extracted_text. For each ite
         },
     ),
 )
-
 # PipeLLM with multiple outputs (nb_output)
 PIPE_LLM_MULTIPLE_OUTPUTS = (
     "pipe_llm_multiple_outputs",
