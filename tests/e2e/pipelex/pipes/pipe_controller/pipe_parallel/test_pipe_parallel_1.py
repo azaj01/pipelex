@@ -40,7 +40,7 @@ class TestPipeParallelDocumentAnalysis:
             concept=ConceptFactory.make(
                 concept_code="DocumentInput",
                 domain="test_pipe_parallel",
-                definition="test_pipe_parallel.DocumentInput",
+                description="test_pipe_parallel.DocumentInput",
                 structure_class_name="DocumentInput",
             ),
             content=document_input,

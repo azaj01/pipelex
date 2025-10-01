@@ -14,20 +14,20 @@ class TestPipeConditionValidation:
         concept_1 = ConceptFactory.make_from_blueprint(
             concept_code="TestConcept",
             domain=domain,
-            blueprint=ConceptBlueprint(definition="Lorem Ipsum"),
+            blueprint=ConceptBlueprint(description="Lorem Ipsum"),
             concept_codes_from_the_same_domain=["TestConcept"],
         )
         concept_2 = ConceptFactory.make_from_blueprint(
             concept_code="Result",
             domain=domain,
-            blueprint=ConceptBlueprint(definition="Lorem Ipsum"),
+            blueprint=ConceptBlueprint(description="Lorem Ipsum"),
             concept_codes_from_the_same_domain=["Result"],
         )
         concept_library = get_concept_provider()
         concept_library.add_concepts([concept_1, concept_2])
 
         pipe_condition_blueprint = PipeConditionBlueprint(
-            definition="Test condition for validation",
+            description="Test condition for validation",
             inputs={"input_var": InputRequirementBlueprint(concept=concept_1.concept_string)},
             output=concept_2.concept_string,
             expression="input_var",
@@ -57,19 +57,19 @@ class TestPipeConditionValidation:
         concept_1 = ConceptFactory.make_from_blueprint(
             concept_code="TestConcept",
             domain=domain,
-            blueprint=ConceptBlueprint(definition="Lorem Ipsum"),
+            blueprint=ConceptBlueprint(description="Lorem Ipsum"),
             concept_codes_from_the_same_domain=["TestConcept"],
         )
         concept_2 = ConceptFactory.make_from_blueprint(
             concept_code="Result",
             domain=domain,
-            blueprint=ConceptBlueprint(definition="Lorem Ipsum"),
+            blueprint=ConceptBlueprint(description="Lorem Ipsum"),
             concept_codes_from_the_same_domain=["Result"],
         )
         concept_library.add_concepts([concept_1, concept_2])
 
         pipe_condition_template_blueprint = PipeConditionBlueprint(
-            definition="Test condition with expression template",
+            description="Test condition with expression template",
             inputs={"var": InputRequirementBlueprint(concept=concept_1.concept_string)},
             output=concept_2.concept_string,
             expression_template="{{ var }}",
@@ -84,7 +84,7 @@ class TestPipeConditionValidation:
 
         # Test with expression
         pipe_condition_expr_blueprint = PipeConditionBlueprint(
-            definition="Test condition with expression",
+            description="Test condition with expression",
             inputs={"var": InputRequirementBlueprint(concept=concept_1.concept_string)},
             output=concept_2.concept_string,
             expression="var",

@@ -1,5 +1,5 @@
 domain = "flowers"
-definition = "A test domain related to flowers"
+description = "A test domain related to flowers"
 system_prompt = "You are an expert at describing flowers based on their species and color."
 
 [concept]
@@ -9,7 +9,7 @@ FlowerDescription = "A detailed description of a flower"
 [pipe]
 [pipe.generate_flower_description]
 type = "PipeLLM"
-definition = "Generate a description of a flower"
+description = "Generate a description of a flower"
 inputs = { flower = "Flower" }
 output = "FlowerDescription"
 prompt_template = """

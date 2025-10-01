@@ -19,7 +19,7 @@ A `PipeSequence` defines a list of `steps`. Each step calls another pipe and giv
 | Parameter  | Type            | Description                                                                                                    | Required |
 | ---------- | --------------- | -------------------------------------------------------------------------------------------------------------- | -------- |
 | `type`      | string          | The type of the pipe: `PipeSequence`                                                                          | Yes      |
-| `definition` | string          | A description of the sequence operation.                                                                          | Yes      |
+| `description` | string          | A description of the sequence operation.                                                                          | Yes      |
 | `inputs`    | dictionary  | The input concept(s) for the *first* pipe in the sequence, as a dictionary mapping input names to concept codes.                                                     | No       |
 | `output`   | string          | The output concept produced by the *last* pipe in the sequence.                                                | Yes      |
 | `steps`    | array of tables | An ordered list of the pipes to execute. Each table in the array defines a single step.                          | Yes      |
@@ -42,26 +42,26 @@ Let's imagine a pipeline that first extracts text from an image, then summarizes
 ```plx
 [pipe.extract_text_from_image]
 type = "PipeOcr"
-definition = "Extract text from an image"
+description = "Extract text from an image"
 output = "Text"
 ocr = "mistral-ocr"
 
 [pipe.summarize_text]
 type = "PipeLLM"
-definition = "Summarize text"
+description = "Summarize text"
 inputs = { text = "Text" }
 output = "Text"
 
 [pipe.translate_to_french]
 type = "PipeLLM"
-definition = "Translate text to French"
+description = "Translate text to French"
 inputs = { text = "Text" }
 output = "Text"
 
 
 [pipe.image_to_french_summary]
 type = "PipeSequence"
-definition = "Extract, summarize, and translate text from an image"
+description = "Extract, summarize, and translate text from an image"
 inputs = { image = "source.Image" }
 output = "target.FrenchText"
 steps = [

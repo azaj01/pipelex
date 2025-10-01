@@ -20,7 +20,7 @@ class PipeFuncSpec(PipeSpec):
     def to_blueprint(self) -> PipeFuncBlueprint:
         base_blueprint = super().to_blueprint()
         return PipeFuncBlueprint(
-            definition=base_blueprint.definition,
+            description=base_blueprint.description,
             inputs=base_blueprint.inputs,
             output=base_blueprint.output,
             type=self.type,

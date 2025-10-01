@@ -35,9 +35,9 @@ class TestConceptFactory:
         """Test that mixed structure blueprints are properly normalized."""
         mixed_structure_blueprint: dict[str, str | ConceptStructureBlueprint] = {
             "name": "The name of the person",
-            "age": ConceptStructureBlueprint(definition="The age of the person", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
+            "age": ConceptStructureBlueprint(description="The age of the person", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
             "active": ConceptStructureBlueprint(
-                definition="Whether the person is active",
+                description="Whether the person is active",
                 type=ConceptStructureBlueprintFieldType.BOOLEAN,
                 required=False,
                 default_value=True,
@@ -45,10 +45,10 @@ class TestConceptFactory:
         }
 
         expected_structure: dict[str, ConceptStructureBlueprint] = {
-            "name": ConceptStructureBlueprint(definition="The name of the person", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
-            "age": ConceptStructureBlueprint(definition="The age of the person", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
+            "name": ConceptStructureBlueprint(description="The name of the person", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
+            "age": ConceptStructureBlueprint(description="The age of the person", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
             "active": ConceptStructureBlueprint(
-                definition="Whether the person is active",
+                description="Whether the person is active",
                 type=ConceptStructureBlueprintFieldType.BOOLEAN,
                 required=False,
                 default_value=True,
@@ -58,10 +58,10 @@ class TestConceptFactory:
         assert ConceptFactory.normalize_structure_blueprint(mixed_structure_blueprint) == expected_structure
 
         mixed_structure_blueprint2: dict[str, str | ConceptStructureBlueprint] = {
-            "name": ConceptStructureBlueprint(definition="The name of the person", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
-            "age": ConceptStructureBlueprint(definition="The age of the person", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
+            "name": ConceptStructureBlueprint(description="The name of the person", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
+            "age": ConceptStructureBlueprint(description="The age of the person", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
             "active": ConceptStructureBlueprint(
-                definition="Whether the person is active",
+                description="Whether the person is active",
                 type=ConceptStructureBlueprintFieldType.BOOLEAN,
                 required=False,
                 default_value=True,
@@ -69,10 +69,10 @@ class TestConceptFactory:
         }
 
         expected_structure2: dict[str, ConceptStructureBlueprint] = {
-            "name": ConceptStructureBlueprint(definition="The name of the person", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
-            "age": ConceptStructureBlueprint(definition="The age of the person", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
+            "name": ConceptStructureBlueprint(description="The name of the person", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
+            "age": ConceptStructureBlueprint(description="The age of the person", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
             "active": ConceptStructureBlueprint(
-                definition="Whether the person is active",
+                description="Whether the person is active",
                 type=ConceptStructureBlueprintFieldType.BOOLEAN,
                 required=False,
                 default_value=True,
@@ -125,7 +125,7 @@ class TestConceptFactory:
 
     def test_make_from_blueprint_with_invalid_structure_class(self):
         """Test that make_from_blueprint raises StructureClassError for invalid structure class."""
-        blueprint = ConceptBlueprint(definition="A concept with invalid structure", structure="NonExistentStructureClass")
+        blueprint = ConceptBlueprint(description="A concept with invalid structure", structure="NonExistentStructureClass")
 
         with pytest.raises(StructureClassError, match="is not a registered subclass of StuffContent"):
             ConceptFactory.make_from_blueprint(

@@ -74,7 +74,7 @@ PurchaseDocumentText = "Transcript of a receipt, invoice, or order confirmation"
 
 [pipe.extract_buyer]
 type = "PipeLLM"
-definition = "Extract buyer from purchase document"
+description = "Extract buyer from purchase document"
 inputs = { purchase_document_text = "PurchaseDocumentText" }
 output = "Buyer"
 llm = "llm_to_extract_info"
@@ -164,7 +164,7 @@ Example with the extension you can download now on Cursor, Windsurf or another V
 
 ```plx
 domain = "tech_tweet"
-definition = "A pipeline for optimizing tech tweets using Twitter/X best practices"
+description = "A pipeline for optimizing tech tweets using Twitter/X best practices"
 
 [concept]
 DraftTweet = "A draft version of a tech tweet that needs optimization"
@@ -175,7 +175,7 @@ WritingStyle = "A style of writing"
 [pipe]
 [pipe.analyze_tweet]
 type = "PipeLLM"
-definition = "Analyze the draft tweet and identify areas for improvement"
+description = "Analyze the draft tweet and identify areas for improvement"
 inputs = { draft_tweet = "DraftTweet" }
 output = "TweetAnalysis"
 llm = "llm_for_writing_analysis"
@@ -204,7 +204,7 @@ without providing an actual rewrite
 
 [pipe.optimize_tweet]
 type = "PipeLLM"
-definition = "Optimize the tweet based on the analysis"
+description = "Optimize the tweet based on the analysis"
 inputs = { draft_tweet = "DraftTweet", tweet_analysis = "TweetAnalysis", writing_style = "WritingStyle" }
 output = "OptimizedTweet"
 llm = "llm_for_social_post_writing"
@@ -239,7 +239,7 @@ Keep the core meaning of the original tweet.
 
 [pipe.optimize_tweet_sequence]
 type = "PipeSequence"
-definition = "Analyze and optimize a tech tweet in sequence"
+description = "Analyze and optimize a tech tweet in sequence"
 inputs = { draft_tweet = "DraftTweet", writing_style = "WritingStyle" }
 output = "OptimizedTweet"
 steps = [

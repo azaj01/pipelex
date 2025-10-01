@@ -40,7 +40,7 @@ class PipeSpec(StructuredContent):
     category: Any = Field(
         description=f"Pipe category. It is defined with type `Any` but validated at runtime and it must be one of: {AllowedPipeCategories}"
     )
-    definition: str | None = Field(description="Natural language description of what the pipe does.")
+    description: str | None = Field(description="Natural language description of what the pipe does.")
     inputs: dict[str, str] = Field(
         description=("Input concept specifications. The keys are input names in snake_case. Each value must be a ConceptCode in PascalCase"),
     )
@@ -89,7 +89,7 @@ class PipeSpec(StructuredContent):
                 converted_inputs[input_name] = InputRequirementBlueprint(concept=concept_code)
 
         return PipeBlueprint(
-            definition=self.definition,
+            description=self.description,
             inputs=converted_inputs,
             output=self.output,
             type=self.type,

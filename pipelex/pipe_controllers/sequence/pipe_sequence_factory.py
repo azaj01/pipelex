@@ -27,7 +27,7 @@ class PipeSequenceFactory(PipeFactoryProtocol[PipeSequenceBlueprint, PipeSequenc
         return PipeSequence(
             domain=domain,
             code=pipe_code,
-            definition=blueprint.definition,
+            description=blueprint.description,
             inputs=PipeInputSpecFactory.make_from_blueprint(
                 domain=domain,
                 blueprint=blueprint.inputs or {},

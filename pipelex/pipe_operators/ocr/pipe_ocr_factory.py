@@ -28,7 +28,7 @@ class PipeOcrFactory(PipeFactoryProtocol[PipeOcrBlueprint, PipeOcr]):
         return PipeOcr(
             domain=domain,
             code=pipe_code,
-            definition=blueprint.definition,
+            description=blueprint.description,
             output=get_concept_provider().get_required_concept(
                 concept_string=ConceptFactory.make_concept_string_with_domain(
                     domain=output_domain_and_code.domain,

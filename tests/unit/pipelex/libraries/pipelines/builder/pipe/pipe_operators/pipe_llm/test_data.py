@@ -11,7 +11,7 @@ class PipeLLMTestCases:
         "simple_llm",
         PipeLLMSpec(
             the_pipe_code="test_pipe",
-            definition="Generate text",
+            description="Generate text",
             inputs={"topic": "Text"},
             output="Text",
             llm="llm_for_creative_writing",
@@ -20,7 +20,7 @@ class PipeLLMTestCases:
         PipeLLMBlueprint(
             source=None,
             type="PipeLLM",
-            definition="Generate text",
+            description="Generate text",
             inputs={"topic": InputRequirementBlueprint(concept="Text")},
             output="Text",
             prompt_template="Write about $topic",
@@ -32,7 +32,7 @@ class PipeLLMTestCases:
         "llm_no_inputs",
         PipeLLMSpec(
             the_pipe_code="generate_pipe",
-            definition="Generate without inputs",
+            description="Generate without inputs",
             inputs={},
             output="Text",
             llm="llm_for_creative_writing",
@@ -41,7 +41,7 @@ class PipeLLMTestCases:
         PipeLLMBlueprint(
             source=None,
             type="PipeLLM",
-            definition="Generate without inputs",
+            description="Generate without inputs",
             output="Text",
             prompt_template="Generate something interesting",
             llm="claude-4.1-opus",
@@ -52,7 +52,7 @@ class PipeLLMTestCases:
         "llm_with_preset",
         PipeLLMSpec(
             the_pipe_code="generate",
-            definition="Generate with preset",
+            description="Generate with preset",
             inputs={},
             output="Text",
             prompt_template="Generate text",
@@ -61,7 +61,7 @@ class PipeLLMTestCases:
         PipeLLMBlueprint(
             source=None,
             type="PipeLLM",
-            definition="Generate with preset",
+            description="Generate with preset",
             llm="claude-4-sonnet",
             output="Text",
             prompt_template="Generate text",
@@ -72,7 +72,7 @@ class PipeLLMTestCases:
         "llm_with_settings",
         PipeLLMSpec(
             the_pipe_code="generate",
-            definition="Generate with settings",
+            description="Generate with settings",
             inputs={},
             output="Text",
             prompt_template="Generate text",
@@ -82,7 +82,7 @@ class PipeLLMTestCases:
         PipeLLMBlueprint(
             source=None,
             type="PipeLLM",
-            definition="Generate with settings",
+            description="Generate with settings",
             llm=LLMSetting(
                 llm_handle="gpt-5-mini",
                 temperature=0.7,
@@ -97,7 +97,7 @@ class PipeLLMTestCases:
         "llm_with_system_prompt",
         PipeLLMSpec(
             the_pipe_code="analyze",
-            definition="Generate with system prompt",
+            description="Generate with system prompt",
             inputs={"data": "Data"},
             output="Analysis",
             system_prompt="You are a data analyst",
@@ -107,7 +107,7 @@ class PipeLLMTestCases:
         PipeLLMBlueprint(
             source=None,
             type="PipeLLM",
-            definition="Generate with system prompt",
+            description="Generate with system prompt",
             inputs={"data": InputRequirementBlueprint(concept="Data")},
             system_prompt="You are a data analyst",
             prompt_template="Analyze: @data",
@@ -120,7 +120,7 @@ class PipeLLMTestCases:
         "llm_with_multiple_output",
         PipeLLMSpec(
             the_pipe_code="generate_items",
-            definition="Generate multiple items",
+            description="Generate multiple items",
             inputs={},
             output="Item",
             prompt_template="Generate items",
@@ -130,7 +130,7 @@ class PipeLLMTestCases:
         PipeLLMBlueprint(
             source=None,
             type="PipeLLM",
-            definition="Generate multiple items",
+            description="Generate multiple items",
             multiple_output=True,
             nb_output=None,
             output="Item",
@@ -143,7 +143,7 @@ class PipeLLMTestCases:
         "llm_with_fixed_output",
         PipeLLMSpec(
             the_pipe_code="generate_items",
-            definition="Generate exactly 5 items",
+            description="Generate exactly 5 items",
             inputs={},
             output="Item",
             prompt_template="Generate items",
@@ -153,7 +153,7 @@ class PipeLLMTestCases:
         PipeLLMBlueprint(
             source=None,
             type="PipeLLM",
-            definition="Generate exactly 5 items",
+            description="Generate exactly 5 items",
             nb_output=5,
             multiple_output=None,
             output="Item",

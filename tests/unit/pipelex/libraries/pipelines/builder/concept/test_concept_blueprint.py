@@ -30,7 +30,7 @@ class TestConceptCodeValidation:
         # Create a ConceptSpec with the input code
         concept_spec = ConceptSpec(
             the_concept_code=input_code,
-            definition="Test concept for code validation",
+            description="Test concept for code validation",
             refines=None,
             structure=None,
         )

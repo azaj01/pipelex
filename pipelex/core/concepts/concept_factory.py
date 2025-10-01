@@ -39,7 +39,7 @@ class ConceptFactory:
             if isinstance(field_value, str):
                 # Convert string definition to ConceptStructureBlueprint for text field
                 normalized[field_name] = ConceptStructureBlueprint(
-                    definition=field_value,
+                    description=field_value,
                     type=ConceptStructureBlueprintFieldType.TEXT,  # Explicitly set as text field
                     required=True,  # Default for simple string definitions
                 )
@@ -54,16 +54,16 @@ class ConceptFactory:
         return Concept(
             code=concept_string.split(".")[1],
             domain=SpecialDomain.IMPLICIT,
-            definition=concept_string,
+            description=concept_string,
             structure_class_name=TextContent.__name__,
         )
 
     @classmethod
-    def make(cls, concept_code: str, domain: str, definition: str, structure_class_name: str, refines: str | None = None) -> Concept:
+    def make(cls, concept_code: str, domain: str, description: str, structure_class_name: str, refines: str | None = None) -> Concept:
         return Concept(
             code=concept_code,
             domain=domain,
-            definition=definition,
+            description=description,
             structure_class_name=structure_class_name,
             refines=refines,
         )
@@ -73,7 +73,7 @@ class ConceptFactory:
         return Concept(
             code=native_concept_data.code,
             domain=SpecialDomain.NATIVE,
-            definition=native_concept_data.definition,
+            description=native_concept_data.description,
             structure_class_name=native_concept_data.content_class_name,
         )
 
@@ -134,7 +134,7 @@ class ConceptFactory:
     ) -> Concept:
         blueprint: ConceptBlueprint
         if isinstance(concept_blueprint_or_description, str):
-            blueprint = ConceptBlueprint(definition=concept_blueprint_or_description)
+            blueprint = ConceptBlueprint(description=concept_blueprint_or_description)
         else:
             blueprint = concept_blueprint_or_description
         return cls.make_from_blueprint(
@@ -157,7 +157,7 @@ class ConceptFactory:
         except ConceptCodeError as exc:
             msg = f"Could not validate concept code '{concept_code}' in domain '{domain}': {exc}"
             raise ConceptDefinitionError(
-                message=msg, domain_code=domain, concept_code=concept_code, description=blueprint.definition, source=blueprint.source
+                message=msg, domain_code=domain, concept_code=concept_code, description=blueprint.description, source=blueprint.source
             ) from exc
         structure_class_name: str
         current_refine: str | None = None
@@ -189,7 +189,7 @@ class ConceptFactory:
                         msg,
                         domain_code=domain,
                         concept_code=concept_code,
-                        description=blueprint.definition,
+                        description=blueprint.description,
                         structure_class_python_code=exc.structure_class_python_code,
                         source=blueprint.source,
                     ) from exc
@@ -209,14 +209,14 @@ class ConceptFactory:
                     "A concept cannot have both structure and refines."
                 )
                 raise ConceptDefinitionError(
-                    msg, domain_code=domain, concept_code=concept_code, description=blueprint.definition, source=blueprint.source
+                    msg, domain_code=domain, concept_code=concept_code, description=blueprint.description, source=blueprint.source
                 )
             try:
                 current_refine = cls.make_refine(refine=blueprint.refines)
             except ConceptRefineError as exc:
                 msg = f"Could not validate refine '{blueprint.refines}' for concept '{concept_code}' in domain '{domain}': {exc}"
                 raise ConceptDefinitionError(
-                    msg, domain_code=domain, concept_code=concept_code, description=blueprint.definition, source=blueprint.source
+                    msg, domain_code=domain, concept_code=concept_code, description=blueprint.description, source=blueprint.source
                 ) from exc
             structure_class_name = current_refine.split(".")[1] + "Content" if current_refine else TextContent.__name__
         # Handle neither structure nor refines - check the class registry
@@ -236,7 +236,7 @@ class ConceptFactory:
         return Concept(
             domain=domain_and_concept_code.domain,
             code=domain_and_concept_code.concept_code,
-            definition=blueprint.definition,
+            description=blueprint.description,
             structure_class_name=structure_class_name,
             refines=current_refine,
         )

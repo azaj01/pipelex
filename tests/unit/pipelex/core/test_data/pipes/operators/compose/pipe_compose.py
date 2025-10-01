@@ -6,22 +6,22 @@ from pipelex.tools.templating.jinja2_template_category import Jinja2TemplateCate
 PIPE_COMPOSE = (
     "pipe_compose",
     """domain = "test_pipes"
-definition = "Domain with template processing pipe"
+description = "Domain with template processing pipe"
 
 [pipe.process_template]
 type = "PipeCompose"
-definition = "Process a Jinja2 template"
+description = "Process a Jinja2 template"
 output = "Text"
 jinja2 = "Hello {{ name }}!"
 template_category = "markdown"
 """,
     PipelexBundleBlueprint(
         domain="test_pipes",
-        definition="Domain with template processing pipe",
+        description="Domain with template processing pipe",
         pipe={
             "process_template": PipeComposeBlueprint(
                 type="PipeCompose",
-                definition="Process a Jinja2 template",
+                description="Process a Jinja2 template",
                 output=NativeConceptEnum.TEXT,
                 jinja2="Hello {{ name }}!",
                 template_category=Jinja2TemplateCategory.MARKDOWN,

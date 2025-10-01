@@ -28,7 +28,7 @@ class TestPipeCompose:
         jinja2: str,
     ):
         pipe_compose_blueprint = PipeComposeBlueprint(
-            definition="Jinja2 test for any context",
+            description="Jinja2 test for any context",
             jinja2=jinja2,
             output=NativeConceptEnum.TEXT,
             extra_context={"place_holder": "[some text from test_pipe_compose_for_any]"},
@@ -55,7 +55,7 @@ class TestPipeCompose:
         working_memory = WorkingMemoryFactory.make_from_text(text="[some text from test_pipe_compose_for_stuff]", name="place_holder")
 
         pipe_compose_blueprint = PipeComposeBlueprint(
-            definition="Jinja2 test for stuff context",
+            description="Jinja2 test for stuff context",
             jinja2=jinja2,
             prompting_style=PromptingStyle(tag_style=TagStyle.TICKS, text_format=TextFormat.MARKDOWN),
             output=NativeConceptEnum.TEXT,

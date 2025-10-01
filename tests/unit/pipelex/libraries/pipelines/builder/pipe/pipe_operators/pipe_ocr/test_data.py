@@ -10,14 +10,14 @@ class PipeOcrTestCases:
         "simple_ocr",
         PipeOcrSpec(
             the_pipe_code="ocr_extractor",
-            definition="Extract text from image",
+            description="Extract text from image",
             inputs={"image": "Image"},
             output="ExtractedText",
             ocr="extract_text_from_visuals",
         ),
         PipeOcrBlueprint(
             source=None,
-            definition="Extract text from image",
+            description="Extract text from image",
             inputs={"image": InputRequirementBlueprint(concept="Image")},
             output="ExtractedText",
             type="PipeOcr",
@@ -30,7 +30,7 @@ class PipeOcrTestCases:
         "ocr_with_options",
         PipeOcrSpec(
             the_pipe_code="advanced_ocr",
-            definition="OCR with page options",
+            description="OCR with page options",
             inputs={"document": "PDF"},
             output="PageContent",
             ocr="extract_text_from_pdf",
@@ -40,7 +40,7 @@ class PipeOcrTestCases:
         ),
         PipeOcrBlueprint(
             source=None,
-            definition="OCR with page options",
+            description="OCR with page options",
             inputs={"document": InputRequirementBlueprint(concept="PDF")},
             output="PageContent",
             type="PipeOcr",

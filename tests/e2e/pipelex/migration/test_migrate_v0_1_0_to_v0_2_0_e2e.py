@@ -19,7 +19,7 @@ class TestMigrationE2E:
         # Create main domain file with mixed syntax
         main_toml = pipelines_dir / "content_analysis.toml"
         main_toml.write_text("""domain = "content_analysis"
-definition = "AI-powered content analysis and processing"
+description = "AI-powered content analysis and processing"
 system_prompt = "You are an expert content analyst"
 
 [concept]
@@ -37,7 +37,7 @@ Concept = "An article reporting current events"
 refines = "Article"
 
 [concept.BlogPost]
-definition = "A blog post with metadata"  # Already migrated
+description = "A blog post with metadata"  # Already migrated
 refines = "Article"
 structure = "BlogPostContent"
 
@@ -67,7 +67,7 @@ prompt_template = "Extract metadata from: @article"
         # File with only old syntax
         old_syntax_file = subdomain_dir / "legacy_concepts.toml"
         old_syntax_file.write_text("""domain = "legacy"
-definition = "Legacy concept definitions"
+description = "Legacy concept definitions"
 
 [concept.LegacyConcept]
 Concept = "An old concept that needs migration"
@@ -82,14 +82,14 @@ structure = "LegacyStructure"
         # File with only new syntax (should remain unchanged)
         new_syntax_file = subdomain_dir / "modern_concepts.toml"
         new_syntax_file.write_text("""domain = "modern"
-definition = "Modern concept definitions"
+description = "Modern concept definitions"
 
 [concept.ModernConcept]
-definition = "A modern concept with new syntax"
+description = "A modern concept with new syntax"
 refines = "Text"
 
 [concept.AdvancedConcept]
-definition = "An advanced concept with structure"
+description = "An advanced concept with structure"
 refines = ["Text", "Document"]
 structure = "AdvancedStructure"
 """)
@@ -97,7 +97,7 @@ structure = "AdvancedStructure"
         # File with no concepts (should remain unchanged)
         pipes_only_file = pipelines_dir / "pipes_only.toml"
         pipes_only_file.write_text("""domain = "pipes_only"
-definition = "File with only pipe definitions"
+description = "File with only pipe definitions"
 
 [pipe.simple_pipe]
 PipeLLM = "A simple pipe"
@@ -119,29 +119,29 @@ prompt_template = "Process: @input_text"
         # Verify main file was migrated correctly
         main_content = main_toml.read_text()
         # Concept migrations
-        assert 'definition = "A written composition on a specific topic"' in main_content
-        assert 'definition = "An article reporting current events"' in main_content
-        assert 'definition = "Analysis of content including sentiment, topics, and key insights"' in main_content
+        assert 'description = "A written composition on a specific topic"' in main_content
+        assert 'description = "An article reporting current events"' in main_content
+        assert 'description = "Analysis of content including sentiment, topics, and key insights"' in main_content
         # BlogPost should remain unchanged (already had definition =)
-        assert 'definition = "A blog post with metadata"' in main_content
+        assert 'description = "A blog post with metadata"' in main_content
         # Pipe migrations
         assert 'type = "PipeLLM"' in main_content
-        assert 'definition = "Analyze text content for sentiment and topics"' in main_content
-        assert 'definition = "Extract structured information from articles"' in main_content
+        assert 'description = "Analyze text content for sentiment and topics"' in main_content
+        assert 'description = "Extract structured information from articles"' in main_content
         # Ensure no old syntax remains
         assert "Concept =" not in main_content
         assert "PipeLLM =" not in main_content
 
         # Verify legacy file was migrated correctly
         legacy_content = old_syntax_file.read_text()
-        assert 'definition = "An old concept that needs migration"' in legacy_content
-        assert 'definition = "Another legacy concept with complex refines"' in legacy_content
+        assert 'description = "An old concept that needs migration"' in legacy_content
+        assert 'description = "Another legacy concept with complex refines"' in legacy_content
         assert "Concept =" not in legacy_content
 
         # Verify modern file was NOT changed
         modern_content = new_syntax_file.read_text()
-        assert 'definition = "A modern concept with new syntax"' in modern_content
-        assert 'definition = "An advanced concept with structure"' in modern_content
+        assert 'description = "A modern concept with new syntax"' in modern_content
+        assert 'description = "An advanced concept with structure"' in modern_content
         assert "Concept =" not in modern_content
 
         # Verify pipes-only file was migrated (pipe syntax changed)
@@ -149,7 +149,7 @@ prompt_template = "Process: @input_text"
         assert 'domain = "pipes_only"' in pipes_content
         assert "[pipe.simple_pipe]" in pipes_content
         assert 'type = "PipeLLM"' in pipes_content
-        assert 'definition = "A simple pipe"' in pipes_content
+        assert 'description = "A simple pipe"' in pipes_content
         assert "Concept =" not in pipes_content
         assert "PipeLLM =" not in pipes_content
 
@@ -178,7 +178,7 @@ prompt_template = "Process: @input_text"
         test_file = tmp_path / "complex_formatting.toml"
         original_content = """# Complex formatting test file
 domain = "formatting_test"
-definition = "Test various formatting scenarios"
+description = "Test various formatting scenarios"
 
 # Simple concepts
 [concept]
@@ -211,7 +211,7 @@ Concept   =   "Extra spaces around equals"
 refines = "Text"
 
 [concept.AlreadyMigratedConcept]
-definition = "This should not change"
+description = "This should not change"
 refines = "Text"
 
 # Comment with Concept = in it (should not change)
@@ -239,23 +239,23 @@ Process this: @input_text
 
         # Verify all Concept = lines were changed to definition =
         expected_changes = [
-            'definition = "Standard formatting concept"',
-            '    definition = "Concept with indentation"',
-            '\tdefinition = "Concept with tab indentation"',
-            '  \tdefinition = "Concept with mixed indentation"',
-            'definition="No spaces around equals"',
-            'definition   =   "Extra spaces around equals"',
+            'description = "Standard formatting concept"',
+            '    description = "Concept with indentation"',
+            '\tdescription = "Concept with tab indentation"',
+            '  \tdescription = "Concept with mixed indentation"',
+            'description="No spaces around equals"',
+            'description   =   "Extra spaces around equals"',
         ]
 
         for expected in expected_changes:
             assert expected in migrated_content
 
         # Verify already migrated concept was not changed
-        assert 'definition = "This should not change"' in migrated_content
+        assert 'description = "This should not change"' in migrated_content
 
         # Verify pipe was migrated to new format
         assert 'type = "PipeLLM"' in migrated_content
-        assert 'definition = "A pipe that mentions Concept = in description"' in migrated_content
+        assert 'description = "A pipe that mentions Concept = in description"' in migrated_content
         # Verify content inside multiline strings was not changed
         assert "This template mentions Concept = something in the text." in migrated_content
 
@@ -354,11 +354,11 @@ Concept = "Test concept"
         migrated_content = test_file.read_text()
 
         # Verify that actual concept definitions were migrated
-        assert 'definition = "A complex concept with old syntax"' in migrated_content
-        assert 'definition = "Another concept to test migration"' in migrated_content
+        assert 'description = "A complex concept with old syntax"' in migrated_content
+        assert 'description = "Another concept to test migration"' in migrated_content
 
         # Verify that already migrated concept remains unchanged
-        assert 'definition = "This one is already migrated"' in migrated_content
+        assert 'description = "This one is already migrated"' in migrated_content
 
         # THE CRITICAL CHALLENGE: Verify that the Concept = inside the prompt_template was NOT changed
         assert (

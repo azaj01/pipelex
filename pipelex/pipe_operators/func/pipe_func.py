@@ -117,7 +117,7 @@ class PipeFunc(PipeOperator[PipeFuncOutput]):
                 concept=ConceptFactory.make(
                     concept_code=self.output.code,
                     domain="generic",
-                    definition="Lorem Ipsum",
+                    description="Lorem Ipsum",
                     structure_class_name=self.output.structure_class_name,
                 ),
                 structure_class=return_type,

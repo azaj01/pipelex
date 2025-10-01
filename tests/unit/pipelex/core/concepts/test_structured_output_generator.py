@@ -11,10 +11,10 @@ class TestStructureGenerator:
     def test_simple_structure_generation(self):
         """Test generation of a simple structure with basic fields."""
         structure_blueprint = {
-            "name": ConceptStructureBlueprint(definition="Name field", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
-            "age": ConceptStructureBlueprint(definition="Age field", type=ConceptStructureBlueprintFieldType.INTEGER, required=False),
+            "name": ConceptStructureBlueprint(description="Name field", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
+            "age": ConceptStructureBlueprint(description="Age field", type=ConceptStructureBlueprintFieldType.INTEGER, required=False),
             "active": ConceptStructureBlueprint(
-                definition="Active status",
+                description="Active status",
                 type=ConceptStructureBlueprintFieldType.BOOLEAN,
                 required=False,
                 default_value=True,
@@ -46,20 +46,20 @@ class TestStructureGenerator:
         """Test generation with complex types like lists and dicts."""
         structure_blueprint = {
             "tags": ConceptStructureBlueprint(
-                definition="List of tags",
+                description="List of tags",
                 type=ConceptStructureBlueprintFieldType.LIST,
                 item_type="text",
                 required=False,
             ),
             "metadata": ConceptStructureBlueprint(
-                definition="Metadata dictionary",
+                description="Metadata dictionary",
                 type=ConceptStructureBlueprintFieldType.DICT,
                 key_type="text",
                 value_type="text",
                 required=False,
             ),
             "scores": ConceptStructureBlueprint(
-                definition="List of scores",
+                description="List of scores",
                 type=ConceptStructureBlueprintFieldType.LIST,
                 item_type="number",
                 required=True,
@@ -90,9 +90,11 @@ class TestStructureGenerator:
     def test_choices_generation(self):
         """Test generation with inline choices (Literal type)."""
         structure_blueprint = {
-            "name": ConceptStructureBlueprint(definition="Product name", type=ConceptStructureBlueprintFieldType.TEXT, required=False),
-            "category": ConceptStructureBlueprint(definition="Product category", choices=["electronics", "clothing", "food", "books"], required=True),
-            "size": ConceptStructureBlueprint(definition="Size of the product", choices=["XS", "S", "M", "L", "XL"], required=False),
+            "name": ConceptStructureBlueprint(description="Product name", type=ConceptStructureBlueprintFieldType.TEXT, required=False),
+            "category": ConceptStructureBlueprint(
+                description="Product category", choices=["electronics", "clothing", "food", "books"], required=True
+            ),
+            "size": ConceptStructureBlueprint(description="Size of the product", choices=["XS", "S", "M", "L", "XL"], required=False),
         }
 
         result, _ = StructureGenerator().generate_from_structure_blueprint("Product", structure_blueprint)
@@ -142,8 +144,8 @@ class TestStructureGenerator:
     def test_concept_get_structure_method(self):
         """Test the get_structure method on Concept class."""
         structure_blueprint = {
-            "title": ConceptStructureBlueprint(definition="Document title", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
-            "page_count": ConceptStructureBlueprint(definition="Number of pages", type=ConceptStructureBlueprintFieldType.INTEGER, required=False),
+            "title": ConceptStructureBlueprint(description="Document title", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
+            "page_count": ConceptStructureBlueprint(description="Number of pages", type=ConceptStructureBlueprintFieldType.INTEGER, required=False),
         }
 
         result, _ = StructureGenerator().generate_from_structure_blueprint("DocumentInfo", structure_blueprint)
@@ -169,7 +171,7 @@ class TestStructureGenerator:
     def test_generate_from_blueprint_dict_function(self):
         """Test the convenience function for generating from blueprint dict."""
         structure_blueprint = {
-            "value": ConceptStructureBlueprint(definition="Test value", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
+            "value": ConceptStructureBlueprint(description="Test value", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
         }
 
         result, _ = StructureGenerator().generate_from_structure_blueprint("ConvenienceTest", structure_blueprint)
@@ -194,18 +196,18 @@ class TestStructureGenerator:
     def test_all_field_types(self):
         """Test that all field types are properly handled."""
         structure_blueprint = {
-            "text_field": ConceptStructureBlueprint(definition="Text field", type=ConceptStructureBlueprintFieldType.TEXT, required=False),
-            "number_field": ConceptStructureBlueprint(definition="Number field", type=ConceptStructureBlueprintFieldType.NUMBER, required=False),
-            "integer_field": ConceptStructureBlueprint(definition="Integer field", type=ConceptStructureBlueprintFieldType.INTEGER, required=False),
-            "boolean_field": ConceptStructureBlueprint(definition="Boolean field", type=ConceptStructureBlueprintFieldType.BOOLEAN, required=False),
+            "text_field": ConceptStructureBlueprint(description="Text field", type=ConceptStructureBlueprintFieldType.TEXT, required=False),
+            "number_field": ConceptStructureBlueprint(description="Number field", type=ConceptStructureBlueprintFieldType.NUMBER, required=False),
+            "integer_field": ConceptStructureBlueprint(description="Integer field", type=ConceptStructureBlueprintFieldType.INTEGER, required=False),
+            "boolean_field": ConceptStructureBlueprint(description="Boolean field", type=ConceptStructureBlueprintFieldType.BOOLEAN, required=False),
             "list_field": ConceptStructureBlueprint(
-                definition="List field",
+                description="List field",
                 type=ConceptStructureBlueprintFieldType.LIST,
                 item_type="text",
                 required=False,
             ),
             "dict_field": ConceptStructureBlueprint(
-                definition="Dict field",
+                description="Dict field",
                 type=ConceptStructureBlueprintFieldType.DICT,
                 key_type="text",
                 value_type="integer",
@@ -240,8 +242,8 @@ class TestStructureGenerator:
     def test_required_vs_optional_fields(self):
         """Test that fields can be marked as required vs optional."""
         structure_blueprint = {
-            "title": ConceptStructureBlueprint(definition="Required title", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
-            "optional_field": ConceptStructureBlueprint(definition="Optional field", type=ConceptStructureBlueprintFieldType.TEXT, required=False),
+            "title": ConceptStructureBlueprint(description="Required title", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
+            "optional_field": ConceptStructureBlueprint(description="Optional field", type=ConceptStructureBlueprintFieldType.TEXT, required=False),
         }
 
         result, _ = StructureGenerator().generate_from_structure_blueprint("RequiredFieldsModel", structure_blueprint)
@@ -268,19 +270,19 @@ class TestStructureGenerator:
         """Test fields with default values."""
         structure_blueprint = {
             "name": ConceptStructureBlueprint(
-                definition="Person name",
+                description="Person name",
                 type=ConceptStructureBlueprintFieldType.TEXT,
                 required=False,
                 default_value="Anonymous",
             ),
             "age": ConceptStructureBlueprint(
-                definition="Person age",
+                description="Person age",
                 type=ConceptStructureBlueprintFieldType.INTEGER,
                 required=False,
                 default_value=0,
             ),
             "active": ConceptStructureBlueprint(
-                definition="Is active",
+                description="Is active",
                 type=ConceptStructureBlueprintFieldType.BOOLEAN,
                 required=False,
                 default_value=True,
@@ -312,19 +314,19 @@ class TestStructureGenerator:
         """Test nested list types with different item types."""
         structure_blueprint = {
             "text_list": ConceptStructureBlueprint(
-                definition="List of text items",
+                description="List of text items",
                 type=ConceptStructureBlueprintFieldType.LIST,
                 item_type="text",
                 required=False,
             ),
             "number_list": ConceptStructureBlueprint(
-                definition="List of numbers",
+                description="List of numbers",
                 type=ConceptStructureBlueprintFieldType.LIST,
                 item_type="number",
                 required=True,
             ),
             "integer_list": ConceptStructureBlueprint(
-                definition="List of integers",
+                description="List of integers",
                 type=ConceptStructureBlueprintFieldType.LIST,
                 item_type="integer",
                 required=False,
@@ -356,21 +358,21 @@ class TestStructureGenerator:
         """Test nested dict types with different key/value combinations."""
         structure_blueprint = {
             "string_to_string": ConceptStructureBlueprint(
-                definition="String to string mapping",
+                description="String to string mapping",
                 type=ConceptStructureBlueprintFieldType.DICT,
                 key_type="text",
                 value_type="text",
                 required=False,
             ),
             "string_to_number": ConceptStructureBlueprint(
-                definition="String to number mapping",
+                description="String to number mapping",
                 type=ConceptStructureBlueprintFieldType.DICT,
                 key_type="text",
                 value_type="number",
                 required=True,
             ),
             "string_to_integer": ConceptStructureBlueprint(
-                definition="String to integer mapping",
+                description="String to integer mapping",
                 type=ConceptStructureBlueprintFieldType.DICT,
                 key_type="text",
                 value_type="integer",
@@ -402,29 +404,29 @@ class TestStructureGenerator:
     def test_mixed_complexity_structure(self):
         """Test a structure with mixed complexity - simple and complex types together."""
         structure_blueprint = {
-            "id": ConceptStructureBlueprint(definition="Unique identifier", type=ConceptStructureBlueprintFieldType.INTEGER, required=True),
-            "name": ConceptStructureBlueprint(definition="Display name", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
+            "id": ConceptStructureBlueprint(description="Unique identifier", type=ConceptStructureBlueprintFieldType.INTEGER, required=True),
+            "name": ConceptStructureBlueprint(description="Display name", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
             "tags": ConceptStructureBlueprint(
-                definition="Associated tags",
+                description="Associated tags",
                 type=ConceptStructureBlueprintFieldType.LIST,
                 item_type="text",
                 required=False,
             ),
             "metadata": ConceptStructureBlueprint(
-                definition="Additional metadata",
+                description="Additional metadata",
                 type=ConceptStructureBlueprintFieldType.DICT,
                 key_type="text",
                 value_type="text",
                 required=False,
             ),
             "active": ConceptStructureBlueprint(
-                definition="Whether item is active",
+                description="Whether item is active",
                 type=ConceptStructureBlueprintFieldType.BOOLEAN,
                 required=False,
                 default_value=True,
             ),
             "priority": ConceptStructureBlueprint(
-                definition="Priority level",
+                description="Priority level",
                 choices=["low", "medium", "high", "urgent"],
                 required=False,
                 default_value="medium",
@@ -460,9 +462,9 @@ class TestStructureGenerator:
         # Create a mixed structure blueprint similar to what would come from TOML parsing
         mixed_structure_blueprint: dict[str, str | ConceptStructureBlueprint] = {
             "name": "The name of the person",  # Simple string definition
-            "age": ConceptStructureBlueprint(definition="The age of the person", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
+            "age": ConceptStructureBlueprint(description="The age of the person", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
             "birthdate": ConceptStructureBlueprint(
-                definition="The birthdate of the person",
+                description="The birthdate of the person",
                 type=ConceptStructureBlueprintFieldType.DATE,
                 required=True,
             ),
@@ -495,14 +497,14 @@ class TestStructureGenerator:
 
         # Verify that the string was properly converted to ConceptStructureBlueprint
         assert isinstance(normalized_structure["name"], ConceptStructureBlueprint)
-        assert normalized_structure["name"].definition == "The name of the person"
+        assert normalized_structure["name"].description == "The name of the person"
         assert normalized_structure["name"].type == ConceptStructureBlueprintFieldType.TEXT
         assert normalized_structure["name"].required
 
     def test_code_validation_success(self):
         """Test that valid generated code passes validation."""
         structure_blueprint = {
-            "name": ConceptStructureBlueprint(definition="Name field", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
+            "name": ConceptStructureBlueprint(description="Name field", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
         }
 
         generator = StructureGenerator()

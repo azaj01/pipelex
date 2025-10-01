@@ -50,7 +50,7 @@ class PipeParallelSpec(PipeSpec):
             raise PipeDefinitionError(
                 message=msg,
                 pipe_code=self.the_pipe_code,
-                description=self.definition,
+                description=self.description,
             )
         return self
 
@@ -59,7 +59,7 @@ class PipeParallelSpec(PipeSpec):
         base_blueprint = super().to_blueprint()
         core_parallels = [parallel.to_blueprint() for parallel in self.parallels]
         return PipeParallelBlueprint(
-            definition=base_blueprint.definition,
+            description=base_blueprint.description,
             inputs=base_blueprint.inputs,
             output=base_blueprint.output,
             type=self.type,

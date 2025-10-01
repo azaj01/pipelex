@@ -1,11 +1,11 @@
 domain = "test_integration"
-definition = "Test pipes for PipeParallel text analysis"
+description = "Test pipes for PipeParallel text analysis"
 
 [pipe]
 
 [pipe.analyze_sentiment]
 type = "PipeLLM"
-definition = "Analyze sentiment of text"
+description = "Analyze sentiment of text"
 inputs = { input_text = "Text" }
 output = "Text"
 structuring_method = "preliminary_text"
@@ -16,7 +16,7 @@ prompt_template = """PLEASE OUTPUT ONLY ONE WORD: 'positive', 'negative', or 'ne
 
 [pipe.count_words]
 type = "PipeLLM"
-definition = "Count words in text"
+description = "Count words in text"
 inputs = { input_text = "Text" }
 output = "Text"
 structuring_method = "preliminary_text"
@@ -28,7 +28,7 @@ Count the number of words in the following text and return only the number:
 
 [pipe.extract_keywords]
 type = "PipeLLM"
-definition = "Extract keywords from text"
+description = "Extract keywords from text"
 inputs = { input_text = "Text" }
 output = "Text"
 prompt_template = """

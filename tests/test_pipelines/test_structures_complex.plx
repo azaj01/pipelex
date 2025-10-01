@@ -1,5 +1,5 @@
 domain = "test_structured_generations"
-definition = "Concepts to test complex structures (dicts, unions, etc.)"
+description = "Concepts to test complex structures (dicts, unions, etc.)"
 
 [concept]
 ConceptWithDicts = "A structure with dicts"

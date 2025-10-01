@@ -31,7 +31,7 @@ class TestPipeConditionSimple:
     async def test_condition_long_text_processing(self, request: FixtureRequest, pipe_run_mode: PipeRunMode):
         """Test PipeCondition with long text that should trigger capitalize_long_text pipe."""
         pipe_condition_blueprint = PipeConditionBlueprint(
-            definition="Text length condition for testing",
+            description="Text length condition for testing",
             inputs={"input_text": InputRequirementBlueprint(concept=f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}")},
             output=f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}",
             expression_template="{% if input_text.text|length > 5 %}long{% else %}short{% endif %}",
@@ -103,7 +103,7 @@ class TestPipeConditionSimple:
         """Test PipeCondition with short text that should trigger add_prefix_short_text pipe."""
         # Create PipeCondition instance - pipes are loaded from PLX files
         pipe_condition_blueprint = PipeConditionBlueprint(
-            definition="Text length condition for short text testing",
+            description="Text length condition for short text testing",
             inputs={"input_text": InputRequirementBlueprint(concept=f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}")},
             output=f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}",
             expression_template="{% if input_text.text|length > 5 %}long{% else %}short{% endif %}",
@@ -176,7 +176,7 @@ class TestPipeConditionSimple:
             concept=ConceptFactory.make(
                 concept_code="CategoryInput",
                 domain="test_pipe_condition_2",
-                definition="test_pipe_condition_2.CategoryInput",
+                description="test_pipe_condition_2.CategoryInput",
                 structure_class_name="CategoryInput",
             ),
             content=category_input,
@@ -245,7 +245,7 @@ class TestPipeConditionSimple:
             concept=ConceptFactory.make(
                 concept_code="CategoryInput",
                 domain="test_pipe_condition_2",
-                definition="test_pipe_condition_2.CategoryInput",
+                description="test_pipe_condition_2.CategoryInput",
                 structure_class_name="CategoryInput",
             ),
             content=category_input,

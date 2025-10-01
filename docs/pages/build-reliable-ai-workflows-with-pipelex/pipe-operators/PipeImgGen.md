@@ -37,7 +37,7 @@ Image generation presets are defined in your model deck configuration and can in
 | Parameter               | Type            | Description                                                                                                                   | Required |
 | ----------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------- |
 | `type`                  | string          | The type of the pipe: `PipeImgGen`                                                                          | Yes      |
-| `definition`           | string          | A description of the image generation operation.                                                                           | Yes      |
+| `description`           | string          | A description of the image generation operation.                                                                           | Yes      |
 | `inputs`                | dictionary      | The input concept(s) for the image generation operation, as a dictionary mapping input names to concept codes.                                                     | Yes       |
 | `output`                | string          | The output concept produced by the image generation operation.                                                | Yes      |
 | `img_gen_prompt`        | string          | A static text prompt for image generation. Use this *or* `input`.                                                             | No       |
@@ -57,7 +57,7 @@ This pipe generates one image of a futuristic car without requiring any input.
 ```plx
 [pipe.generate_car_image]
 type = "PipeImgGen"
-definition = "Generate a futuristic car image"
+description = "Generate a futuristic car image"
 output = "Image"
 img_gen_prompt = "A sleek, futuristic sports car driving on a neon-lit highway at night."
 img_gen = "base_img_gen"
@@ -75,7 +75,7 @@ ImagePrompt = "A text prompt for generating an image"
 
 [pipe.generate_logo_variations]
 type = "PipeImgGen"
-definition = "Generate three logo variations from a prompt"
+description = "Generate three logo variations from a prompt"
 inputs = { prompt = "images.ImgGenPrompt" }
 output = "Image"
 nb_output = 3

@@ -77,7 +77,7 @@ class TestPipelexApiClient:
                         concept=ConceptFactory.make(
                             concept_code="Question",
                             domain="answer",
-                            definition="answer.Question",
+                            description="answer.Question",
                             structure_class_name="Question",
                         ),
                         name="question",

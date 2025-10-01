@@ -30,5 +30,5 @@ class PipeParallelBlueprint(PipeBlueprint):
                 "PipeParallel requires either add_each_output to be True or combined_output to be set, "
                 "or both, otherwise the pipe won't output anything"
             )
-            raise PipeDefinitionError(message=msg, description=self.definition, source=self.source)
+            raise PipeDefinitionError(message=msg, description=self.description, source=self.source)
         return self

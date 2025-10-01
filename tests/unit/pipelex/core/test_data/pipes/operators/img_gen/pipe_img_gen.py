@@ -5,21 +5,21 @@ from pipelex.pipe_operators.img_gen.pipe_img_gen_blueprint import PipeImgGenBlue
 PIPE_IMG_GEN = (
     "pipe_img_gen",
     """domain = "test_pipes"
-definition = "Domain with image generation pipe"
+description = "Domain with image generation pipe"
 
 [pipe.generate_image]
 type = "PipeImgGen"
-definition = "Generate an image from a prompt"
+description = "Generate an image from a prompt"
 output = "Image"
 img_gen_prompt = "A beautiful landscape"
 """,
     PipelexBundleBlueprint(
         domain="test_pipes",
-        definition="Domain with image generation pipe",
+        description="Domain with image generation pipe",
         pipe={
             "generate_image": PipeImgGenBlueprint(
                 type="PipeImgGen",
-                definition="Generate an image from a prompt",
+                description="Generate an image from a prompt",
                 output=NativeConceptEnum.IMAGE,
                 img_gen_prompt="A beautiful landscape",
             ),

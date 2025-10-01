@@ -64,7 +64,7 @@ Once the function is registered, you can use it in your `.plx` file.
 | Parameter       | Type   | Description                                                                 | Required |
 | --------------- | ------ | --------------------------------------------------------------------------- | -------- |
 | `type`          | string | The type of the pipe: `PipeFunc`                                                                          | Yes      |
-| `definition`   | string | A description of the function operation.                                                                   | Yes      |
+| `description`   | string | A description of the function operation.                                                                   | Yes      |
 | `function_name` | string | The unique name used to register the Python function (e.g., "combine_two_texts"). | Yes      |
 | `output`        | string | The concept to associate with the function's return value.                  | Yes      |
 
@@ -75,7 +75,7 @@ This PLX snippet shows how to use the `concatenate_texts` function defined above
 ```plx
 [pipe.combine_them]
 type = "PipeFunc"
-definition = "Combine two text inputs using a custom Python function"
+description = "Combine two text inputs using a custom Python function"
 function_name = "concatenate_texts"
 output = "ConcatenatedText"
 ```

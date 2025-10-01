@@ -1,7 +1,7 @@
 
 
 domain = "test_multiplicity"
-definition = "Test library about multiplicity"
+description = "Test library about multiplicity"
 
 [concept]
 Color = "A color"
@@ -10,7 +10,7 @@ FantasyScene = "A fantasy scene"
 
 [pipe.original_power_ranger_colors]
 type = "PipeLLM"
-definition = "Recall the colors of the original power rangers"
+description = "Recall the colors of the original power rangers"
 output = "Color"
 prompt_template = """
 Remind me of the colors of the {{ _nb_output }} original power rangers.
@@ -20,7 +20,7 @@ nb_output = 5
 
 [pipe.alltime_power_ranger_colors]
 type = "PipeLLM"
-definition = "Recall the colors of all the power rangers"
+description = "Recall the colors of all the power rangers"
 output = "Color"
 prompt_template = """
 Remind me of the colors of all the power rangers over all series.
@@ -30,7 +30,7 @@ llm = "llm_for_creative_writing"
 
 [pipe.imagine_nature_product]
 type = "PipeLLM"
-definition = "Imagine a product of nature"
+description = "Imagine a product of nature"
 inputs = { color = "Color" }
 output = "ProductOfNature"
 prompt_template = """
@@ -40,7 +40,7 @@ Just state what it is in a single sentence.
 
 [pipe.imagine_fantasy_scene_including_products_of_nature]
 type = "PipeLLM"
-definition = "Imagine a fantasy scene including products of nature"
+description = "Imagine a fantasy scene including products of nature"
 inputs = { product_of_nature = "ProductOfNature" }
 output = "images.ImgGenPrompt"
 prompt_template = """
@@ -53,7 +53,7 @@ Keep it short and concise, just one sentence.
 
 [pipe.imagine_nature_scene_of_original_power_rangers_colors]
 type = "PipeSequence"
-definition = "Imagine nature scenes of Power Rangers colors"
+description = "Imagine nature scenes of Power Rangers colors"
 output = "images.ImgGenPrompt"
 steps = [
     { pipe = "original_power_ranger_colors", result = "color" },
@@ -63,7 +63,7 @@ steps = [
 
 [pipe.imagine_nature_scene_of_alltime_power_rangers_colors]
 type = "PipeSequence"
-definition = "Imagine nature scenes of Power Rangers colors"
+description = "Imagine nature scenes of Power Rangers colors"
 output = "images.ImgGenPrompt"
 steps = [
     { pipe = "alltime_power_ranger_colors", result = "color", multiple_output = true },

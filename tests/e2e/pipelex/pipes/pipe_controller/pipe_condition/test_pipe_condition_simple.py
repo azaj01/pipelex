@@ -26,7 +26,7 @@ class TestPipeConditionSimple:
         """Test a PipeCondition created directly in code that should FAIL dry run."""
         # Create a PipeCondition directly in Python that requires an input
         pipe_condition_blueprint = PipeConditionBlueprint(
-            definition="Test condition that should fail",
+            description="Test condition that should fail",
             inputs={"user_category": InputRequirementBlueprint(concept="test_pipe_condition.CategoryInput")},
             output=f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}",
             expression_template="{{ user_category.category }}",
@@ -60,7 +60,7 @@ class TestPipeConditionSimple:
         """Test a PipeCondition created directly in code that should SUCCEED dry run."""
         # Create a PipeCondition directly in Python
         pipe_condition_blueprint = PipeConditionBlueprint(
-            definition="Test condition that should succeed",
+            description="Test condition that should succeed",
             inputs={"user_status": InputRequirementBlueprint(concept="test_pipe_condition.CategoryInput")},
             output=f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}",
             expression_template="{{ user_status.category }}",
@@ -82,7 +82,7 @@ class TestPipeConditionSimple:
                     concept=ConceptFactory.make(
                         concept_code="CategoryInput",
                         domain="test_pipe_condition",
-                        definition="CategoryInput",
+                        description="CategoryInput",
                         structure_class_name="CategoryInput",
                     ),
                     structure_class=CategoryInput,

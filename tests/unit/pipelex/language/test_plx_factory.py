@@ -26,10 +26,10 @@ class TestPlxFactoryUnit:
                 spaces_inside_curly_braces=True,
             ),
             concepts=PlxConfigForConcepts(
-                structure_field_ordering=["type", "definition", "inputs", "output"],
+                structure_field_ordering=["type", "description", "inputs", "output"],
             ),
             pipes=PlxConfigForPipes(
-                field_ordering=["type", "definition", "inputs", "output"],
+                field_ordering=["type", "description", "inputs", "output"],
             ),
         )
 
@@ -263,7 +263,7 @@ class TestPlxFactoryUnit:
 
         pipe_data = {
             "type": "PipeLLM",
-            "definition": "Test pipe",
+            "description": "Test pipe",
             "inputs": {"input1": "Text"},
             "output": "Text",
             "nested_config": {"param1": "value1", "param2": 42},
@@ -273,7 +273,7 @@ class TestPlxFactoryUnit:
 
         assert isinstance(result, tomlkit.items.Table)  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
         assert "type" in result
-        assert "definition" in result
+        assert "description" in result
         assert "inputs" in result
         assert "output" in result
         assert "nested_config" in result
@@ -294,14 +294,14 @@ class TestPlxFactoryUnit:
         """Test making table object for concept with structure."""
         _mock_config = mocker.patch.object(PlxFactory, "_plx_config", return_value=mock_plx_config)
 
-        concept_data = {"ComplexConcept": {"definition": "A complex concept", "structure": {"field1": "string", "field2": "int"}}}
+        concept_data = {"ComplexConcept": {"description": "A complex concept", "structure": {"field1": "string", "field2": "int"}}}
 
         result = PlxFactory.make_table_obj_for_concept(concept_data)
 
         assert isinstance(result, tomlkit.items.Table)  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
         assert "ComplexConcept" in result
         assert isinstance(result["ComplexConcept"], tomlkit.items.Table)  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
-        assert "definition" in result["ComplexConcept"]
+        assert "description" in result["ComplexConcept"]
         assert "structure" in result["ComplexConcept"]
 
     def test_make_table_obj_for_concept_structure_string(self, mocker: MockerFixture, mock_plx_config: PlxConfig):
@@ -347,7 +347,7 @@ class TestPlxFactoryUnit:
         _mock_config = mocker.patch.object(PlxFactory, "_plx_config", return_value=mock_plx_config)
         mock_add_spaces = mocker.patch.object(PlxFactory, "add_spaces_to_inline_tables", return_value="spaced_output")
 
-        data = {"domain": "test", "definition": "test domain"}
+        data = {"domain": "test", "description": "test domain"}
 
         result = PlxFactory.dict_to_plx_styled_toml(data)
 
@@ -360,7 +360,7 @@ class TestPlxFactoryUnit:
         _mock_config = mocker.patch.object(PlxFactory, "_plx_config", return_value=mock_plx_config)
         mock_add_spaces = mocker.patch.object(PlxFactory, "add_spaces_to_inline_tables")
 
-        data = {"domain": "test", "definition": "test domain"}
+        data = {"domain": "test", "description": "test domain"}
 
         result = PlxFactory.dict_to_plx_styled_toml(data)
 
@@ -389,14 +389,14 @@ class TestPlxFactoryUnit:
         """Test dict to PLX styled TOML with pipe section."""
         _mock_config = mocker.patch.object(PlxFactory, "_plx_config", return_value=mock_plx_config)
 
-        data = {"domain": "test", "pipe": {"test_pipe": {"type": "PipeLLM", "definition": "Test pipe"}}}
+        data = {"domain": "test", "pipe": {"test_pipe": {"type": "PipeLLM", "description": "Test pipe"}}}
 
         result = PlxFactory.dict_to_plx_styled_toml(data)
 
         assert "domain" in result
         assert "[pipe.test_pipe]" in result
         assert "type" in result
-        assert "definition" in result
+        assert "description" in result
 
     def test_dict_to_plx_styled_toml_with_concept_section(self, mocker: MockerFixture, mock_plx_config: PlxConfig):
         """Test dict to PLX styled TOML with concept section."""

@@ -10,13 +10,13 @@ class PipeBatchTestCases:
         "simple_batch",
         PipeBatchSpec(
             the_pipe_code="batch_processor",
-            definition="Process items in batch",
+            description="Process items in batch",
             inputs={"items": "ItemList"},
             output="ProcessedItems",
             branch_pipe_code="process_item",
         ),
         PipeBatchBlueprint(
-            definition="Process items in batch",
+            description="Process items in batch",
             inputs={"items": InputRequirementBlueprint(concept="ItemList")},
             output="ProcessedItems",
             type="PipeBatch",
@@ -31,7 +31,7 @@ class PipeBatchTestCases:
         "batch_with_names",
         PipeBatchSpec(
             the_pipe_code="named_batch",
-            definition="Batch with custom names",
+            description="Batch with custom names",
             inputs={"data": "DataList"},
             output="Results",
             branch_pipe_code="transform_data",
@@ -39,7 +39,7 @@ class PipeBatchTestCases:
             input_item_name="current_data",
         ),
         PipeBatchBlueprint(
-            definition="Batch with custom names",
+            description="Batch with custom names",
             inputs={"data": InputRequirementBlueprint(concept="DataList")},
             output="Results",
             type="PipeBatch",

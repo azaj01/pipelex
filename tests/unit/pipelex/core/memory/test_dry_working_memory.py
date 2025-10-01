@@ -23,7 +23,7 @@ class TestDryWorkingMemory:
             TypedNamedInputRequirement(
                 variable_name="page",
                 concept=ConceptFactory.make(
-                    concept_code=NativeConceptEnum.PAGE, domain="test_tricky_questions", definition="Lorem Ipsum", structure_class_name="Page"
+                    concept_code=NativeConceptEnum.PAGE, domain="test_tricky_questions", description="Lorem Ipsum", structure_class_name="Page"
                 ),
                 structure_class=PageContent,
             ),
@@ -66,14 +66,14 @@ class TestDryWorkingMemory:
                 concept=ConceptFactory.make(
                     concept_code="ThoughtfulAnswer",
                     domain="test_tricky_questions",
-                    definition="Thoughtful answer",
+                    description="Thoughtful answer",
                     structure_class_name="ThoughtfulAnswer",
                 ),
                 structure_class=ThoughtfulAnswer,
             ),
             TypedNamedInputRequirement(
                 variable_name="question",
-                concept=ConceptFactory.make(concept_code="Question", domain="answer", definition="Question", structure_class_name="Question"),
+                concept=ConceptFactory.make(concept_code="Question", domain="answer", description="Question", structure_class_name="Question"),
                 structure_class=TextContent,
             ),
         ]
@@ -123,7 +123,7 @@ class TestDryWorkingMemory:
                 concept=ConceptFactory.make(
                     concept_code="QuestionAnalysis",
                     domain="test_tricky_questions",
-                    definition="Question analysis",
+                    description="Question analysis",
                     structure_class_name="QuestionAnalysis",
                 ),
                 structure_class=TextContent,
@@ -133,7 +133,7 @@ class TestDryWorkingMemory:
                 concept=ConceptFactory.make(
                     concept_code="ThoughtfulAnswerConclusion",
                     domain="test_tricky_questions",
-                    definition="Thoughtful answer conclusion",
+                    description="Thoughtful answer conclusion",
                     structure_class_name="ThoughtfulAnswerConclusion",
                 ),
                 structure_class=TextContent,
@@ -171,14 +171,14 @@ class TestDryWorkingMemory:
                 concept=ConceptFactory.make(
                     concept_code="ThoughtfulAnswer",
                     domain="test_tricky_questions",
-                    definition="Thoughtful answer",
+                    description="Thoughtful answer",
                     structure_class_name="ThoughtfulAnswer",
                 ),
                 structure_class=ThoughtfulAnswer,
             ),
             TypedNamedInputRequirement(
                 variable_name="raw_question",
-                concept=ConceptFactory.make(concept_code="Question", domain="answer", definition="Question", structure_class_name="Question"),
+                concept=ConceptFactory.make(concept_code="Question", domain="answer", description="Question", structure_class_name="Question"),
                 structure_class=TextContent,
             ),
             TypedNamedInputRequirement(
@@ -186,7 +186,7 @@ class TestDryWorkingMemory:
                 concept=ConceptFactory.make(
                     concept_code="QuestionAnalysis",
                     domain="test_tricky_questions",
-                    definition="Question analysis",
+                    description="Question analysis",
                     structure_class_name="QuestionAnalysis",
                 ),
                 structure_class=TextContent,
@@ -241,7 +241,7 @@ class TestDryWorkingMemory:
         needed_inputs = [
             TypedNamedInputRequirement(
                 variable_name="question",
-                concept=ConceptFactory.make(concept_code="Question", domain="answer", definition="Question", structure_class_name="Question"),
+                concept=ConceptFactory.make(concept_code="Question", domain="answer", description="Question", structure_class_name="Question"),
                 structure_class=TextContent,
             ),
             TypedNamedInputRequirement(
@@ -249,7 +249,7 @@ class TestDryWorkingMemory:
                 concept=ConceptFactory.make(
                     concept_code="QuestionAnalysis",
                     domain="test_tricky_questions",
-                    definition="Question analysis",
+                    description="Question analysis",
                     structure_class_name="QuestionAnalysis",
                 ),
                 structure_class=TextContent,
@@ -259,7 +259,7 @@ class TestDryWorkingMemory:
                 concept=ConceptFactory.make(
                     concept_code="ThoughtfulAnswer",
                     domain="test_tricky_questions",
-                    definition="Thoughtful answer",
+                    description="Thoughtful answer",
                     structure_class_name="ThoughtfulAnswer",
                 ),
                 structure_class=ThoughtfulAnswer,

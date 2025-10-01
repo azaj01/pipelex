@@ -8,7 +8,7 @@ class DomainBlueprint(BaseModel):
     model_config = ConfigDict(extra="forbid")
     source: str | None = None
     code: str
-    definition: str
+    description: str
     system_prompt: str | None = None
     system_prompt_to_structure: str | None = None
     prompt_template_to_structure: str | None = None

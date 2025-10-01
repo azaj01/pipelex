@@ -142,7 +142,7 @@ class PipeLLMSpec(PipeSpec):
         return PipeLLMBlueprint(
             type="PipeLLM",
             category="PipeOperator",
-            definition=base_blueprint.definition,
+            description=base_blueprint.description,
             inputs=base_blueprint.inputs,
             output=base_blueprint.output,
             system_prompt=self.system_prompt,

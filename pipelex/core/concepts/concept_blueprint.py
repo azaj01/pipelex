@@ -30,7 +30,7 @@ class ConceptStructureBlueprintFieldType(StrEnum):
 
 
 class ConceptStructureBlueprint(BaseModel):
-    definition: str
+    description: str
     type: ConceptStructureBlueprintFieldType | None = None
     item_type: str | None = None
     key_type: str | None = None
@@ -115,7 +115,7 @@ class ConceptBlueprint(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     source: str | None = None
-    definition: str
+    description: str
     # TODO (non-blockiing): define a type for Union[str, ConceptStructureBlueprint] (ConceptChoice to be consistent with LLMChoice)
     structure: str | dict[str, str | ConceptStructureBlueprint] | None = None
     # TODO: restore possibility of multiple refiles
@@ -208,7 +208,7 @@ class ConceptBlueprint(BaseModel):
         if isinstance(values, dict) and values.get("refines") and values.get("structure"):
             msg = (
                 f"Forbidden to have refines and structure at the same time: `{values.get('refines')}` "
-                f"and `{values.get('structure')}` for concept that has the definition `{values.get('definition')}`"
+                f"and `{values.get('structure')}` for concept that has the definition `{values.get('description')}`"
             )
             raise ConceptBlueprintError(msg)
         return values

@@ -30,7 +30,7 @@ class TestPipeImgGen:
         image_desc: str,
     ):
         pipe_img_gen_blueprint = PipeImgGenBlueprint(
-            definition="Image generation test",
+            description="Image generation test",
             img_gen_prompt=image_desc,
             output=NativeConceptEnum.IMAGE,
             nb_output=1,

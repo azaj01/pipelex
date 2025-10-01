@@ -57,7 +57,7 @@ The pipeline uses a powerful `PipeLLM` to extract the structured data from the d
 ```plx
 [pipe.write_markdown_from_page_content_proof_of_purchase]
 type = "PipeLLM"
-definition = "Write markdown from page content"
+description = "Write markdown from page content"
 inputs = { "page_content.page_view" = "Page" } # The LLM receives the image of the page
 output = "ProofOfPurchase" # The LLM is forced to output a ProofOfPurchase object
 llm = "llm_for_img_to_text"

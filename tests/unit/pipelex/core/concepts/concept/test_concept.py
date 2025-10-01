@@ -106,7 +106,7 @@ class TestConcept:
                 ConceptFactory.make_from_blueprint(
                     concept_code=NativeConceptEnum.TEXT,
                     domain=valid_domain,
-                    blueprint=ConceptBlueprint(definition=valid_definition),
+                    blueprint=ConceptBlueprint(description=valid_definition),
                     concept_codes_from_the_same_domain=["RandomConcept"],
                 ),
             )
@@ -117,7 +117,7 @@ class TestConcept:
                 ConceptFactory.make_from_blueprint(
                     concept_code=NativeConceptEnum.TEXT,
                     domain=SpecialDomain.NATIVE,
-                    blueprint=ConceptBlueprint(definition=valid_definition),
+                    blueprint=ConceptBlueprint(description=valid_definition),
                 ),
             )
             is True
@@ -127,7 +127,7 @@ class TestConcept:
                 ConceptFactory.make_from_blueprint(
                     concept_code=NativeConceptEnum.IMAGE,
                     domain=valid_domain,
-                    blueprint=ConceptBlueprint(definition=valid_definition),
+                    blueprint=ConceptBlueprint(description=valid_definition),
                     concept_codes_from_the_same_domain=["RandomConcept"],
                 ),
             )
@@ -138,7 +138,7 @@ class TestConcept:
                 ConceptFactory.make_from_blueprint(
                     concept_code=NativeConceptEnum.PDF,
                     domain=valid_domain,
-                    blueprint=ConceptBlueprint(definition=valid_definition),
+                    blueprint=ConceptBlueprint(description=valid_definition),
                     concept_codes_from_the_same_domain=["RandomConcept"],
                 ),
             )
@@ -149,7 +149,7 @@ class TestConcept:
                 ConceptFactory.make_from_blueprint(
                     concept_code=NativeConceptEnum.TEXT_AND_IMAGES,
                     domain=valid_domain,
-                    blueprint=ConceptBlueprint(definition=valid_definition),
+                    blueprint=ConceptBlueprint(description=valid_definition),
                     concept_codes_from_the_same_domain=["RandomConcept"],
                 ),
             )
@@ -160,7 +160,7 @@ class TestConcept:
                 ConceptFactory.make_from_blueprint(
                     concept_code=NativeConceptEnum.NUMBER,
                     domain=valid_domain,
-                    blueprint=ConceptBlueprint(definition=valid_definition),
+                    blueprint=ConceptBlueprint(description=valid_definition),
                     concept_codes_from_the_same_domain=["RandomConcept"],
                 ),
             )
@@ -171,7 +171,7 @@ class TestConcept:
                 ConceptFactory.make_from_blueprint(
                     concept_code=NativeConceptEnum.LLM_PROMPT,
                     domain=valid_domain,
-                    blueprint=ConceptBlueprint(definition=valid_definition),
+                    blueprint=ConceptBlueprint(description=valid_definition),
                     concept_codes_from_the_same_domain=["RandomConcept"],
                 ),
             )
@@ -182,7 +182,7 @@ class TestConcept:
                 ConceptFactory.make_from_blueprint(
                     concept_code=NativeConceptEnum.ANYTHING,
                     domain=valid_domain,
-                    blueprint=ConceptBlueprint(definition=valid_definition),
+                    blueprint=ConceptBlueprint(description=valid_definition),
                     concept_codes_from_the_same_domain=["RandomConcept"],
                 ),
             )
@@ -193,7 +193,7 @@ class TestConcept:
                 ConceptFactory.make_from_blueprint(
                     concept_code="RandomConcept",
                     domain=valid_domain,
-                    blueprint=ConceptBlueprint(definition=valid_definition),
+                    blueprint=ConceptBlueprint(description=valid_definition),
                     concept_codes_from_the_same_domain=["RandomConcept"],
                 ),
             )
@@ -263,25 +263,25 @@ class TestConcept:
         concept1 = ConceptFactory.make_from_blueprint(
             concept_code="Code1",
             domain="domain1",
-            blueprint=ConceptBlueprint(definition="Lorem Ipsum", refines=NativeConceptEnum.TEXT),
+            blueprint=ConceptBlueprint(description="Lorem Ipsum", refines=NativeConceptEnum.TEXT),
             concept_codes_from_the_same_domain=["Code1"],
         )
         concept2 = ConceptFactory.make_from_blueprint(
             concept_code="Code2",
             domain="domain1",
-            blueprint=ConceptBlueprint(definition="Lorem Ipsum", refines=NativeConceptEnum.TEXT),
+            blueprint=ConceptBlueprint(description="Lorem Ipsum", refines=NativeConceptEnum.TEXT),
             concept_codes_from_the_same_domain=["Code1"],
         )
         concept3 = ConceptFactory.make_from_blueprint(
             concept_code="Code3",
             domain="domain2",
-            blueprint=ConceptBlueprint(definition="Lorem Ipsum", structure="TextContent"),
+            blueprint=ConceptBlueprint(description="Lorem Ipsum", structure="TextContent"),
             concept_codes_from_the_same_domain=["Code1"],
         )
         concept4 = ConceptFactory.make_from_blueprint(
             concept_code="Code4",
             domain="domain1",
-            blueprint=ConceptBlueprint(definition="Lorem Ipsum", structure="ImageContent"),
+            blueprint=ConceptBlueprint(description="Lorem Ipsum", structure="ImageContent"),
             concept_codes_from_the_same_domain=["Code1"],
         )
 
@@ -296,7 +296,7 @@ class TestConcept:
         concept_7 = ConceptFactory.make_from_blueprint(
             concept_code="VisualDescription",
             domain="images",
-            blueprint=ConceptBlueprint(definition="Lorem Ipsum"),
+            blueprint=ConceptBlueprint(description="Lorem Ipsum"),
         )
 
         assert Concept.are_concept_compatible(concept_7, concept_6, strict=True) is False

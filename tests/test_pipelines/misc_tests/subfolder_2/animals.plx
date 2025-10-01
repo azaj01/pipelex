@@ -1,7 +1,7 @@
 
 
 domain = "animals"
-definition = "The test domain for handling animal descriptions"
+description = "The test domain for handling animal descriptions"
 system_prompt = "You are an expert at describing animals based on their species, breed, and age."
 
 [concept]
@@ -11,7 +11,7 @@ AnimalDescription = "A detailed description of an animal"
 [pipe]
 [pipe.generate_animal_description]
 type = "PipeLLM"
-definition = "Generate a description of an animal"
+description = "Generate a description of an animal"
 inputs = { animal = "Animal" }
 output = "AnimalDescription"
 prompt_template = """

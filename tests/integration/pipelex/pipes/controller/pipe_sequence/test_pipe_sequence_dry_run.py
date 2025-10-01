@@ -43,7 +43,7 @@ class TestPipeSequenceDryRun:
             concept=ConceptFactory.make(
                 concept_code="DiscordChannelUpdate",
                 domain="discord_newsletter",
-                definition="Lorem Ipsum",
+                description="Lorem Ipsum",
                 structure_class_name="DiscordChannelUpdate",
             ),
             content=discord_channel_updates,

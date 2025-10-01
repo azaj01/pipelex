@@ -41,7 +41,7 @@ class PipeBlueprint(BaseModel):
     source: str | None = None
     category: Any
     type: Any  # TODO: Find a better way to handle this.
-    definition: str | None = None
+    description: str | None = None
     inputs: dict[str, str | InputRequirementBlueprint] | None = None
     output: str
 

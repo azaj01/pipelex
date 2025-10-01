@@ -1,5 +1,5 @@
 domain = "test_integration"
-definition = "Simple pipes for testing PipeBatch integration"
+description = "Simple pipes for testing PipeBatch integration"
 
 [concept]
 UppercaseText = "Text that has been transformed to uppercase"
@@ -8,7 +8,7 @@ TextList = "List of Text"
 [pipe]
 [pipe.test_pipe_batch]
 type = "PipeBatch"
-definition = "Test pipe batch"
+description = "Test pipe batch"
 inputs = { text_item = "Text", text_list = "TextList" }
 output = "UppercaseText"
 branch_pipe_code = "uppercase_transformer"
@@ -17,7 +17,7 @@ input_item_name = "text_item"
 
 [pipe.uppercase_transformer]
 type = "PipeLLM"
-definition = "Transform text to uppercase"
+description = "Transform text to uppercase"
 inputs = { text_item = "Text" }
 output = "UppercaseText"
 prompt_template = """

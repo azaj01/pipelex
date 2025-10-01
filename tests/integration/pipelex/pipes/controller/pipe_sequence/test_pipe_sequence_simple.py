@@ -34,7 +34,7 @@ class TestPipeSequenceSimple:
         concept_1 = ConceptFactory.make_from_blueprint(
             concept_code="TestConcept1",
             domain=domain,
-            blueprint=ConceptBlueprint(definition="Lorem Ipsum"),
+            blueprint=ConceptBlueprint(description="Lorem Ipsum"),
             concept_codes_from_the_same_domain=["TestConcept1"],
         )
         concept_library = get_concept_provider()
@@ -43,7 +43,7 @@ class TestPipeSequenceSimple:
 
         # Create PipeSequence instance - pipes are loaded from PLX files
         pipe_sequence_blueprint = PipeSequenceBlueprint(
-            definition="Simple sequence for text processing",
+            description="Simple sequence for text processing",
             inputs={"input_text": InputRequirementBlueprint(concept=concept_1.concept_string)},
             output=concept_2.concept_string,
             steps=[

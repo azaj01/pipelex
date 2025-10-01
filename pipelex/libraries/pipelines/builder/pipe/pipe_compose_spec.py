@@ -95,7 +95,7 @@ class PipeComposeSpec(PipeSpec):
         template_category = target_format.template_category
 
         return PipeComposeBlueprint(
-            definition=base_blueprint.definition,
+            description=base_blueprint.description,
             inputs=base_blueprint.inputs,
             output=base_blueprint.output,
             type=self.type,

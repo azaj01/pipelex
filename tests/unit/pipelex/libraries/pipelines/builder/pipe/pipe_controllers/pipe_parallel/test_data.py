@@ -12,7 +12,7 @@ class PipeParallelTestCases:
         "parallel_with_each_output",
         PipeParallelSpec(
             the_pipe_code="parallel_processor",
-            definition="Run pipes in parallel",
+            description="Run pipes in parallel",
             inputs={"data": "Data"},
             output="Results",
             parallels=[
@@ -23,7 +23,7 @@ class PipeParallelTestCases:
             add_each_output=True,
         ),
         PipeParallelBlueprint(
-            definition="Run pipes in parallel",
+            description="Run pipes in parallel",
             inputs={"data": InputRequirementBlueprint(concept="Data")},
             output="Results",
             type="PipeParallel",
@@ -43,7 +43,7 @@ class PipeParallelTestCases:
         "parallel_with_combined",
         PipeParallelSpec(
             the_pipe_code="combined_parallel",
-            definition="Parallel with combined output",
+            description="Parallel with combined output",
             inputs={"input": "Input"},
             output="CombinedResult",
             parallels=[
@@ -54,7 +54,7 @@ class PipeParallelTestCases:
             combined_output="MergedData",
         ),
         PipeParallelBlueprint(
-            definition="Parallel with combined output",
+            description="Parallel with combined output",
             inputs={"input": InputRequirementBlueprint(concept="Input")},
             output="CombinedResult",
             type="PipeParallel",
@@ -73,7 +73,7 @@ class PipeParallelTestCases:
         "parallel_with_both_each_output_and_combined",
         PipeParallelSpec(
             the_pipe_code="combined_parallel",
-            definition="Parallel with combined output",
+            description="Parallel with combined output",
             inputs={"input": "Input"},
             output="CombinedResult",
             parallels=[
@@ -84,7 +84,7 @@ class PipeParallelTestCases:
             combined_output="MergedData",
         ),
         PipeParallelBlueprint(
-            definition="Parallel with combined output",
+            description="Parallel with combined output",
             inputs={"input": InputRequirementBlueprint(concept="Input")},
             output="CombinedResult",
             type="PipeParallel",

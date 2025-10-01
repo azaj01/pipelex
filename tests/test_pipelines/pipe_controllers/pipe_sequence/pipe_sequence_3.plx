@@ -1,5 +1,5 @@
 domain = "creative_ideation"
-definition = "Creative ideation pipeline with multiple outputs, batching, and evaluation"
+description = "Creative ideation pipeline with multiple outputs, batching, and evaluation"
 system_prompt = "You are a creative brainstorming expert who generates and evaluates ideas"
 
 [concept]
@@ -12,7 +12,7 @@ BestIdea = "The top-ranked creative idea with justification"
 [pipe]
 [pipe.creative_ideation_sequence]
 type = "PipeSequence"
-definition = "Generate multiple ideas, analyze each individually, then select the best"
+description = "Generate multiple ideas, analyze each individually, then select the best"
 inputs = { topic = "CreativeTopic" }
 output = "BestIdea"
 steps = [
@@ -24,7 +24,7 @@ steps = [
 
 [pipe.generate_multiple_ideas]
 type = "PipeLLM"
-definition = "Generate exactly 5 creative ideas for a topic"
+description = "Generate exactly 5 creative ideas for a topic"
 inputs = { topic = "CreativeTopic" }
 output = "CreativeIdea"
 nb_output = 5
@@ -44,7 +44,7 @@ Ideas:
 
 [pipe.brainstorm_concepts]
 type = "PipeLLM"
-definition = "Brainstorm variable number of concepts"
+description = "Brainstorm variable number of concepts"
 inputs = { topic = "CreativeTopic" }
 output = "CreativeIdea"
 multiple_output = true
@@ -59,7 +59,7 @@ Each concept should be briefly described.
 
 [pipe.analyze_single_idea]
 type = "PipeLLM"
-definition = "Analyze a single idea in detail"
+description = "Analyze a single idea in detail"
 inputs = { single_idea = "CreativeIdea" }
 output = "IdeaAnalysis"
 llm = "llm_for_testing_gen_text"
@@ -80,7 +80,7 @@ Provide a comprehensive assessment.
 
 [pipe.evaluate_all_ideas]
 type = "PipeLLM"
-definition = "Evaluate and rank all analyzed ideas"
+description = "Evaluate and rank all analyzed ideas"
 inputs = { detailed_analyses = "IdeaAnalysis" }
 output = "IdeaEvaluation"
 llm = "llm_for_testing_gen_text"
@@ -97,7 +97,7 @@ Provide:
 
 [pipe.select_best_idea]
 type = "PipeLLM"
-definition = "Select the best idea based on evaluation"
+description = "Select the best idea based on evaluation"
 inputs = { evaluation = "IdeaEvaluation" }
 output = "BestIdea"
 llm = "llm_for_testing_gen_text"

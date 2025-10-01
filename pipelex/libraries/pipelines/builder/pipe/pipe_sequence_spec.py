@@ -27,7 +27,7 @@ class PipeSequenceSpec(PipeSpec):
         base_blueprint = super().to_blueprint()
         core_steps = [step.to_blueprint() for step in self.steps]
         return PipeSequenceBlueprint(
-            definition=base_blueprint.definition,
+            description=base_blueprint.description,
             inputs=base_blueprint.inputs,
             output=base_blueprint.output,
             type=self.type,

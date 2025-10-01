@@ -1,5 +1,5 @@
 domain = "test_structured_generations"
-definition = "Concepts to test basic structures without unions"
+description = "Concepts to test basic structures without unions"
 
 [concept]
 ConceptWithSimpleStructure = "A simple structure"

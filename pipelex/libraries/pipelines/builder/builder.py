@@ -44,7 +44,7 @@ from pipelex.tools.typing.pydantic_utils import format_pydantic_validation_error
 
 class DomainInformation(StructuredContent):
     domain: str = Field(description="Name of the domain of the knowledge work.")
-    definition: str = Field(description="Definition of the domain of the knowledge work.")
+    description: str = Field(description="Definition of the domain of the knowledge work.")
 
 
 PipeSpecUnion = Annotated[
@@ -71,7 +71,7 @@ class PipelexBundleSpec(StructuredContent):
     Attributes:
         domain: The domain identifier for this bundle in snake_case format.
                Serves as the namespace for all concepts and pipes within.
-        definition: Natural language description of the pipeline's purpose and functionality.
+        description: Natural language description of the pipeline's purpose and functionality.
         system_prompt: Default system prompt applied to all LLM pipes in the bundle
                       unless overridden at the pipe level.
         system_prompt_to_structure: System prompt specifically for output structuring
@@ -97,7 +97,7 @@ class PipelexBundleSpec(StructuredContent):
     model_config = ConfigDict(extra="forbid")
 
     domain: str
-    definition: str | None = None
+    description: str | None = None
     system_prompt: str | None = None
 
     concept: dict[str, ConceptSpec | str] | None = Field(default_factory=dict)
@@ -124,7 +124,7 @@ class PipelexBundleSpec(StructuredContent):
                         concept_failure = ConceptFailure(concept_spec=concept_spec_or_name, error_message=msg)
                         raise ConceptSpecError(message=msg, concept_failure=concept_failure) from exc
                 else:
-                    concept[concept_code] = ConceptBlueprint(definition=concept_code, structure=concept_spec_or_name)
+                    concept[concept_code] = ConceptBlueprint(description=concept_code, structure=concept_spec_or_name)
 
         pipe: dict[str, PipeBlueprintUnion] | None = None
         if self.pipe:
@@ -139,7 +139,7 @@ class PipelexBundleSpec(StructuredContent):
 
         return PipelexBundleBlueprint(
             domain=self.domain,
-            definition=self.definition,
+            description=self.description,
             prompt_template_to_structure=None,
             system_prompt=self.system_prompt,
             system_prompt_to_structure=None,
@@ -203,7 +203,7 @@ async def assemble_pipelex_bundle_spec(working_memory: WorkingMemory) -> Pipelex
 
     return PipelexBundleSpec(
         domain=domain_information.domain,
-        definition=domain_information.definition,
+        description=domain_information.description,
         concept=validated_concepts,
         pipe={pipe_spec.the_pipe_code: _convert_pipe_spec(pipe_spec) for pipe_spec in pipe_specs.items},
     )

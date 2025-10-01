@@ -64,7 +64,7 @@ Here's how to use these configurations in your pipelines:
 ```plx
 [pipe.generate_response]
 type = "PipeLLM"
-definition = "Generate a creative response"
+description = "Generate a creative response"
 inputs = { question = "Question" }
 output = "Response"
 llm = {
@@ -80,7 +80,7 @@ Generate a creative response to this question:
 
 [pipe.extract_weather_data]
 type = "PipeLLM"
-definition = "Extract structured weather data from text"
+description = "Extract structured weather data from text"
 inputs = { text = "Text" }
 output = "WeatherData"
 llm = "llm_to_extract"  # Using a preset

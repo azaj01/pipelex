@@ -6,7 +6,7 @@ from pipelex.core.interpreter import PLXDecodeError
 INVALID_PLX_SYNTAX = (
     "invalid_plx_syntax",
     """domain = "test_domain"
-definition = "Domain with invalid PLX syntax"
+description = "Domain with invalid PLX syntax"
 
 [concept]
 InvalidConcept = "This is missing a closing quote""",
@@ -16,7 +16,7 @@ InvalidConcept = "This is missing a closing quote""",
 MALFORMED_SECTION = (
     "malformed_section",
     """domain = "test_domain"
-definition = "Domain with malformed section"
+description = "Domain with malformed section"
 
 [concept
 TestConcept = "Missing closing bracket"
@@ -27,7 +27,7 @@ TestConcept = "Missing closing bracket"
 UNCLOSED_STRING = (
     "unclosed_string",
     """domain = "test_domain"
-definition = "Domain with unclosed string
+description = "Domain with unclosed string
 """,
     PLXDecodeError,
 )
@@ -35,8 +35,8 @@ definition = "Domain with unclosed string
 DUPLICATE_KEYS = (
     "duplicate_keys",
     """domain = "test_domain"
-definition = "First definition"
-definition = "Duplicate definition key"
+description = "First definition"
+description = "Duplicate definition key"
 
 [concept]
 TestConcept = "A test concept"
@@ -47,7 +47,7 @@ TestConcept = "A test concept"
 INVALID_ESCAPE_SEQUENCE = (
     "invalid_escape_sequence",
     """domain = "test_domain"
-definition = "Domain with invalid escape sequence \\z"
+description = "Domain with invalid escape sequence \\z"
 
 [concept]
 TestConcept = "A test concept"
@@ -59,7 +59,7 @@ TestConcept = "A test concept"
 MISSING_DOMAIN = (
     "missing_domain",
     """# Missing required domain field
-definition = "Domain without domain field"
+description = "Domain without domain field"
 
 [concept]
 TestConcept = "A test concept"
@@ -70,7 +70,7 @@ TestConcept = "A test concept"
 INVALID_DOMAIN_NAME = (
     "invalid_domain_name",
     """domain = "invalid-domain-with-hyphens"
-definition = "Domain with invalid characters"
+description = "Domain with invalid characters"
 
 [concept]
 TestConcept = "A test concept"
@@ -81,7 +81,7 @@ TestConcept = "A test concept"
 EMPTY_DOMAIN = (
     "empty_domain",
     """domain = ""
-definition = "Domain with empty string"
+description = "Domain with empty string"
 
 [concept]
 TestConcept = "A test concept"
@@ -92,7 +92,7 @@ TestConcept = "A test concept"
 INVALID_ROOT_KEY = (
     "invalid_root_key",
     """domain = "test_domain"
-definition = "Domain with invalid root key"
+description = "Domain with invalid root key"
 invalid_root_key = "This key should not be allowed at root level"
 
 [concept]
@@ -104,7 +104,7 @@ TestConcept = "A test concept"
 MULTIPLE_INVALID_ROOT_KEYS = (
     "multiple_invalid_root_keys",
     """domain = "test_domain"
-definition = "Domain with multiple invalid root keys"
+description = "Domain with multiple invalid root keys"
 invalid_key_1 = "First invalid key"
 invalid_key_2 = "Second invalid key"
 unknown_field = "Another unknown field"
@@ -118,7 +118,7 @@ TestConcept = "A test concept"
 WRONG_TYPE_FOR_DOMAIN = (
     "wrong_type_for_domain",
     """domain = 123
-definition = "Domain should be string, not number"
+description = "Domain should be string, not number"
 
 [concept]
 TestConcept = "A test concept"
@@ -129,7 +129,7 @@ TestConcept = "A test concept"
 WRONG_TYPE_FOR_DEFINITION = (
     "wrong_type_for_definition",
     """domain = "test_domain"
-definition = 456
+description = 456
 
 [concept]
 TestConcept = "A test concept"
@@ -140,7 +140,7 @@ TestConcept = "A test concept"
 WRONG_TYPE_FOR_CONCEPT_SECTION = (
     "wrong_type_for_concept_section",
     """domain = "test_domain"
-definition = "Domain with wrong type for concept"
+description = "Domain with wrong type for concept"
 concept = "should_be_dict_not_string"
 """,
     ValidationError,
@@ -149,7 +149,7 @@ concept = "should_be_dict_not_string"
 WRONG_TYPE_FOR_PIPE_SECTION = (
     "wrong_type_for_pipe_section",
     """domain = "test_domain"
-definition = "Domain with wrong type for pipe"
+description = "Domain with wrong type for pipe"
 pipe = "should_be_dict_not_string"
 """,
     ValidationError,
@@ -158,7 +158,7 @@ pipe = "should_be_dict_not_string"
 INVALID_NESTED_SECTION = (
     "invalid_nested_section",
     """domain = "test_domain"
-definition = "Domain with invalid nested section"
+description = "Domain with invalid nested section"
 
 [invalid_section]
 some_key = "This section is not allowed"
@@ -172,7 +172,7 @@ TestConcept = "A test concept"
 INVALID_TABLE_SYNTAX = (
     "invalid_table_syntax",
     """domain = "test_domain"
-definition = "Domain with invalid table syntax"
+description = "Domain with invalid table syntax"
 
 [concept.]
 InvalidName = "Empty table name"
@@ -183,7 +183,7 @@ InvalidName = "Empty table name"
 INVALID_ARRAY_SYNTAX = (
     "invalid_array_syntax",
     """domain = "test_domain"
-definition = "Domain with invalid array syntax"
+description = "Domain with invalid array syntax"
 
 [concept]
 TestConcept = ["Unclosed array"
@@ -193,7 +193,7 @@ TestConcept = ["Unclosed array"
 INVALID_ARRAY_SYNTAX2 = (
     "invalid_array_syntax",
     """domain = "test_domain"
-definition = "Domain with invalid array syntax"
+description = "Domain with invalid array syntax"
 
 [concept]
 [concept]

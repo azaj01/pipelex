@@ -12,7 +12,7 @@ class PipeSequenceTestCases:
         "simple_sequence",
         PipeSequenceSpec(
             the_pipe_code="sequence_processor",
-            definition="A sequence of operations",
+            description="A sequence of operations",
             inputs={"input_data": "Text"},
             output="ProcessedData",
             steps=[
@@ -22,7 +22,7 @@ class PipeSequenceTestCases:
             ],
         ),
         PipeSequenceBlueprint(
-            definition="A sequence of operations",
+            description="A sequence of operations",
             inputs={"input_data": InputRequirementBlueprint(concept="Text")},
             output="ProcessedData",
             type="PipeSequence",
@@ -39,7 +39,7 @@ class PipeSequenceTestCases:
         "sequence_with_batch",
         PipeSequenceSpec(
             the_pipe_code="batch_sequence",
-            definition="Sequence with batch",
+            description="Sequence with batch",
             inputs={"items": "ItemList"},
             output="ProcessedItems",
             steps=[
@@ -53,7 +53,7 @@ class PipeSequenceTestCases:
             ],
         ),
         PipeSequenceBlueprint(
-            definition="Sequence with batch",
+            description="Sequence with batch",
             inputs={"items": InputRequirementBlueprint(concept="ItemList")},
             output="ProcessedItems",
             type="PipeSequence",

@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
         # Create the PipeFunc job
         pipe_func_blueprint = PipeFuncBlueprint(
-            definition="Function pipe for wrapping lines",
+            description="Function pipe for wrapping lines",
             function_name="wrap_lines",
             output=NativeConceptEnum.TEXT,
         )

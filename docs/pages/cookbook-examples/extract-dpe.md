@@ -61,7 +61,7 @@ The pipeline uses a `PipeLLM` with a very specific prompt to extract the informa
 ```plx
 [pipe.write_markdown_from_page_content_dpe]
 type = "PipeLLM"
-definition = "Write markdown from page content of a 'Diagnostic de Performance Energetique'"
+description = "Write markdown from page content of a 'Diagnostic de Performance Energetique'"
 inputs = { page_content = "Page" }
 output = "Dpe" # The output is structured as a Dpe object
 llm = "llm_for_img_to_text"

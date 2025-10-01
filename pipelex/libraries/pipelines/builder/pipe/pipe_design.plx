@@ -1,5 +1,5 @@
 domain = "pipe_design"
-definition = "Build and process pipes."
+description = "Build and process pipes."
 
 [concept]
 PipeSignature = "A pipe contract which says what the pipe does, not how it does it: code (the pipe code in snake_case), type, description, inputs, output."
@@ -21,7 +21,7 @@ PipeFailure = "Details of a single pipe failure during dry run."
 
 [pipe.detail_pipe_spec]
 type = "PipeCondition"
-definition = "Route by signature.type to the correct spec emitter."
+description = "Route by signature.type to the correct spec emitter."
 inputs = { plan_draft = "PlanDraft", pipe_signature = "PipeSignature", concept_specs = "ConceptSpec" }
 output = "Dynamic"
 expression = "pipe_signature.type"
@@ -41,7 +41,7 @@ PipeImgGen    = "detail_pipe_img_gen"
 
 [pipe.detail_pipe_sequence]
 type = "PipeLLM"
-definition = "Build a PipeSequenceSpec from the signature (children referenced by code)."
+description = "Build a PipeSequenceSpec from the signature (children referenced by code)."
 inputs = { plan_draft = "PlanDraft", pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec" }
 output = "PipeSequenceSpec"
 llm = "llm_to_engineer"
@@ -57,7 +57,7 @@ You will specifically generate the PipeSequence related to this signature:
 
 [pipe.detail_pipe_parallel]
 type = "PipeLLM"
-definition = "Build a PipeParallelSpec from the signature."
+description = "Build a PipeParallelSpec from the signature."
 inputs = { plan_draft = "PlanDraft", pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec" }
 output = "PipeParallelSpec"
 llm = "llm_to_engineer"
@@ -73,7 +73,7 @@ You will specifically generate the PipeParallel related to this signature:
 
 [pipe.detail_pipe_condition]
 type = "PipeLLM"
-definition = "Build a PipeConditionSpec from the signature (provide expression/pipe_map consistent with children)."
+description = "Build a PipeConditionSpec from the signature (provide expression/pipe_map consistent with children)."
 inputs = { plan_draft = "PlanDraft", pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec" }
 output = "PipeConditionSpec"
 llm = "llm_to_engineer"
@@ -93,7 +93,7 @@ You will specifically generate the PipeCondition related to this signature:
 
 [pipe.detail_pipe_llm]
 type = "PipeLLM"
-definition = "Build a PipeLLMSpec from the signature."
+description = "Build a PipeLLMSpec from the signature."
 inputs = { plan_draft = "PlanDraft", pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec" }
 output = "PipeLLMSpec"
 llm = "llm_to_engineer"
@@ -114,7 +114,7 @@ If it's to generate an image generation, the prompt_template should indicate to 
 
 [pipe.detail_pipe_ocr]
 type = "PipeLLM"
-definition = "Build a PipeOcrSpec from the signature."
+description = "Build a PipeOcrSpec from the signature."
 inputs = { plan_draft = "PlanDraft", pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec" }
 output = "PipeOcrSpec"
 llm = "llm_to_engineer"
@@ -130,7 +130,7 @@ You will specifically generate the PipeOcr related to this signature:
 
 [pipe.detail_pipe_img_gen]
 type = "PipeLLM"
-definition = "Build a PipeImgGenSpec from the signature."
+description = "Build a PipeImgGenSpec from the signature."
 inputs = { plan_draft = "PlanDraft", pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec" }
 output = "PipeImgGenSpec"
 llm = "llm_to_engineer"
@@ -148,7 +148,7 @@ The inputs for the image has to be a single input which must be a Text or anothe
 
 [pipe.detail_pipe_compose]
 type = "PipeLLM"
-definition = "Build a PipeComposeSpec from the signature."
+description = "Build a PipeComposeSpec from the signature."
 inputs = { plan_draft = "PlanDraft", pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec" }
 output = "PipeComposeSpec"
 llm = "llm_to_engineer"

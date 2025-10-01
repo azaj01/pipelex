@@ -85,7 +85,7 @@ class TestExternalPlugin:
         )
 
         pipe_llm_blueprint = PipeLLMBlueprint(
-            definition="LLM test with external plugin",
+            description="LLM test with external plugin",
             output=NativeConceptEnum.TEXT,
             system_prompt=PipeTestCases.SYSTEM_PROMPT,
             prompt=PipeTestCases.USER_PROMPT,

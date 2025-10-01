@@ -10,7 +10,7 @@ Generate a concept specification for a "BlogPost" concept.
 
 Requirements:
 - the_concept_code: BlogPost
-- definition: A blog post with title, content, and publication date
+- description: A blog post with title, content, and publication date
 - structure: None (leave empty)
 - refines: None (leave empty)
 """
@@ -21,7 +21,7 @@ Generate a concept specification for a "ProductDescription" concept.
 
 Requirements:
 - the_concept_code: ProductDescription
-- definition: A detailed description of a product for e-commerce
+- description: A detailed description of a product for e-commerce
 - refines: Text (this concept refines the native Text concept)
 - structure: None (leave empty because we're using refines)
 """
@@ -32,10 +32,10 @@ Generate a concept specification for a "Person" concept with a simple structure.
 
 Requirements:
 - the_concept_code: Person
-- definition: A person with basic information
+- description: A person with basic information
 - structure: A dictionary with these fields:
-  - name: (type: text, definition: "The person's full name", required: true)
-  - age: (type: integer, definition: "The person's age", required: true)
+  - name: (type: text, description: "The person's full name", required: true)
+  - age: (type: integer, description: "The person's age", required: true)
 - refines: None (leave empty)
 """
 
@@ -45,13 +45,13 @@ Generate a concept specification for a "Product" concept with a detailed structu
 
 Requirements:
 - the_concept_code: Product
-- definition: A product in an e-commerce system
+- description: A product in an e-commerce system
 - structure: A dictionary with these fields:
-  - name: (type: text, definition: "Product name", required: true)
-  - description: (type: text, definition: "Product description", required: true)
-  - price: (type: number, definition: "Product price in dollars", required: true)
-  - stock_quantity: (type: integer, definition: "Number of items in stock", required: false, default_value: 0)
-  - is_available: (type: boolean, definition: "Whether the product is currently available", required: false, default_value: true)
+  - name: (type: text, description: "Product name", required: true)
+  - description: (type: text, description: "Product description", required: true)
+  - price: (type: number, description: "Product price in dollars", required: true)
+  - stock_quantity: (type: integer, description: "Number of items in stock", required: false, default_value: 0)
+  - is_available: (type: boolean, description: "Whether the product is currently available", required: false, default_value: true)
 - refines: None (leave empty)
 """
 
@@ -61,13 +61,13 @@ Generate a concept specification for a "UserProfile" concept.
 
 Requirements:
 - the_concept_code: UserProfile
-- definition: A user profile with optional settings
+- description: A user profile with optional settings
 - structure: A dictionary with these fields:
-  - username: (type: text, definition: "User's username", required: true)
-  - email: (type: text, definition: "User's email address", required: true)
-  - bio: (type: text, definition: "User biography", required: false, default_value: "")
-  - notification_enabled: (type: boolean, definition: "Whether notifications are enabled", required: false, default_value: true)
-  - login_count: (type: integer, definition: "Number of times user has logged in", required: false, default_value: 0)
+  - username: (type: text, description: "User's username", required: true)
+  - email: (type: text, description: "User's email address", required: true)
+  - bio: (type: text, description: "User biography", required: false, default_value: "")
+  - notification_enabled: (type: boolean, description: "Whether notifications are enabled", required: false, default_value: true)
+  - login_count: (type: integer, description: "Number of times user has logged in", required: false, default_value: 0)
 - refines: None (leave empty)
 """
 
@@ -77,11 +77,11 @@ Generate a concept specification for a "customer_order" concept.
 
 Requirements:
 - the_concept_code: customer_order
-- definition: An order placed by a customer
+- description: An order placed by a customer
 - structure: A dictionary with these fields:
-  - order_number: (type: text, definition: "Unique order identifier", required: true)
-  - total_amount: (type: number, definition: "Total order amount", required: true)
-  - is_paid: (type: boolean, definition: "Payment status", required: false, default_value: false)
+  - order_number: (type: text, description: "Unique order identifier", required: true)
+  - total_amount: (type: number, description: "Total order amount", required: true)
+  - is_paid: (type: boolean, description: "Payment status", required: false, default_value: false)
 - refines: None (leave empty)
 """
 
@@ -91,7 +91,7 @@ Generate a concept specification for a "ProductPhoto" concept.
 
 Requirements:
 - the_concept_code: ProductPhoto
-- definition: A photograph of a product for display in catalog
+- description: A photograph of a product for display in catalog
 - refines: Image (this concept refines the native Image concept)
 - structure: None (leave empty because we're using refines)
 """
@@ -102,12 +102,12 @@ Generate a concept specification for an "Event" concept with a date field.
 
 Requirements:
 - the_concept_code: Event
-- definition: An event with scheduling information
+- description: An event with scheduling information
 - structure: A dictionary with these fields:
-  - title: (type: text, definition: "Event title", required: true)
-  - description: (type: text, definition: "Event description", required: true)
-  - start_date: (type: date, definition: "Event start date and time", required: true)
-  - is_public: (type: boolean, definition: "Whether the event is public", required: false, default_value: true)
+  - title: (type: text, description: "Event title", required: true)
+  - description: (type: text, description: "Event description", required: true)
+  - start_date: (type: date, description: "Event start date and time", required: true)
+  - is_public: (type: boolean, description: "Whether the event is public", required: false, default_value: true)
 - refines: None (leave empty)
 """
 

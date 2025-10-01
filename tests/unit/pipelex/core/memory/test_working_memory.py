@@ -134,7 +134,7 @@ class TestWorkingMemory:
 
         complex_stuff = StuffFactory.make_stuff(
             concept=ConceptFactory.make(
-                concept_code="List", domain=SpecialDomain.NATIVE, definition="Lorem Ipsum", structure_class_name="ListContent"
+                concept_code="List", domain=SpecialDomain.NATIVE, description="Lorem Ipsum", structure_class_name="ListContent"
             ),
             name="mixed_list",
             content=complex_content,
@@ -168,7 +168,7 @@ class TestWorkingMemory:
 
         stuff = StuffFactory.make_stuff(
             concept=ConceptFactory.make(
-                concept_code="Html", domain=SpecialDomain.NATIVE, definition="Lorem Ipsum", structure_class_name="HtmlContent"
+                concept_code="Html", domain=SpecialDomain.NATIVE, description="Lorem Ipsum", structure_class_name="HtmlContent"
             ),
             name="test_report",
             content=html_content,

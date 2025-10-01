@@ -17,7 +17,7 @@ class TestTomlMigrator:
     def sample_old_syntax_content(self) -> str:
         """Sample TOML content with old Concept = syntax."""
         return """domain = "test"
-definition = "Test domain"
+description = "Test domain"
 
 [concept]
 SimpleText = "A simple text concept"
@@ -33,31 +33,31 @@ structure = "CustomStructure"
 refines = ["Text", "Document"]
 
 [concept.AlreadyMigrated]
-definition = "This one is already migrated"
+description = "This one is already migrated"
 refines = "Text"
 """
 
     @pytest.fixture
     def sample_new_syntax_content(self) -> str:
-        """Sample TOML content with new definition = syntax."""
+        """Sample TOML content with new description = syntax."""
         return """domain = "test"
-definition = "Test domain"
+description = "Test domain"
 
 [concept]
 SimpleText = "A simple text concept"
 SimpleDoc = "A simple document concept"
 
 [concept.ComplexConcept]
-definition = "A complex concept with old syntax"
+description = "A complex concept with old syntax"
 refines = "Text"
 
 [concept.AnotherConcept]
-definition = "Another concept to test migration"
+description = "Another concept to test migration"
 structure = "CustomStructure"
 refines = ["Text", "Document"]
 
 [concept.AlreadyMigrated]
-definition = "This one is already migrated"
+description = "This one is already migrated"
 refines = "Text"
 """
 
@@ -68,7 +68,7 @@ Concept = "A test concept"
 refines = "Text"
 
 [concept.AnotherConcept]
-definition = "Already migrated"
+description = "Already migrated"
 Concept = "This should be caught"
 """
 
@@ -84,7 +84,7 @@ Concept = "This should be caught"
         assert matches[1].group(4) == '"This should be caught"'
 
     def test_pattern_replacement(self, migrator: TOMLMigrator) -> None:
-        """Test that the regex pattern correctly replaces Concept = with definition =."""
+        """Test that the regex pattern correctly replaces Concept = with description =."""
         test_content = """[concept.TestConcept]
 Concept = "A test concept"
 refines = "Text"
@@ -95,11 +95,11 @@ refines = "Text"
 """
 
         expected_content = """[concept.TestConcept]
-definition = "A test concept"
+description = "A test concept"
 refines = "Text"
 
 [concept.IndentedConcept]
-    definition = "Indented concept"
+    description = "Indented concept"
     refines = "Text"
 """
 
@@ -110,17 +110,17 @@ refines = "Text"
         """Test that migration preserves indentation and spacing."""
         test_cases = [
             # No indentation
-            ('Concept = "test"', 'definition = "test"'),
+            ('Concept = "test"', 'description = "test"'),
             # With spaces
-            ('  Concept = "test"', '  definition = "test"'),
+            ('  Concept = "test"', '  description = "test"'),
             # With tabs
-            ('\tConcept = "test"', '\tdefinition = "test"'),
+            ('\tConcept = "test"', '\tdescription = "test"'),
             # Mixed indentation
-            ('  \tConcept = "test"', '  \tdefinition = "test"'),
+            ('  \tConcept = "test"', '  \tdescription = "test"'),
             # Various spacing around =
-            ('Concept ="test"', 'definition ="test"'),
-            ('Concept= "test"', 'definition= "test"'),
-            ('Concept   =   "test"', 'definition   =   "test"'),
+            ('Concept ="test"', 'description ="test"'),
+            ('Concept= "test"', 'description= "test"'),
+            ('Concept   =   "test"', 'description   =   "test"'),
         ]
 
         for original, expected in test_cases:
@@ -131,7 +131,7 @@ refines = "Text"
         """Test that migration doesn't affect non-concept Concept = lines."""
         # These should NOT be changed
         test_content = """# This is a comment about Concept = something
-definition = "This pipe works with Concept = something"
+description = "This pipe works with Concept = something"
 prompt_template = "Define the Concept = whatever"
 """
 
@@ -162,8 +162,8 @@ refines = "Document"
         result = migrator.migrate_content(test_content)
 
         # Valid concept definitions should be migrated
-        assert 'definition = "This should be migrated"' in result
-        assert 'definition = "This should also be migrated"' in result
+        assert 'description = "This should be migrated"' in result
+        assert 'description = "This should also be migrated"' in result
 
         # Concept inside multiline string should NOT be migrated
         assert 'Concept = "This should NOT be migrated because it\'s inside a multiline string"' in result
@@ -192,8 +192,8 @@ Concept = "Should also be migrated"
         result = migrator.migrate_content(test_content)
 
         # Valid concepts should be migrated
-        assert 'definition = "Should be migrated"' in result
-        assert 'definition = "Should also be migrated"' in result
+        assert 'description = "Should be migrated"' in result
+        assert 'description = "Should also be migrated"' in result
 
         # Concept inside single-quote multiline string should NOT be migrated
         assert 'Concept = "Should NOT be migrated"' in result
@@ -219,11 +219,11 @@ refines = "Text"
         assert len(changes) == 2
         assert changes[0]["line_number"] == 2
         assert changes[0]["old_line"] == 'Concept = "A test concept"'
-        assert changes[0]["new_line"] == 'definition = "A test concept"'
+        assert changes[0]["new_line"] == 'description = "A test concept"'
 
         assert changes[1]["line_number"] == 6
         assert changes[1]["old_line"] == 'Concept = "Another concept"'
-        assert changes[1]["new_line"] == 'definition = "Another concept"'
+        assert changes[1]["new_line"] == 'description = "Another concept"'
 
     def test_migrate_file_success(
         self,
@@ -336,7 +336,7 @@ Concept = "Old syntax file 1"
 
         file2 = tmp_path / "file2.toml"
         file2.write_text("""[concept.Test2]
-definition = "Already migrated file 2"
+description = "Already migrated file 2"
 """)
 
         file3 = tmp_path / "file3.toml"
@@ -356,10 +356,10 @@ Concept = "Another old concept"
         assert len(result.errors) == 0
 
         # Check that files were migrated correctly
-        assert 'definition = "Old syntax file 1"' in file1.read_text()
-        assert 'definition = "Already migrated file 2"' in file2.read_text()  # Unchanged
-        assert 'definition = "Old syntax file 3"' in file3.read_text()
-        assert 'definition = "Another old concept"' in file3.read_text()
+        assert 'description = "Old syntax file 1"' in file1.read_text()
+        assert 'description = "Already migrated file 2"' in file2.read_text()  # Unchanged
+        assert 'description = "Old syntax file 3"' in file3.read_text()
+        assert 'description = "Another old concept"' in file3.read_text()
 
         # Check backups exist for modified files only
         assert (tmp_path / "file1.toml.backup").exists()
@@ -426,7 +426,7 @@ Concept = "Test concept"
         assert len(result.errors) == 0
 
         # Check migration worked
-        assert 'definition = "Test concept"' in test_file.read_text()
+        assert 'description = "Test concept"' in test_file.read_text()
         assert (tmp_path / "test.toml.backup").exists()
 
 

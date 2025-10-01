@@ -49,7 +49,7 @@ class SubPipe(BaseModel):
                 raise PipeInputError(msg) from exc
 
             pipe_batch_blueprint = PipeBatchBlueprint(
-                definition=f"Batch processing for {self.pipe_code}",
+                description=f"Batch processing for {self.pipe_code}",
                 branch_pipe_code=self.pipe_code,
                 output=sub_pipe.output.code,
                 input_list_name=batch_params.input_list_stuff_name,

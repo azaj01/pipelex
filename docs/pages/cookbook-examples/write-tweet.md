@@ -62,7 +62,7 @@ This pipeline uses a two-step "analyze and optimize" sequence. The first pipe an
 ```plx
 [pipe.optimize_tweet_sequence]
 type = "PipeSequence"
-definition = "Analyze and optimize a tech tweet in sequence"
+description = "Analyze and optimize a tech tweet in sequence"
 inputs = { draft_tweet = "DraftTweet", writing_style = "WritingStyle" }
 output = "OptimizedTweet"
 steps = [
@@ -75,7 +75,7 @@ steps = [
 # This is the pipe that analyzes the draft tweet.
 [pipe.analyze_tweet]
 type = "PipeLLM"
-definition = "Analyze the draft tweet and identify areas for improvement"
+description = "Analyze the draft tweet and identify areas for improvement"
 inputs = { draft_tweet = "DraftTweet" }
 output = "TweetAnalysis"
 system_prompt = """

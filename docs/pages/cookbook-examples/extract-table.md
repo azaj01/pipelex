@@ -62,7 +62,7 @@ The pipeline uses a two-step "extract and review" pattern. The first pipe does t
 ```plx
 [pipe.extract_html_table_and_review]
 type = "PipeSequence"
-definition = "Get an HTML table and review it"
+description = "Get an HTML table and review it"
 inputs = { table_screenshot = "TableScreenshot" }
 output = "HtmlTable"
 steps = [
@@ -74,7 +74,7 @@ steps = [
 
 [pipe.review_html_table]
 type = "PipeLLM"
-definition = "Review an HTML table"
+description = "Review an HTML table"
 inputs = { table_screenshot = "TableScreenshot", html_table = "HtmlTable" }
 output = "HtmlTable"
 prompt_template = """

@@ -1,5 +1,5 @@
 domain = "test_tricky_questions"
-definition = "Domain for testing tricky questions"
+description = "Domain for testing tricky questions"
 
 [concept]
 AnswerToAQuestion = "Answer to a question"
@@ -8,12 +8,12 @@ QuestionAnalysis = "Analysis of a question"
 ThoughtfulAnswerConclusion = "Conclusion of a thoughtful answer"
 
 [concept.ThoughtfulAnswer]
-definition = "A thoughtful answer to a question"
+description = "A thoughtful answer to a question"
 
 [pipe]
 [pipe.analyse_question_tricky]
 type = "PipeLLM"
-definition = "Analyze a question to determine whether it's straightforward or tricky"
+description = "Analyze a question to determine whether it's straightforward or tricky"
 inputs = { question = "Question" }
 output = "QuestionAnalysis"
 llm = "llm_to_reason"
@@ -29,7 +29,7 @@ If there's an obvious trap, state it without getting into details.
 
 [pipe.answer_after_analysis]
 type = "PipeLLM"
-definition = "Answer knowingly after analyzing a question"
+description = "Answer knowingly after analyzing a question"
 inputs = { question = "Question", question_analysis = "QuestionAnalysis" }
 output = "ThoughtfulAnswer"
 llm = "llm_to_reason"
@@ -48,7 +48,7 @@ Answer in 4 parts:
 
 [pipe.conclude_thoughtful_answer]
 type = "PipeCompose"
-definition = "Conclude a thoughtful answer"
+description = "Conclude a thoughtful answer"
 inputs = { thoughtful_answer = "ThoughtfulAnswer" }
 output = "ThoughtfulAnswerConclusion"
 jinja2 = "After analyzing the question, here is my answer: $thoughtful_answer.the_answer"
@@ -56,7 +56,7 @@ jinja2 = "After analyzing the question, here is my answer: $thoughtful_answer.th
 
 [pipe.conclude_tricky_question_by_steps]
 type = "PipeSequence"
-definition = "Answer a tricky question by first analyzing its trickiness and then concluding"
+description = "Answer a tricky question by first analyzing its trickiness and then concluding"
 inputs = { question = "Question" }
 output = "ThoughtfulAnswerConclusion"
 steps = [

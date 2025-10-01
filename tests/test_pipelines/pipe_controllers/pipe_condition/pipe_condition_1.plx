@@ -1,5 +1,5 @@
 domain = "test_pipe_condition"
-definition = "Simple test for PipeCondition functionality"
+description = "Simple test for PipeCondition functionality"
 
 [concept]
 CategoryInput = "Input with a category field"
@@ -7,7 +7,7 @@ CategoryInput = "Input with a category field"
 [pipe]
 [pipe.basic_condition_by_category]
 type = "PipeCondition"
-definition = "Route based on category field"
+description = "Route based on category field"
 inputs = { input_data = "CategoryInput" }
 output = "native.Text"
 expression_template = "{{ input_data.category }}"
@@ -19,7 +19,7 @@ large = "process_large"
 
 [pipe.process_small]
 type = "PipeLLM"
-definition = "Generate random text for small items"
+description = "Generate random text for small items"
 output = "native.Text"
 prompt_template = """
 Output this only: "small"
@@ -27,7 +27,7 @@ Output this only: "small"
 
 [pipe.process_medium]
 type = "PipeLLM"
-definition = "Generate random text for medium items"
+description = "Generate random text for medium items"
 output = "native.Text"
 prompt_template = """
 Output this only: "medium"
@@ -35,7 +35,7 @@ Output this only: "medium"
 
 [pipe.process_large]
 type = "PipeLLM"
-definition = "Generate random text for large items"
+description = "Generate random text for large items"
 output = "native.Text"
 prompt_template = """
 Output this only: "large"

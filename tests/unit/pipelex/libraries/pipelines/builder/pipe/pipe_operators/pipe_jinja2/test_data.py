@@ -12,14 +12,14 @@ class PipeComposeTestCases:
         "simple_jinja2",
         PipeComposeSpec(
             the_pipe_code="template_renderer",
-            definition="Render a template",
+            description="Render a template",
             inputs={"data": "Data"},
             output="RenderedText",
             jinja2="Hello {{ data.name }}!",
             target_format="markdown",
         ),
         PipeComposeBlueprint(
-            definition="Render a template",
+            description="Render a template",
             inputs={"data": InputRequirementBlueprint(concept="Data")},
             output="RenderedText",
             type="PipeCompose",

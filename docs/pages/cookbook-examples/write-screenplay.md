@@ -82,7 +82,7 @@ The `generate_screenplay` pipeline is a master `PipeSequence` that orchestrates 
 ```plx
 [pipe.generate_screenplay]
 type = "PipeSequence"
-definition = "Generate a complete screenplay from a pitch"
+description = "Generate a complete screenplay from a pitch"
 inputs = { pitch = "Pitch" }
 output = "FormattedScreenplay"
 steps = [
@@ -101,7 +101,7 @@ steps = [
 # This is the nested sequence that creates all the scenes for a single chapter.
 [pipe.create_scenes_sequence]
 type = "PipeSequence"
-definition = "Create all scenes for a chapter sequentially"
+description = "Create all scenes for a chapter sequentially"
 inputs = { chapter = "Chapter", characters = "CharacterList", detailed_pitch = "DetailedPitch" }
 output = "Chapter"
 steps = [

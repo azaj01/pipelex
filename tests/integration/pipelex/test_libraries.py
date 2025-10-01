@@ -37,7 +37,7 @@ def pretty_print_all_pipes(
         table.add_row(
             pipe.domain,
             pipe.code,
-            pipe.definition,
+            pipe.description,
             pipe.__class__.__name__,
             ", ".join([f"{name}: {concept_code}" for name, concept_code in pipe.inputs.items]),
             pipe.output.code,
@@ -70,7 +70,7 @@ def pretty_print_all_concepts(
         table.add_row(
             concept.domain,
             concept.code,
-            concept.definition,
+            concept.description,
             concept.structure_class_name,
             concept.refines,
         )

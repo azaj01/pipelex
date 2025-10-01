@@ -23,7 +23,7 @@ class TestPipeSequenceMultiplicity:
             concept=ConceptFactory.make(
                 concept_code="CreativeTopic",
                 domain="creative_ideation",
-                definition="creative_ideation.CreativeTopic",
+                description="creative_ideation.CreativeTopic",
                 structure_class_name="CreativeTopic",
             ),
             content=TextContent(text="Sustainable transportation solutions for urban areas"),

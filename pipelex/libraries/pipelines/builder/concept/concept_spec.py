@@ -38,7 +38,7 @@ class ConceptStructureSpec(StructuredContent):
 
     Attributes:
         the_field_name: Field name. Must be snake_case.
-        definition: Natural language description of the field's purpose and usage.
+        description: Natural language description of the field's purpose and usage.
         type: The field's data type.
         required: Whether the field is mandatory. Defaults to True unless explicitly set to False.
         default_value: Default value for the field. Must match the specified type, and for choice
@@ -54,7 +54,7 @@ class ConceptStructureSpec(StructuredContent):
     """
 
     the_field_name: str = Field(description="Field name. Must be snake_case.")
-    definition: str
+    description: str
     type: ConceptStructureSpecFieldType = Field(description="The type of the field.")
     required: bool | None = None
     default_value: Any | None = None
@@ -105,7 +105,7 @@ class ConceptStructureSpec(StructuredContent):
         core_type = ConceptStructureBlueprintFieldType(self.type)
 
         return ConceptStructureBlueprint(
-            definition=self.definition,
+            description=self.description,
             type=core_type,
             required=self.required,
             default_value=self.default_value,
@@ -114,9 +114,9 @@ class ConceptStructureSpec(StructuredContent):
 
 class ConceptSpecDraft(StructuredContent):
     the_concept_code: str = Field(description="Concept code. Must be PascalCase.")
-    definition: str = Field(description="Description of the concept, in natural language.")
+    description: str = Field(description="Description of the concept, in natural language.")
     structure: str = Field(
-        description="Description of a dict with fieldnames as keys, and values being a dict with: definition, type, required, default_value",
+        description="Description of a dict with fieldnames as keys, and values being a dict with: description, type, required, default_value",
     )
     refines: str | None = Field(
         default=None,
@@ -143,7 +143,7 @@ class ConceptSpec(StructuredContent):
     model_config = ConfigDict(extra="forbid")
 
     the_concept_code: str = Field(description="Name of the concept. Must be PascalCase.")
-    definition: str = Field(description="Description of the concept, in natural language.")
+    description: str = Field(description="Description of the concept, in natural language.")
     structure: dict[str, ConceptStructureSpec] | None = Field(
         default=None,
         description=(
@@ -191,7 +191,7 @@ class ConceptSpec(StructuredContent):
         if values.get("refines") and values.get("structure"):
             msg = (
                 f"Forbidden to have refines and structure at the same time: `{values.get('refines')}` "
-                f"and `{values.get('structure')}` for concept that has the definition `{values.get('definition')}`",
+                f"and `{values.get('structure')}` for concept that has the description `{values.get('description')}`",
             )
             raise ConceptSpecError(msg)
         return values
@@ -231,7 +231,7 @@ class ConceptSpec(StructuredContent):
             for field_name, field_spec in self.structure.items():
                 converted_structure[field_name] = field_spec.to_blueprint()
 
-        return ConceptBlueprint(definition=self.definition, structure=converted_structure, refines=self.refines)
+        return ConceptBlueprint(description=self.description, structure=converted_structure, refines=self.refines)
 
 
 async def create_concept_spec(working_memory: WorkingMemory) -> ConceptSpec:
@@ -242,7 +242,7 @@ async def create_concept_spec(working_memory: WorkingMemory) -> ConceptSpec:
     for structure_item in concept_spec_structures_stuff.items:
         structure_spec = ConceptStructureSpec(
             the_field_name=structure_item.the_field_name,
-            definition=structure_item.definition,
+            description=structure_item.description,
             type=structure_item.type,
             required=structure_item.required,
             default_value=structure_item.default_value,
@@ -251,7 +251,7 @@ async def create_concept_spec(working_memory: WorkingMemory) -> ConceptSpec:
 
     return ConceptSpec(
         the_concept_code=concept_spec_draft.the_concept_code,
-        definition=concept_spec_draft.definition,
+        description=concept_spec_draft.description,
         structure=structure_dict,
         refines=concept_spec_draft.refines,
     )

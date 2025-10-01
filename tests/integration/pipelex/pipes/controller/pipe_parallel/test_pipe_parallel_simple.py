@@ -26,7 +26,7 @@ class TestPipeParallelSimple:
         """Test PipeParallel running three text analysis pipes in parallel."""
         # Create PipeParallel instance - pipes are loaded from PLX files
         pipe_parallel_blueprint = PipeParallelBlueprint(
-            definition="Parallel text analysis pipeline",
+            description="Parallel text analysis pipeline",
             inputs={"input_text": InputRequirementBlueprint(concept=f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}")},
             output=f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}",
             parallels=[
@@ -142,7 +142,7 @@ class TestPipeParallelSimple:
         """Test PipeParallel with shorter text to verify consistent behavior."""
         # Create PipeParallel instance
         pipe_parallel_blueprint = PipeParallelBlueprint(
-            definition="Parallel text analysis pipeline for short text",
+            description="Parallel text analysis pipeline for short text",
             inputs={"input_text": InputRequirementBlueprint(concept=f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}")},
             output=f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}",
             parallels=[

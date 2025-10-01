@@ -1,11 +1,11 @@
 domain = "test_integration"
-definition = "Test pipes for PipeCondition based on text length"
+description = "Test pipes for PipeCondition based on text length"
 
 [pipe]
 
 [pipe.capitalize_long_text]
 type = "PipeLLM"
-definition = "Capitalize text for long inputs"
+description = "Capitalize text for long inputs"
 inputs = { input_text = "Text" }
 output = "Text"
 prompt_template = """Transform the following LONG text to uppercase and add "LONG: " prefix:
@@ -16,7 +16,7 @@ Return only the prefixed uppercase text, nothing else."""
 
 [pipe.add_prefix_short_text]
 type = "PipeLLM"
-definition = "Add prefix for short text inputs"
+description = "Add prefix for short text inputs"
 inputs = { input_text = "Text" }
 output = "Text"
 prompt_template = """Add the prefix "SHORT: " to the beginning of the following text:

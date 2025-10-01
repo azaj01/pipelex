@@ -8,7 +8,7 @@ A pipeline in Pipelex is a collection of related concepts and pipes. Start by cr
 # pipelex_libraries/pipelines/tutorial.plx
 
 domain = "tutorial"
-definition = "My first Pipelex library"
+description = "My first Pipelex library"
 system_prompt = "You are a helpful assistant."
 
 [concept]
@@ -18,7 +18,7 @@ Answer = "A response to a question"
 [pipe]
 [pipe.answer_question]
 type = "PipeLLM"
-definition = "Answer a question"
+description = "Answer a question"
 inputs = { question = "tutorial.Question" }
 output = "tutorial.Answer"
 prompt_template = """
@@ -47,7 +47,7 @@ When you create a pipeline file (`.plx`), you always start by declaring its doma
 
 ```plx
 domain = "finance"                                      # The domain name for this file
-definition = "Financial document processing"            # Optional description
+description = "Financial document processing"            # Optional description
 system_prompt = "You are an expert financial analyst."  # Optional system prompt for all PipeLLM in this domain
 ```
 
@@ -64,7 +64,7 @@ A domain consists of:
     [pipe]
     [pipe.summarize_invoice]
     type = "PipeLLM"
-    definition = "Summarize an invoice to extract key information"
+    description = "Summarize an invoice to extract key information"
     inputs = { invoice = "finance.Invoice" }
     output = "finance.InvoiceSummary"
     ```

@@ -33,20 +33,20 @@ class TestPipeBatchSimple:
         concept_1 = ConceptFactory.make_from_blueprint(
             concept_code="TestConcept1",
             domain=domain,
-            blueprint=ConceptBlueprint(definition="Lorem Ipsum"),
+            blueprint=ConceptBlueprint(description="Lorem Ipsum"),
             concept_codes_from_the_same_domain=["TestConcept1"],
         )
         concept_2 = ConceptFactory.make_from_blueprint(
             concept_code="TestConcept2",
             domain=domain,
-            blueprint=ConceptBlueprint(definition="Lorem Ipsum"),
+            blueprint=ConceptBlueprint(description="Lorem Ipsum"),
             concept_codes_from_the_same_domain=["TestConcept2"],
         )
         concept_library = get_concept_provider()
         concept_library.add_concepts([concept_1, concept_2])
 
         pipe_batch_blueprint = PipeBatchBlueprint(
-            definition="Simple batch processing test",
+            description="Simple batch processing test",
             branch_pipe_code="uppercase_transformer",  # This exists in the PLX file
             inputs={
                 "text_list": InputRequirementBlueprint(concept=concept_1.concept_string),

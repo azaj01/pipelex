@@ -1,5 +1,5 @@
 domain = "test_pipe_parallel"
-definition = "Simple test for PipeParallel functionality"
+description = "Simple test for PipeParallel functionality"
 
 [concept]
 DocumentInput = "Input document with text content"
@@ -10,7 +10,7 @@ CombinedAnalysis = "Combined analysis results from parallel processing"
 [pipe]
 [pipe.parallel_document_analysis]
 type = "PipeParallel"
-definition = "Analyze document length and content in parallel"
+description = "Analyze document length and content in parallel"
 inputs = { document = "DocumentInput" }
 output = "CombinedAnalysis"
 add_each_output = true
@@ -22,7 +22,7 @@ parallels = [
 
 [pipe.analyze_length]
 type = "PipeLLM"
-definition = "Analyze document length and structure"
+description = "Analyze document length and structure"
 inputs = { document = "DocumentInput" }
 output = "LengthAnalysis"
 llm = "llm_for_testing_gen_text"
@@ -39,7 +39,7 @@ Provide a brief analysis focusing on:
 
 [pipe.analyze_content]
 type = "PipeLLM"
-definition = "Analyze document content and themes"
+description = "Analyze document content and themes"
 inputs = { document = "DocumentInput" }
 output = "ContentAnalysis"
 llm = "llm_for_testing_gen_text"

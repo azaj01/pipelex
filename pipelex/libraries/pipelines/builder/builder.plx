@@ -1,5 +1,5 @@
 domain = "builder"
-definition = "Auto-generate a Pipelex bundle (concepts + pipes) from a short user brief."
+description = "Auto-generate a Pipelex bundle (concepts + pipes) from a short user brief."
 
 [concept]
 UserBrief = "A short, natural-language description of what the user wants."
@@ -17,7 +17,7 @@ DomainInformation = "A domain information object."
 [pipe]
 [pipe.pipe_builder]
 type = "PipeSequence"
-definition = "This pipe is going to be the entry point for the builder. It will take a UserBrief and return a PipelexBundleSpec."
+description = "This pipe is going to be the entry point for the builder. It will take a UserBrief and return a PipelexBundleSpec."
 inputs = { brief = "UserBrief" }
 output = "PipelexBundleSpec"
 steps = [
@@ -33,7 +33,7 @@ steps = [
 
 [pipe.pipe_builder_domain_information]
 type = "PipeLLM"
-definition = "Turn the brief into a DomainInformation object."
+description = "Turn the brief into a DomainInformation object."
 inputs = { brief = "UserBrief" }
 output = "DomainInformation"
 llm = "llm_to_engineer"
@@ -49,7 +49,7 @@ For the definition, be concise.
 
 [pipe.draft_the_plan]
 type = "PipeLLM"
-definition = "Turn the brief into a pseudo-code plan describing controllers, pipes, their inputs/outputs."
+description = "Turn the brief into a pseudo-code plan describing controllers, pipes, their inputs/outputs."
 inputs = { brief = "UserBrief" }
 output = "PlanDraft"
 llm = "llm_to_engineer"
@@ -97,7 +97,7 @@ Do not write any intro or outro, just write the plan.
 
 [pipe.draft_the_concepts]
 type = "PipeLLM"
-definition = "Interpret the draft of a plan to create an AI pipeline, and define the needed concepts."
+description = "Interpret the draft of a plan to create an AI pipeline, and define the needed concepts."
 inputs = { plan_draft = "PlanDraft", brief = "UserBrief" }
 output = "ConceptDrafts"
 llm = "llm_to_engineer"
@@ -113,7 +113,7 @@ We want clear concepts but we don't want  too many concepts. If a concept can be
 For instance:
 - If you have a "FlowerDescription" concept, then it can be used for rose_description, tulip_description, beautiful_flower_description, dead_flower_description, etc.
 - DO NOT define concepts that include adjectives: "LongArticle" is wrong, "Article" is right.
-- DO NOT include circumstances in the concept definition:
+- DO NOT include circumstances in the concept description:
   "ArticleAboutApple" is wrong, "Article" is right.
   "CounterArgument" is wrong, "Argument" is right.
 - Concepts are always expressed as singular nouns, even if we're to use them as a list:
@@ -126,8 +126,8 @@ If the concept can be expressed as a text, image, pdf, number, or page:
 - No need to define its structure
 Else, if you need structure for your concept, draft its structure:
 - field name in snake_case
-- definition:
-  - definition: the definition of the field, in natural language
+- description:
+  - description: the description of the field, in natural language
   - type: the type of the field (text, integer,boolean, number, date)
   - required: add required = true if the field is required (otherwise, leave it empty)
   - default_value: the default value of the field
@@ -142,7 +142,7 @@ List the concept drafts in Markdown format with a heading 3 for each, e.g. `### 
 
 [pipe.structure_concepts]
 type = "PipeLLM"
-definition = "Structure the concept definitions."
+description = "Structure the concept definitions."
 inputs = { concept_drafts = "ConceptDrafts", brief = "UserBrief" }
 output = "concept.ConceptSpec"
 multiple_output = true
@@ -158,7 +158,7 @@ Your job is to extract a list of ConceptSpec from these concept drafts:
 
 [pipe.design_pipe_signatures]
 type = "PipeLLM"
-definition = "Write the pipe signatures for the plan."
+description = "Write the pipe signatures for the plan."
 inputs = { plan_draft = "PlanDraft", brief = "UserBrief", concept_specs = "concept.ConceptSpec" }
 output = "pipe_design.PipeSignature"
 multiple_output = true
@@ -213,7 +213,7 @@ Be smart about splitting the workflow into steps (sequence or parallel):
 
 [pipe.assemble_pipelex_bundle_spec]
 type = "PipeFunc"
-definition = "Compile the pipelex bundle spec."
+description = "Compile the pipelex bundle spec."
 inputs = { pipe_specs = "PipeSpec", concept_specs = "ConceptSpec", domain_information = "DomainInformation" }
 output = "PipelexBundleSpec"
 function_name = "assemble_pipelex_bundle_spec"

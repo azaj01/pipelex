@@ -5,11 +5,11 @@ from pipelex.pipe_controllers.sub_pipe_blueprint import SubPipeBlueprint
 PIPE_PARALLEL = (
     "pipe_parallel",
     """domain = "test_pipes"
-definition = "Domain with parallel pipe"
+description = "Domain with parallel pipe"
 
 [pipe.parallel_process]
 type = "PipeParallel"
-definition = "PipeParallel example in PIPE_PARALLEL_TEST_CASES"
+description = "PipeParallel example in PIPE_PARALLEL_TEST_CASES"
 output = "ProcessedData"
 parallels = [
     { pipe = "process_a", result = "result_a" },
@@ -19,11 +19,11 @@ add_each_output = true
 """,
     PipelexBundleBlueprint(
         domain="test_pipes",
-        definition="Domain with parallel pipe",
+        description="Domain with parallel pipe",
         pipe={
             "parallel_process": PipeParallelBlueprint(
                 type="PipeParallel",
-                definition="PipeParallel example in PIPE_PARALLEL_TEST_CASES",
+                description="PipeParallel example in PIPE_PARALLEL_TEST_CASES",
                 output="ProcessedData",
                 parallels=[
                     SubPipeBlueprint(pipe="process_a", result="result_a"),

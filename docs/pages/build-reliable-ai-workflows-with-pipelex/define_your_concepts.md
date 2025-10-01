@@ -44,7 +44,7 @@ Those concepts will be Text-based by default. If you want to use sutrctured outp
    # ❌ Wrong: includes subjective qualifier
    LongArticle = "A lengthy written composition"
    
-   # ✅ Right: neutral definition
+   # ✅ Right: neutral description
    Article = "A written composition on a specific topic"
    ```
 
@@ -55,7 +55,7 @@ Group concepts that naturally belong together in the same domain. A domain acts 
 ```plx
 # pipelex_libraries/pipelines/finance.plx
 domain = "finance"
-definition = "Financial document processing"
+description = "Financial document processing"
 
 [concept]
 Invoice = "A commercial document issued by a seller to a buyer"
@@ -200,11 +200,11 @@ Use the `refines` field to indicate when one concept is a more specific version 
 Document = "A written or printed record"
 
 [concept.Contract]
-definition = "A legally binding agreement between parties"
+description = "A legally binding agreement between parties"
 refines = "Text"
 
 [concept.ContractLogo]
-definition = "A logo associated with a contract"
+description = "A logo associated with a contract"
 refines = "Image"
 ```
 
@@ -221,7 +221,7 @@ For example, a pipe that processes `Document` can also process `Contract` or `Em
 ```plx
 [pipe.extract_key_points]
 type = "PipeLLM"
-definition = "Extract main points from any document"
+description = "Extract main points from any document"
 inputs = { doc = "Document" }  # Can accept Document, Contract, or EmploymentContract
 output = "KeyPoints"
 ```
@@ -308,21 +308,21 @@ Native concepts can be used directly in your pipeline definitions without any ad
 ```plx
 [pipe.analyze_document]
 type = "PipeLLM"
-definition = "Analyze a PDF document"
+description = "Analyze a PDF document"
 inputs = { document = "PDF" }
 output = "Text"
 prompt_template = "Analyze this document and provide a summary"
 
 [pipe.process_image]
 type = "PipeLLM"
-definition = "Describe an image"
+description = "Describe an image"
 inputs = { photo = "Image" }
 output = "Text"
 prompt_template = "Describe what you see in this image"
 
 [pipe.extract_from_page]
 type = "PipeLLM"
-definition = "Extract information from a document page"
+description = "Extract information from a document page"
 inputs = { page_content = "Page" }
 output = "ExtractedInfo"
 prompt_template = "Extract key information from this page content"
@@ -334,15 +334,15 @@ You can create more specific concepts by refining native ones:
 
 ```plx
 [concept.Invoice]
-definition = "A commercial document issued by a seller to a buyer"
+description = "A commercial document issued by a seller to a buyer"
 refines = "PDF"
 
 [concept.ProductPhoto]
-definition = "A photograph of a product for marketing purposes"
+description = "A photograph of a product for marketing purposes"
 refines = "Image"
 
 [concept.ContractPage]
-definition = "A page from a legal contract document"
+description = "A page from a legal contract document"
 refines = "Page"
 ```
 

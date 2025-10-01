@@ -135,13 +135,13 @@ class PipeLibrary(RootModel[PipeLibraryRoot], PipeProviderAbstract):
 
                 table.add_row(
                     pipe.code,
-                    pipe.definition or "",
+                    pipe.description or "",
                     formatted_inputs_str,
                     output_code,
                 )
 
                 pipes_dict[domain][pipe.code] = {
-                    "definition": pipe.definition or "",
+                    "description": pipe.description or "",
                     "inputs": formatted_inputs_str,
                     "output": pipe.output.code,
                 }

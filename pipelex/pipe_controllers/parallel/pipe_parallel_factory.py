@@ -30,7 +30,7 @@ class PipeParallelFactory(PipeFactoryProtocol[PipeParallelBlueprint, PipeParalle
             if not sub_pipe_blueprint.result:
                 msg = "Unexpected error in pipe '{pipe_code}': PipeParallel requires a result specified for each parallel sub pipe"
                 raise PipeDefinitionError(
-                    message=msg, domain_code=domain, pipe_code=pipe_code, description=blueprint.definition, source=blueprint.source
+                    message=msg, domain_code=domain, pipe_code=pipe_code, description=blueprint.description, source=blueprint.source
                 )
             sub_pipe = SubPipeFactory.make_from_blueprint(sub_pipe_blueprint, concept_codes_from_the_same_domain=concept_codes_from_the_same_domain)
             parallel_sub_pipes.append(sub_pipe)
@@ -39,7 +39,9 @@ class PipeParallelFactory(PipeFactoryProtocol[PipeParallelBlueprint, PipeParalle
                 f"Unexpected error in pipe '{pipe_code}': PipeParallel requires either add_each_output to be True or combined_output to be set, "
                 "or both, otherwise the pipe won't output anything"
             )
-            raise PipeDefinitionError(message=msg, domain_code=domain, pipe_code=pipe_code, description=blueprint.definition, source=blueprint.source)
+            raise PipeDefinitionError(
+                message=msg, domain_code=domain, pipe_code=pipe_code, description=blueprint.description, source=blueprint.source
+            )
 
         if blueprint.combined_output:
             combined_output_domain_and_code = ConceptFactory.make_domain_and_concept_code_from_concept_string_or_code(
@@ -64,7 +66,7 @@ class PipeParallelFactory(PipeFactoryProtocol[PipeParallelBlueprint, PipeParalle
         return PipeParallel(
             domain=domain,
             code=pipe_code,
-            definition=blueprint.definition,
+            description=blueprint.description,
             inputs=PipeInputSpecFactory.make_from_blueprint(
                 domain=domain,
                 blueprint=blueprint.inputs or {},

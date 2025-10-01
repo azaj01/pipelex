@@ -1,15 +1,15 @@
 domain = "images"
-definition = "Generic image-related domain"
+description = "Generic image-related domain"
 
 [concept]
 VisualDescription = "Visual description of something"
 
 [concept.ImgGenPrompt]
-definition = "Prompt to generate an image"
+description = "Prompt to generate an image"
 refines = "Text"
 
 [concept.Photo]
-definition = "Photo"
+description = "Photo"
 refines = "Image"
 
 [pipe]
@@ -23,14 +23,14 @@ refines = "Image"
 # but it must be either an ImgGenPrompt or a concept which refines ImgGenPrompt
 [pipe.generate_image]
 type = "PipeImgGen"
-definition = "Generate an image"
+description = "Generate an image"
 inputs = { prompt = "ImgGenPrompt" }
 output = "Image"
 
 
 [pipe.generate_photo]
 type = "PipeImgGen"
-definition = "Generate a photo"
+description = "Generate a photo"
 inputs = { prompt = "ImgGenPrompt" }
 output = "images.Photo"
 

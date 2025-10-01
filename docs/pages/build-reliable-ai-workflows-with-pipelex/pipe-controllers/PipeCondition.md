@@ -20,7 +20,7 @@ The `PipeCondition` controller adds branching logic to your pipelines. It evalua
 | Parameter                      | Type           | Description                                                                                                                                              | Required                       |
 | ------------------------------ | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
 | `type`                         | string         | The type of the pipe: `PipeCondition`                                                                          | Yes                            |
-| `definition`                   | string         | A description of the condition operation.                                                                          | Yes                            |
+| `description`                   | string         | A description of the condition operation.                                                                          | Yes                            |
 | `inputs`                       | dictionary     | The input concept(s) for the condition, as a dictionary mapping input names to concept codes.                                                     | Yes                            |
 | `output`                       | string         | The output concept produced by the selected pipe.                                                | Yes                            |
 | `expression`                   | string         | A simple Jinja2 expression. `{{ ... }}` are automatically added. Good for simple variable access like `"my_var.category"`.                                | Yes (or `expression_template`)   |
@@ -38,7 +38,7 @@ Here's a basic example showing how PipeCondition routes based on input data:
 
 ```plx
 domain = "routing_example"
-definition = "Example of PipeCondition routing"
+description = "Example of PipeCondition routing"
 
 [concept]
 CategoryInput = "Input with a category field"
@@ -46,7 +46,7 @@ CategoryInput = "Input with a category field"
 # Define the PipeCondition first
 [pipe.route_by_category]
 type = "PipeCondition"
-definition = "Route based on category field"
+description = "Route based on category field"
 inputs = { input_data = "CategoryInput" }
 output = "native.Text"
 expression = "input_data.category"
@@ -59,7 +59,7 @@ large = "process_large"
 # Define the pipes that PipeCondition can route to
 [pipe.process_small]
 type = "PipeLLM"
-definition = "Handle small category"
+description = "Handle small category"
 output = "native.Text"
 prompt_template = """
 Output this only: "small"
@@ -67,7 +67,7 @@ Output this only: "small"
 
 [pipe.process_medium]
 type = "PipeLLM"
-definition = "Handle medium category"
+description = "Handle medium category"
 output = "native.Text"
 prompt_template = """
 Output this only: "medium"
@@ -75,7 +75,7 @@ Output this only: "medium"
 
 [pipe.process_large]
 type = "PipeLLM"
-definition = "Handle large category"
+description = "Handle large category"
 output = "native.Text"
 prompt_template = """
 Output this only: "large"
@@ -94,7 +94,7 @@ How this works:
 ```plx
 [pipe.route_with_fallback]
 type = "PipeCondition"
-definition = "Route with default handling"
+description = "Route with default handling"
 inputs = { classification = "DocumentType" }
 output = "ProcessedDocument"
 expression = "classification.type"
@@ -106,7 +106,7 @@ receipt = "process_receipt"
 
 [pipe.process_invoice]
 type = "PipeLLM"
-definition = "Process invoice documents"
+description = "Process invoice documents"
 inputs = { classification = "DocumentType" }
 output = "ProcessedDocument"
 prompt_template = """
@@ -115,7 +115,7 @@ Process this invoice document...
 
 [pipe.process_receipt]
 type = "PipeLLM"
-definition = "Process receipt documents" 
+description = "Process receipt documents" 
 inputs = { classification = "DocumentType" }
 output = "ProcessedDocument"
 prompt_template = """
@@ -124,7 +124,7 @@ Process this receipt document...
 
 [pipe.process_unknown]
 type = "PipeLLM"
-definition = "Handle unknown document types"
+description = "Handle unknown document types"
 inputs = { classification = "DocumentType" }
 output = "ProcessedDocument"
 prompt_template = """

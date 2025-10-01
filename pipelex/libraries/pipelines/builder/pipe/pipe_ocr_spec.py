@@ -80,7 +80,7 @@ class PipeOcrSpec(PipeSpec):
 
         return PipeOcrBlueprint(
             source=None,
-            definition=base_blueprint.definition,
+            description=base_blueprint.description,
             inputs=base_blueprint.inputs,
             output=base_blueprint.output,
             type=self.type,

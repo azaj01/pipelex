@@ -1,4 +1,4 @@
-"""Migration from version 0.1.0 to 0.2.0 - Concept = to definition = syntax change."""
+"""Migration from version 0.1.0 to 0.2.0 - Concept = to description = syntax change."""
 
 import re
 import shutil
@@ -10,7 +10,7 @@ from pipelex.migration.migration_result import MigrationResult
 
 
 class TOMLMigrator:
-    """Handles migration from Concept = to definition = and PipeClassName = to type/definition syntax in TOML files."""
+    """Handles migration from Concept = to description = and PipeClassName = to type/definition syntax in TOML files."""
 
     # Known pipe class names based on the factory classes in the codebase
     PIPE_CLASS_NAMES: ClassVar[set[str]] = {
@@ -82,7 +82,7 @@ class TOMLMigrator:
 
             line_num = content[: match.start()].count("\n") + 1
             old_line = match.group(0)
-            new_line = self.concept_pattern.sub(r"\1definition\3\4", old_line)
+            new_line = self.concept_pattern.sub(r"\1description\3\4", old_line)
 
             changes.append({"line_number": line_num, "old_line": old_line.strip(), "new_line": new_line.strip()})
 
@@ -100,7 +100,7 @@ class TOMLMigrator:
 
             old_line = match.group(0)
             type_line = f'{leading_whitespace}type = "{pipe_class_name}"'
-            definition_line = f"{leading_whitespace}definition = {definition_value}"
+            definition_line = f"{leading_whitespace}description = {definition_value}"
             new_line = f"{type_line}\\n{definition_line}"
 
             changes.append({"line_number": line_num, "old_line": old_line.strip(), "new_line": new_line})
@@ -116,7 +116,7 @@ class TOMLMigrator:
                 # Return the original text unchanged
                 return match.group(0)
             # Apply the normal replacement: Concept = -> definition =
-            return f"{match.group(1)}definition{match.group(3)}{match.group(4)}"
+            return f"{match.group(1)}description{match.group(3)}{match.group(4)}"
 
         def pipe_replacement_function(match: Match[str]) -> str:
             # Check if this match is inside a multiline string
@@ -130,7 +130,7 @@ class TOMLMigrator:
             trailing_whitespace = match.group(5)
 
             type_line = f'{leading_whitespace}type = "{pipe_class_name}"'
-            definition_line = f"{leading_whitespace}definition = {definition_value}"
+            definition_line = f"{leading_whitespace}description = {definition_value}"
 
             return f"{type_line}\n{definition_line}{trailing_whitespace}"
 
@@ -241,7 +241,7 @@ class TOMLMigrator:
 
 
 def migrate_concept_syntax(directory: Path, create_backups: bool = True, dry_run: bool = False) -> MigrationResult:
-    """Convenience function to migrate TOML files from Concept = to definition = syntax.
+    """Convenience function to migrate TOML files from Concept = to description = syntax.
 
     This function accepts either a directory (the historical behavior) or a path to a single TOML file.
 

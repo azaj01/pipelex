@@ -35,7 +35,7 @@ class TestPipeConditionExpressionTemplate:
             concept=ConceptFactory.make(
                 concept_code="CategoryInput",
                 domain="test_pipe_condition",
-                definition="test_pipe_condition.CategoryInput",
+                description="test_pipe_condition.CategoryInput",
                 structure_class_name="CategoryInput",
             ),
             content=category_input,

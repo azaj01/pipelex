@@ -60,7 +60,7 @@ The `extract_gantt_by_steps` pipeline is a sequence of smaller, focused pipes. T
 ```plx
 [pipe.extract_gantt_by_steps]
 type = "PipeSequence"
-definition = "Extract all details from a gantt chart"
+description = "Extract all details from a gantt chart"
 inputs = { gantt_chart_image = "GanttChartImage" }
 output = "GanttChart"
 steps = [
@@ -77,7 +77,7 @@ steps = [
 # This is the pipe that extracts the details for a single task
 [pipe.extract_details_of_task]
 type = "PipeLLM"
-definition = "Extract the precise dates of the task, start_date and end_date"
+description = "Extract the precise dates of the task, start_date and end_date"
 inputs = { gantt_chart_image = "GanttChartImage", gantt_timescale = "GanttTimescaleDescription", gantt_task_name = "GanttTaskName" }
 output = "GanttTaskDetails" # The output is structured as a GanttTaskDetails object
 structuring_method = "preliminary_text"

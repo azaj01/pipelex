@@ -33,7 +33,7 @@ class PipelexBundleBlueprint(BaseModel):
 
     source: str | None = None
     domain: str
-    definition: str | None = None
+    description: str | None = None
     system_prompt: str | None = None
     system_prompt_to_structure: str | None = None
     prompt_template_to_structure: str | None = None

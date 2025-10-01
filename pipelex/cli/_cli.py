@@ -3,7 +3,7 @@ from click import Command, Context
 from typer.core import TyperGroup
 from typing_extensions import override
 
-from pipelex.cli.commands import init_app, migrate_app, show_app, validate_app
+from pipelex.cli.commands import init_app, show_app, validate_app
 from pipelex.cli.commands.build_cmd import build_app
 
 
@@ -34,5 +34,4 @@ app = typer.Typer(
 app.add_typer(init_app, name="init", help="Initialization commands")
 app.add_typer(validate_app, name="validate", help="Validation and dry-run commands")
 app.add_typer(show_app, name="show", help="Show and list commands")
-app.add_typer(migrate_app, name="migrate", help="Migration commands")
 app.add_typer(build_app, name="build", help="Build artifacts like pipeline blueprints")

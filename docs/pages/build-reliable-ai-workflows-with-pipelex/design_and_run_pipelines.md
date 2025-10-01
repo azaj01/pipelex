@@ -27,7 +27,7 @@ We can achieve this with a `PipeLLM` operator.
 # Filename: marketing_pipeline.plx
 
 domain = "marketing"
-definition = "Marketing content generation domain"
+description = "Marketing content generation domain"
 
 # 1. Define the concepts used in our pipes
 [concept]
@@ -37,7 +37,7 @@ Tagline = "A catchy marketing tagline"
 # 2. Define the pipe that does the work
 [pipe.generate_tagline]
 type = "PipeLLM"
-definition = "Generate a catchy tagline for a product"
+description = "Generate a catchy tagline for a product"
 inputs = { description = "ProductDescription" }
 output = "Tagline"
 prompt_template = """
@@ -61,7 +61,7 @@ The output concept is very important. Indeed, the output of your pipe wille be c
 # Filename: marketing_pipeline.plx
 
 domain = "marketing"
-definition = "Marketing content generation domain"
+description = "Marketing content generation domain"
 
 # 1. Define concepts
 [concept]
@@ -72,7 +72,7 @@ Tagline = "A catchy marketing tagline"
 # 2. Define operator pipes
 [pipe.extract_keywords]
 type = "PipeLLM"
-definition = "Extract keywords from a product description"
+description = "Extract keywords from a product description"
 inputs = { description = "ProductDescription" }
 output = "Keyword"
 multiple_output = true
@@ -86,7 +86,7 @@ Focus on features, benefits, and unique selling points.
 
 [pipe.generate_tagline_from_keywords]
 type = "PipeLLM"
-definition = "Generate a tagline from keywords"
+description = "Generate a tagline from keywords"
 inputs = { keywords = "Keyword" }
 output = "Tagline"
 prompt_template = """
@@ -100,7 +100,7 @@ The tagline should be memorable, concise (under 10 words), and highlight the mai
 # 3. This controller pipe defines the two-step pipeline
 [pipe.description_to_tagline]
 type = "PipeSequence"
-definition = "From product description to tagline"
+description = "From product description to tagline"
 inputs = { description = "ProductDescription" }
 output = "Tagline"
 steps = [

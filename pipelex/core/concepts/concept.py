@@ -16,7 +16,7 @@ class Concept(BaseModel):
 
     code: str
     domain: str
-    definition: str
+    description: str
     structure_class_name: str
     refines: str | None = None
 

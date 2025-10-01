@@ -41,7 +41,7 @@ OCR presets are defined in your model deck configuration and can include paramet
 | Parameter                   | Type    | Description                                                                                                                              | Required |
 | --------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------- |
 | `type`                      | string  | The type of the pipe: `PipeOcr`                                                                          | Yes      |
-| `definition`               | string  | A description of the OCR operation.                                                                   | Yes      |
+| `description`               | string  | A description of the OCR operation.                                                                   | Yes      |
 | `inputs`                    | Fixed  | The value is either of concept `Image` or `Pdf`.                                                     | Yes       |
 | `output`                    | string  | The output concept produced by the OCR operation.                                                | Yes      |
 | `page_images`               | boolean | If `true`, any images found within the document pages will be extracted and included in the output. Defaults to `false`.                 | No       |
@@ -59,12 +59,12 @@ This example defines a pipe that takes a PDF, extracts text and full-page images
 ScannedDocument = "A document that has been scanned as a PDF"
 
 [concept.ExtractedPages]
-definition = "A list of pages extracted from a document by OCR"
+description = "A list of pages extracted from a document by OCR"
 refines = "Page"
 
 [pipe.extract_text_from_document]
 type = "PipeOcr"
-definition = "Extract text from a scanned document"
+description = "Extract text from a scanned document"
 inputs = { document = "ScannedDocument" }
 output = "Page"
 page_views = true

@@ -20,7 +20,7 @@ class PipeAbstract(ABC, BaseModel):
     type: Any  # Any so that subclasses can put a Literal
     code: str
     domain: str
-    definition: str | None = None
+    description: str | None = None
     inputs: PipeInputSpec = Field(default_factory=PipeInputSpec)
     output: Concept
 

@@ -1,5 +1,5 @@
 domain = "simple_text_processing"
-definition = "Simple text processing pipeline without batching"
+description = "Simple text processing pipeline without batching"
 system_prompt = "You are an expert at text analysis and processing"
 
 [concept]
@@ -10,7 +10,7 @@ SummaryText = "A summary of the processed text"
 [pipe]
 [pipe.simple_text_sequence]
 type = "PipeSequence"
-definition = "Process text through cleaning and summarization"
+description = "Process text through cleaning and summarization"
 inputs = { raw_text = "RawText" }
 output = "SummaryText"
 steps = [
@@ -20,7 +20,7 @@ steps = [
 
 [pipe.clean_text]
 type = "PipeLLM"
-definition = "Clean and normalize the input text"
+description = "Clean and normalize the input text"
 inputs = { raw_text = "RawText" }
 output = "CleanedText"
 llm = "llm_for_testing_gen_text"
@@ -35,7 +35,7 @@ Clean and normalize the following text by:
 
 [pipe.generate_summary]
 type = "PipeLLM"
-definition = "Generate a summary of the cleaned text"
+description = "Generate a summary of the cleaned text"
 inputs = { cleaned_text = "CleanedText" }
 output = "SummaryText"
 llm = "llm_for_testing_gen_text"

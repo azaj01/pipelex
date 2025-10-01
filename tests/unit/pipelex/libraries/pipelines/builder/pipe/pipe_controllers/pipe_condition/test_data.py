@@ -10,7 +10,7 @@ class PipeConditionTestCases:
         "condition_with_template",
         PipeConditionSpec(
             the_pipe_code="template_condition",
-            definition="Conditional with template",
+            description="Conditional with template",
             inputs={"item": "Item"},
             output="ProcessedItem",
             jinja2_expression_template="{{ item.category }}",
@@ -22,7 +22,7 @@ class PipeConditionTestCases:
             default_pipe_code="process_default",
         ),
         PipeConditionBlueprint(
-            definition="Conditional with template",
+            description="Conditional with template",
             inputs={"item": InputRequirementBlueprint(concept="Item")},
             output="ProcessedItem",
             type="PipeCondition",

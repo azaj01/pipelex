@@ -24,7 +24,7 @@ class TestPipeLLM:
         pipe_run_mode: PipeRunMode,
     ):
         pipe_llm_blueprint = PipeLLMBlueprint(
-            definition="LLM test for basic text generation",
+            description="LLM test for basic text generation",
             output=NativeConceptEnum.TEXT,
             system_prompt=PipeTestCases.SYSTEM_PROMPT,
             prompt=PipeTestCases.USER_PROMPT,
@@ -84,7 +84,7 @@ class TestPipeLLM:
 
         # Create pipe blueprint
         pipe_llm_blueprint = PipeLLMBlueprint(
-            definition=f"Extract {concept} from text",
+            description=f"Extract {concept} from text",
             inputs={"data": "Text"},
             output=f"test_structured_generations.{concept}",
             prompt_template=BasicStructuredDataTestCases.EXTRACTION_PROMPT,
@@ -154,7 +154,7 @@ class TestPipeLLM:
                 pytest.fail(f"Cannot use nameless stuff in this test: {stuff}")
             working_memory = WorkingMemoryFactory.make_from_single_stuff(stuff=stuff)
             pipe_llm_blueprint = PipeLLMBlueprint(
-                definition="LLM test for image processing with attributes",
+                description="LLM test for image processing with attributes",
                 inputs={stuff_name: InputRequirementBlueprint(concept=stuff.concept.concept_string)},
                 output=NativeConceptEnum.TEXT,
                 system_prompt=PipeTestCases.SYSTEM_PROMPT,

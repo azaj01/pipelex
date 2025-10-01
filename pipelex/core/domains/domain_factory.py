@@ -12,7 +12,7 @@ class DomainFactory:
         try:
             return Domain(
                 code=blueprint.code,
-                definition=blueprint.definition,
+                description=blueprint.description,
                 system_prompt=blueprint.system_prompt,
                 system_prompt_to_structure=blueprint.system_prompt_to_structure,
                 prompt_template_to_structure=blueprint.prompt_template_to_structure,
@@ -20,4 +20,4 @@ class DomainFactory:
         except ValidationError as exc:
             formatted_error_msg = format_pydantic_validation_error(exc)
             msg = f"Could not make domain from blueprint: {formatted_error_msg}"
-            raise DomainDefinitionError(message=msg, domain_code=blueprint.code, description=blueprint.definition) from exc
+            raise DomainDefinitionError(message=msg, domain_code=blueprint.code, description=blueprint.description) from exc

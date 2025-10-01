@@ -61,7 +61,7 @@ class TestApiSerialization:
             concept=ConceptFactory.make(
                 concept_code="DateTimeEvent",
                 domain="event",
-                definition="event.DateTimeEvent",
+                description="event.DateTimeEvent",
                 structure_class_name="DateTimeEvent",
             ),
             name="project_meeting",

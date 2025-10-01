@@ -613,7 +613,7 @@ Simplified input memory:
   - Codex test targets
   
 ### Changed
-- Domain validation is now less restrictive in pipeline TOML: the `definition` attribute is now `Optional`
+- Domain validation is now less restrictive in pipeline TOML: the `description` attribute is now `Optional`
 
 ## [v0.3.0] - 2025-06-09
 

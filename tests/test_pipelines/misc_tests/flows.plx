@@ -1,7 +1,7 @@
 
 
 domain = "flows"
-definition = "A collection of pipes that are used to test the flow of a pipeline"
+description = "A collection of pipes that are used to test the flow of a pipeline"
 
 [concept]
 Color = "A color"
@@ -9,7 +9,7 @@ Color = "A color"
 [pipe]
 [pipe.choose_colors]
 type = "PipeLLM"
-definition = "Choose Colors"
+description = "Choose Colors"
 output = "Color"
 prompt_template = """
 Choose {{ _nb_output }} colors.
@@ -18,7 +18,7 @@ llm = "llm_for_creative_writing"
 
 [pipe.sequence_for_batch_test]
 type = "PipeSequence"
-definition = "Sequence for parallel test"
+description = "Sequence for parallel test"
 inputs = { color = "Color" }
 output = "Color"
 steps = [
@@ -28,7 +28,7 @@ steps = [
 
 [pipe.capitalize_color]
 type = "PipeLLM"
-definition = "Capitalize Colors"
+description = "Capitalize Colors"
 inputs = { color = "Color" }
 output = "Color"
 prompt_template = """
@@ -42,7 +42,7 @@ Output only the word, nothing else.
 
 [pipe.capitalize_last_letter]
 type = "PipeLLM"
-definition = "Capitalize Last Letter"
+description = "Capitalize Last Letter"
 inputs = { capitalized_color = "Color" }
 output = "Color"
 prompt_template = """

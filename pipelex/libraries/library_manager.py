@@ -56,7 +56,7 @@ class LibraryComponent(StrEnum):
 class LibraryManager(LibraryManagerAbstract):
     allowed_root_attributes: ClassVar[list[str]] = [
         "domain",
-        "definition",
+        "description",
         "system_prompt",
         "system_prompt_jto_structure",
         "prompt_template_to_structure",
@@ -181,7 +181,7 @@ class LibraryManager(LibraryManagerAbstract):
             blueprint=DomainBlueprint(
                 source=blueprint.source,
                 code=blueprint.domain,
-                definition=blueprint.definition or "",
+                description=blueprint.description or "",
                 system_prompt=blueprint.system_prompt,
                 system_prompt_to_structure=blueprint.system_prompt_to_structure,
                 prompt_template_to_structure=blueprint.prompt_template_to_structure,

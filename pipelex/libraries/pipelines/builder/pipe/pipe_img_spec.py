@@ -41,7 +41,7 @@ class PipeImgGenSpec(PipeSpec):
         """Convert this PipeImgGenBlueprint to the core PipeImgGenBlueprint."""
         base_blueprint = super().to_blueprint()
         return PipeImgGenBlueprint(
-            definition=base_blueprint.definition,
+            description=base_blueprint.description,
             inputs=base_blueprint.inputs,
             output=base_blueprint.output,
             type=self.type,
