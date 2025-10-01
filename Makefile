@@ -455,7 +455,7 @@ docs-deploy: env
 ### SHORTHANDS
 ##########################################################################################
 
-c: format lint pyright pylint mypy
+c: format lint pyright mypy pylint
 	@echo "> done: c = check"
 
 cc: cleanderived c
