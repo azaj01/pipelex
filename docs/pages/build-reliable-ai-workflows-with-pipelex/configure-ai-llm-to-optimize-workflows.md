@@ -51,7 +51,7 @@ llm_to_reason = {
 }
 
 llm_to_extract = { 
-    llm_handle = "claude-4-sonnet", 
+    llm_handle = "claude-4.5-sonnet", 
     temperature = 0.1, 
     max_tokens = "auto" 
 }
@@ -67,7 +67,7 @@ type = "PipeLLM"
 description = "Generate a creative response"
 inputs = { question = "Question" }
 output = "Response"
-llm = {
+model = {
     llm_handle = "gpt-4-turbo",  # Using inline LLM settings
     temperature = 0.8,
     max_tokens = "auto",
@@ -83,7 +83,7 @@ type = "PipeLLM"
 description = "Extract structured weather data from text"
 inputs = { text = "Text" }
 output = "WeatherData"
-llm = "llm_to_extract"  # Using a preset
+model = "llm_to_extract"  # Using a preset
 prompt = """
 Extract the weather data from this text:
 

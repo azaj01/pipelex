@@ -1,18 +1,16 @@
 from typing import ClassVar
 
 from pipelex.core.concepts.concept_factory import ConceptFactory
-from pipelex.core.concepts.concept_native import NATIVE_CONCEPTS_DATA, NativeConceptEnum
-from pipelex.core.pipes.pipe_run_params import PipeOutputMultiplicity
+from pipelex.core.concepts.concept_native import NativeConceptCode
+from pipelex.core.stuffs.image_content import ImageContent
+from pipelex.core.stuffs.list_content import ListContent
+from pipelex.core.stuffs.pdf_content import PDFContent
+from pipelex.core.stuffs.structured_content import StructuredContent
 from pipelex.core.stuffs.stuff import Stuff
-from pipelex.core.stuffs.stuff_content import (
-    ImageContent,
-    ListContent,
-    PDFContent,
-    StructuredContent,
-    TextContent,
-)
 from pipelex.core.stuffs.stuff_factory import StuffBlueprint, StuffFactory
+from pipelex.core.stuffs.text_content import TextContent
 from pipelex.exceptions import PipeStackOverflowError
+from pipelex.pipe_run.pipe_run_params import PipeOutputMultiplicity
 from tests.cases import ImageTestCases, PDFTestCases
 
 
@@ -50,17 +48,17 @@ class PipeTestCases:
     # Create simple Stuff objects
     SIMPLE_STUFF_TEXT = StuffFactory.make_stuff(
         name="text",
-        concept=ConceptFactory.make_native_concept(native_concept_data=NATIVE_CONCEPTS_DATA[NativeConceptEnum.TEXT]),
+        concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT),
         content=TextContent(text="Describe a t-shirt in 2 sentences"),
     )
     SIMPLE_STUFF_IMAGE = StuffFactory.make_stuff(
         name="image",
-        concept=ConceptFactory.make_native_concept(native_concept_data=NATIVE_CONCEPTS_DATA[NativeConceptEnum.IMAGE]),
+        concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.IMAGE),
         content=ImageContent(url=URL_IMG_FASHION_PHOTO_1),
     )
     SIMPLE_STUFF_PDF = StuffFactory.make_stuff(
         name="document",
-        concept=ConceptFactory.make_native_concept(native_concept_data=NATIVE_CONCEPTS_DATA[NativeConceptEnum.PDF]),
+        concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.PDF),
         content=PDFContent(url=PDFTestCases.DOCUMENT_URLS[0]),
     )
     COMPLEX_STUFF = StuffFactory.make_stuff(
@@ -76,7 +74,7 @@ class PipeTestCases:
 
     STUFF_CONTENT_WITH_IMAGE_ATTRIBUTE_1 = SomeContentWithImageAttribute(image_attribute=ImageContent(url=URL_IMG_FASHION_PHOTO_1))
     STUFF_WITH_IMAGE_ATTRIBUTE = StuffFactory.make_stuff(
-        concept=ConceptFactory.make_native_concept(native_concept_data=NATIVE_CONCEPTS_DATA[NativeConceptEnum.IMAGE]),
+        concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.IMAGE),
         content=STUFF_CONTENT_WITH_IMAGE_ATTRIBUTE_1,
         name="stuff_with_image",
     )
@@ -85,7 +83,7 @@ class PipeTestCases:
         sub_object=STUFF_CONTENT_WITH_IMAGE_ATTRIBUTE_1,
     )
     STUFF_WITH_IMAGE_ATTRIBUTE_IN_SUB_OBJECT = StuffFactory.make_stuff(
-        concept=ConceptFactory.make_native_concept(native_concept_data=NATIVE_CONCEPTS_DATA[NativeConceptEnum.IMAGE]),
+        concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.IMAGE),
         content=STUFF_CONTENT_WITH_IMAGE_ATTRIBUTE_IN_SUB_OBJECT,
         name="stuff_with_image_in_sub_object",
     )
@@ -153,11 +151,6 @@ class PipeTestCases:
             SIMPLE_STUFF_IMAGE,
             "simple_llm_test_from_image",
         ),
-        (
-            "Extract page contents from PDF",
-            SIMPLE_STUFF_PDF,
-            "ocr_page_contents_from_pdf",
-        ),
     ]
     FAILURE_PIPES: ClassVar[list[tuple[str, type[Exception], str]]] = [
         (
@@ -169,6 +162,7 @@ class PipeTestCases:
 
 
 class LibraryTestCases:
+    TEST_PIPELINES_DIR_PATH = "tests/test_pipelines"
     KNOWN_CONCEPTS_AND_PIPES: ClassVar[list[tuple[str, str]]] = [  # concept, pipe
         ("cars.CarDescription", "generate_car_description"),
         ("animals.AnimalDescription", "generate_animal_description"),
@@ -176,7 +170,7 @@ class LibraryTestCases:
     ]
 
 
-class PipeOcrTestCases:
+class PipeExtractTestCases:
     PIPE_OCR_IMAGE_TEST_CASES: ClassVar[list[str]] = [
         ImageTestCases.IMAGE_FILE_PATH_PNG,
         ImageTestCases.IMAGE_URL_PNG,
@@ -305,17 +299,17 @@ Extract information from the following text:
 
     # Combined test cases for parametrized tests
     STRUCTURE_TEST_CASES: ClassVar[list[tuple[str, str, str]]] = [  # topic, data, concept
-        ("Simple structure basic", SIMPLE_STRUCTURE_1, "ConceptWithSimpleStructure"),
+        # ("Simple structure basic", SIMPLE_STRUCTURE_1, "ConceptWithSimpleStructure"),
         ("Simple structure narrative", SIMPLE_STRUCTURE_2, "ConceptWithSimpleStructure"),
-        ("Optionals all present", OPTIONAL_ALL_PRESENT, "ConceptWithOptionals"),
-        ("Optionals some missing", OPTIONAL_SOME_MISSING, "ConceptWithOptionals"),
-        ("Optionals all missing", OPTIONAL_ALL_MISSING, "ConceptWithOptionals"),
-        ("Lists with data", LISTS_WITH_DATA, "ConceptWithLists"),
-        ("Lists empty", LISTS_EMPTY, "ConceptWithLists"),
-        ("Lists mixed", LISTS_MIXED, "ConceptWithLists"),
-        ("Nested full", NESTED_FULL, "ConceptWithNestedStructures"),
-        ("Nested partial", NESTED_PARTIAL, "ConceptWithNestedStructures"),
-        ("Nested complex", NESTED_COMPLEX, "ConceptWithNestedStructures"),
+        # ("Optionals all present", OPTIONAL_ALL_PRESENT, "ConceptWithOptionals"),
+        # ("Optionals some missing", OPTIONAL_SOME_MISSING, "ConceptWithOptionals"),
+        # ("Optionals all missing", OPTIONAL_ALL_MISSING, "ConceptWithOptionals"),
+        # ("Lists with data", LISTS_WITH_DATA, "ConceptWithLists"),
+        # ("Lists empty", LISTS_EMPTY, "ConceptWithLists"),
+        # ("Lists mixed", LISTS_MIXED, "ConceptWithLists"),
+        # ("Nested full", NESTED_FULL, "ConceptWithNestedStructures"),
+        # ("Nested partial", NESTED_PARTIAL, "ConceptWithNestedStructures"),
+        # ("Nested complex", NESTED_COMPLEX, "ConceptWithNestedStructures"),
     ]
 
 

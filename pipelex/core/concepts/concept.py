@@ -3,12 +3,14 @@ from pydantic import BaseModel, ConfigDict, field_validator
 
 from pipelex import log
 from pipelex.core.concepts.concept_blueprint import ConceptBlueprint
-from pipelex.core.concepts.concept_native import NativeConceptManager
+from pipelex.core.concepts.concept_native import NativeConceptCode
 from pipelex.core.domains.domain import SpecialDomain
 from pipelex.core.domains.domain_blueprint import DomainBlueprint
+from pipelex.core.stuffs.image_field_search import search_for_nested_image_fields
 from pipelex.core.stuffs.stuff_content import StuffContent
-from pipelex.tools.class_registry_utils import ClassRegistryUtils
+from pipelex.exceptions import PipelexUnexpectedError
 from pipelex.tools.misc.string_utils import pascal_case_to_sentence
+from pipelex.tools.typing.class_utils import are_classes_equivalent, has_compatible_field
 
 
 class Concept(BaseModel):
@@ -30,20 +32,20 @@ class Concept(BaseModel):
         return concept_string.startswith(SpecialDomain.IMPLICIT)
 
     @field_validator("code")
-    @staticmethod
-    def validate_code(code: str) -> str:
+    @classmethod
+    def validate_code(cls, code: str) -> str:
         ConceptBlueprint.validate_concept_code(concept_code=code)
         return code
 
     @field_validator("domain")
-    @staticmethod
-    def validate_domain(domain: str) -> str:
+    @classmethod
+    def validate_domain(cls, domain: str) -> str:
         DomainBlueprint.validate_domain_code(code=domain)
         return domain
 
     @field_validator("refines", mode="before")
-    @staticmethod
-    def validate_refines(refines: str | None) -> str | None:
+    @classmethod
+    def validate_refines(cls, refines: str | None) -> str | None:
         if refines is None:
             return None
         ConceptBlueprint.validate_concept_string(concept_string=refines)
@@ -55,7 +57,7 @@ class Concept(BaseModel):
 
     @classmethod
     def is_native_concept(cls, concept: "Concept") -> bool:
-        return NativeConceptManager.is_native_concept(concept_string_or_code=concept.concept_string)
+        return NativeConceptCode.get_validated_native_concept_string(concept_string_or_code=concept.concept_string) is not None
 
     @classmethod
     def are_concept_compatible(cls, concept_1: "Concept", concept_2: "Concept", strict: bool = False) -> bool:
@@ -72,7 +74,7 @@ class Concept(BaseModel):
 
             if strict:
                 # Check if classes are equivalent (same fields, types, descriptions)
-                return ClassRegistryUtils.are_classes_equivalent(concept_1_class, concept_2_class)
+                return are_classes_equivalent(concept_1_class, concept_2_class)
             # Check if concept_1 is a subclass of concept_2
             try:
                 if issubclass(concept_1_class, concept_2_class):
@@ -81,7 +83,7 @@ class Concept(BaseModel):
                 pass
 
             # Check if concept_1 has compatible fields with concept_2
-            return ClassRegistryUtils.has_compatible_field(concept_1_class, concept_2_class)
+            return has_compatible_field(concept_1_class, concept_2_class)
         return False
 
     @classmethod
@@ -93,3 +95,11 @@ class Concept(BaseModel):
         if KajsonManager.get_class_registry().has_class(name=structure_class_name):
             log.warning(f"Concept class '{structure_class_name}' is registered but it's not a subclass of StuffContent")
         return False
+
+    def search_for_nested_image_fields_in_structure_class(self) -> list[str]:
+        """Recursively search for image fields in a structure class."""
+        structure_class = KajsonManager.get_class_registry().get_required_subclass(name=self.structure_class_name, base_class=StuffContent)
+        if not issubclass(structure_class, StuffContent):
+            msg = f"Concept class '{self.structure_class_name}' is not a subclass of StuffContent"
+            raise PipelexUnexpectedError(msg)
+        return search_for_nested_image_fields(content_class=structure_class)

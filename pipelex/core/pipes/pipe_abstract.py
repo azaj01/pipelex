@@ -5,23 +5,23 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from pipelex.core.concepts.concept import Concept
 from pipelex.core.memory.working_memory import WorkingMemory
+from pipelex.core.pipes.input_requirements import InputRequirements
 from pipelex.core.pipes.pipe_blueprint import PipeBlueprint
-from pipelex.core.pipes.pipe_input import PipeInputSpec
 from pipelex.core.pipes.pipe_output import PipeOutput
-from pipelex.core.pipes.pipe_run_params import PipeRunParams
 from pipelex.exceptions import PipeStackOverflowError
+from pipelex.pipe_run.pipe_run_params import PipeRunParams
 from pipelex.pipeline.job_metadata import JobMetadata
 
 
 class PipeAbstract(ABC, BaseModel):
     model_config = ConfigDict(strict=True, extra="forbid")
 
-    category: Any  # Any so that subclasses can put a Literal
+    pipe_category: Any  # Any so that subclasses can put a Literal
     type: Any  # Any so that subclasses can put a Literal
     code: str
     domain: str
     description: str | None = None
-    inputs: PipeInputSpec = Field(default_factory=PipeInputSpec)
+    inputs: InputRequirements = Field(default_factory=InputRequirements)
     output: Concept
 
     @field_validator("code", mode="before")
@@ -44,12 +44,12 @@ class PipeAbstract(ABC, BaseModel):
         # 1 - The inputs of dependency pipes
         # 2 - The variables in the pipe definition
             - PipeConditon : Variables in the expression
-            - PipeBatch : Variables in the batch_params
+            - PipeBatch: Variables in the batch_params
             - PipeLLM : Variables in the prompt
         """
 
     @abstractmethod
-    def needed_inputs(self, visited_pipes: set[str] | None = None) -> PipeInputSpec:
+    def needed_inputs(self, visited_pipes: set[str] | None = None) -> InputRequirements:
         """Return the inputs that are needed for the pipe to run.
 
         Args:
@@ -57,15 +57,15 @@ class PipeAbstract(ABC, BaseModel):
                           If None, starts recursion detection with an empty set.
 
         Returns:
-            PipeInputSpec containing all needed inputs for this pipe
+            PipeInput containing all needed inputs for this pipe
 
         """
 
     def pipe_dependencies(self) -> set[str]:
         """Return the pipes that are dependencies of the pipe.
-        - PipeBatch : The pipe that is being batched
-        - PipeCondition : The pipes in the pipe_map
-        - PipeSequence : The pipes in the steps
+        - PipeBatch: The pipe that is being batched
+        - PipeCondition: The pipes in the outcome_map
+        - PipeSequence: The pipes in the steps
         """
         return set()
 

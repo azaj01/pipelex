@@ -1,8 +1,16 @@
-from pipelex.tools.exceptions import FatalError, RootException
+from pipelex.system.exceptions import FatalError, RootException
 from pipelex.types import StrEnum
 
 
 class CogtError(RootException):
+    pass
+
+
+class LLMConfigError(CogtError):
+    pass
+
+
+class ImageContentError(CogtError):
     pass
 
 
@@ -34,7 +42,7 @@ class LLMChoiceNotFoundError(CogtError):
     pass
 
 
-class OcrChoiceNotFoundError(CogtError):
+class ExtractChoiceNotFoundError(CogtError):
     pass
 
 
@@ -51,6 +59,10 @@ class ImgGenSettingsValidationError(CogtError):
 
 
 class ModelDeckValidatonError(CogtError):
+    pass
+
+
+class ModelNotFoundError(CogtError):
     pass
 
 
@@ -102,6 +114,10 @@ class PromptImageFactoryError(CogtError):
     pass
 
 
+class PromptImageDefinitionError(CogtError):
+    pass
+
+
 class PromptImageFormatError(CogtError):
     pass
 
@@ -139,11 +155,15 @@ class MissingPluginError(CogtError):
     pass
 
 
-class OcrCapabilityError(CogtError):
+class ExtractCapabilityError(CogtError):
     pass
 
 
 class RoutingProfileLibraryNotFoundError(CogtError):
+    pass
+
+
+class RoutingProfileValidationError(CogtError):
     pass
 
 
@@ -156,6 +176,14 @@ class InferenceModelSpecError(CogtError):
 
 
 class InferenceBackendError(CogtError):
+    pass
+
+
+class InferenceBackendLibraryNotFoundError(CogtError):
+    pass
+
+
+class InferenceBackendLibraryValidationError(CogtError):
     pass
 
 
@@ -187,9 +215,13 @@ class RoutingProfileError(CogtError):
     pass
 
 
-class ModelsManagerError(CogtError):
+class ModelManagerError(CogtError):
     pass
 
 
 class ModelDeckNotFoundError(CogtError):
+    pass
+
+
+class ModelDeckValidationError(CogtError):
     pass

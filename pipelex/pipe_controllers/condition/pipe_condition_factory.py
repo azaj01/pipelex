@@ -1,9 +1,9 @@
 from typing_extensions import override
 
 from pipelex.core.concepts.concept_factory import ConceptFactory
+from pipelex.core.pipes.input_requirements_factory import InputRequirementsFactory
 from pipelex.core.pipes.pipe_factory import PipeFactoryProtocol
-from pipelex.core.pipes.pipe_input_factory import PipeInputSpecFactory
-from pipelex.hub import get_concept_provider
+from pipelex.hub import get_required_concept
 from pipelex.pipe_controllers.condition.pipe_condition import PipeCondition
 from pipelex.pipe_controllers.condition.pipe_condition_blueprint import PipeConditionBlueprint
 
@@ -27,12 +27,12 @@ class PipeConditionFactory(PipeFactoryProtocol[PipeConditionBlueprint, PipeCondi
             domain=domain,
             code=pipe_code,
             description=blueprint.description,
-            inputs=PipeInputSpecFactory.make_from_blueprint(
+            inputs=InputRequirementsFactory.make_from_blueprint(
                 domain=domain,
                 blueprint=blueprint.inputs or {},
                 concept_codes_from_the_same_domain=concept_codes_from_the_same_domain,
             ),
-            output=get_concept_provider().get_required_concept(
+            output=get_required_concept(
                 concept_string=ConceptFactory.make_concept_string_with_domain(
                     domain=output_domain_and_code.domain,
                     concept_code=output_domain_and_code.concept_code,
@@ -40,7 +40,7 @@ class PipeConditionFactory(PipeFactoryProtocol[PipeConditionBlueprint, PipeCondi
             ),
             expression_template=blueprint.expression_template,
             expression=blueprint.expression,
-            pipe_map=blueprint.pipe_map,
-            default_pipe_code=blueprint.default_pipe_code,
+            outcome_map=blueprint.outcomes,
+            default_outcome=blueprint.default_outcome,
             add_alias_from_expression_to=blueprint.add_alias_from_expression_to,
         )

@@ -4,20 +4,26 @@ from pydantic import Field, field_validator, model_validator
 
 from pipelex import log
 from pipelex.cogt.exceptions import (
+    ExtractChoiceNotFoundError,
     ImgGenChoiceNotFoundError,
     LLMChoiceNotFoundError,
     LLMHandleNotFoundError,
     LLMSettingsValidationError,
     ModelDeckValidatonError,
-    OcrChoiceNotFoundError,
+    ModelNotFoundError,
 )
-from pipelex.cogt.img_gen.img_gen_setting import ImgGenChoice, ImgGenSetting
-from pipelex.cogt.llm.llm_setting import LLMChoice, LLMSetting, LLMSettingChoices, LLMSettingChoicesDefaults
+from pipelex.cogt.extract.extract_setting import ExtractModelChoice, ExtractSetting
+from pipelex.cogt.img_gen.img_gen_setting import ImgGenModelChoice, ImgGenSetting
+from pipelex.cogt.llm.llm_setting import (
+    LLMModelChoice,
+    LLMSetting,
+    LLMSettingChoices,
+    LLMSettingChoicesDefaults,
+)
 from pipelex.cogt.model_backends.model_constraints import ModelConstraints
 from pipelex.cogt.model_backends.model_spec import InferenceModelSpec
-from pipelex.cogt.ocr.ocr_setting import OcrChoice, OcrSetting
-from pipelex.tools.config.config_model import ConfigModel
-from pipelex.tools.exceptions import ConfigValidationError
+from pipelex.system.configuration.config_model import ConfigModel
+from pipelex.system.exceptions import ConfigValidationError
 from pipelex.types import Self
 
 LLM_PRESET_DISABLED = "disabled"
@@ -34,21 +40,21 @@ class LLMDeckBlueprint(ConfigModel):
     )
 
 
-class OCRDeckBlueprint(ConfigModel):
-    presets: dict[str, OcrSetting] = Field(default_factory=dict)
-    choice_default: OcrChoice
+class ExtractDeckBlueprint(ConfigModel):
+    presets: dict[str, ExtractSetting] = Field(default_factory=dict)
+    choice_default: ExtractModelChoice
 
 
 class ImgGenDeckBlueprint(ConfigModel):
     presets: dict[str, ImgGenSetting] = Field(default_factory=dict)
-    choice_default: ImgGenChoice
+    choice_default: ImgGenModelChoice
 
 
 class ModelDeckBlueprint(ConfigModel):
     aliases: dict[str, Waterfall] = Field(default_factory=dict)
 
     llm: LLMDeckBlueprint
-    ocr: OCRDeckBlueprint
+    extract: ExtractDeckBlueprint
     img_gen: ImgGenDeckBlueprint
 
 
@@ -63,13 +69,17 @@ class ModelDeck(ConfigModel):
         for_object=None,
     )
 
-    ocr_presets: dict[str, OcrSetting] = Field(default_factory=dict)
-    ocr_choice_default: OcrChoice
+    extract_presets: dict[str, ExtractSetting] = Field(default_factory=dict)
+    extract_choice_default: ExtractModelChoice
 
     img_gen_presets: dict[str, ImgGenSetting] = Field(default_factory=dict)
-    img_gen_choice_default: ImgGenChoice
+    img_gen_choice_default: ImgGenModelChoice
 
-    def check_llm_setting(self, llm_setting_or_preset_id: LLMChoice, is_disabled_allowed: bool = False):
+    def check_llm_setting(
+        self,
+        llm_setting_or_preset_id: LLMModelChoice,
+        is_disabled_allowed: bool = False,
+    ):
         if isinstance(llm_setting_or_preset_id, LLMSetting):
             return
         preset_id: str = llm_setting_or_preset_id
@@ -80,43 +90,43 @@ class ModelDeck(ConfigModel):
         msg = f"llm preset id '{preset_id}' not found in deck"
         raise LLMChoiceNotFoundError(msg)
 
-    def get_llm_setting(self, llm_choice: LLMChoice) -> LLMSetting:
+    def get_llm_setting(self, llm_choice: LLMModelChoice) -> LLMSetting:
         if isinstance(llm_choice, LLMSetting):
             return llm_choice
         # it's a string, so either an llm preset id or an llm handle
         if llm_preset := self.llm_presets.get(llm_choice):
             return llm_preset
         if self.is_handle_defined(model_handle=llm_choice):
-            return LLMSetting(llm_handle=llm_choice, temperature=0.7, max_tokens=None)
+            return LLMSetting(model=llm_choice, temperature=0.7, max_tokens=None)
         msg = f"LLM choice '{llm_choice}' not found in deck"
         raise LLMChoiceNotFoundError(msg)
 
-    def get_ocr_setting(self, ocr_choice: OcrChoice) -> OcrSetting:
-        if isinstance(ocr_choice, OcrSetting):
-            return ocr_choice
-        # it's a string, so either an ocr preset id or an ocr handle
-        if ocr_preset := self.ocr_presets.get(ocr_choice):
-            return ocr_preset
-        if self.is_handle_defined(model_handle=ocr_choice):
-            return OcrSetting(ocr_handle=ocr_choice)
-        msg = f"OCR choice '{ocr_choice}' not found in deck"
-        raise OcrChoiceNotFoundError(msg)
+    def get_extract_setting(self, extract_choice: ExtractModelChoice) -> ExtractSetting:
+        if isinstance(extract_choice, ExtractSetting):
+            return extract_choice
+        # it's a string, so either an extract preset id or an extract handle
+        if extract_preset := self.extract_presets.get(extract_choice):
+            return extract_preset
+        if self.is_handle_defined(model_handle=extract_choice):
+            return ExtractSetting(model=extract_choice)
+        msg = f"Extract choice '{extract_choice}' not found in deck"
+        raise ExtractChoiceNotFoundError(msg)
 
-    def get_img_gen_setting(self, img_gen_choice: ImgGenChoice) -> ImgGenSetting:
+    def get_img_gen_setting(self, img_gen_choice: ImgGenModelChoice) -> ImgGenSetting:
         if isinstance(img_gen_choice, ImgGenSetting):
             return img_gen_choice
         # it's a string, so either an img gen preset id or an img gen handle
         if img_gen_preset := self.img_gen_presets.get(img_gen_choice):
             return img_gen_preset
         if self.is_handle_defined(model_handle=img_gen_choice):
-            return ImgGenSetting(img_gen_handle=img_gen_choice)
+            return ImgGenSetting(model=img_gen_choice)
         msg = f"Image generation choice '{img_gen_choice}' not found in deck"
         raise ImgGenChoiceNotFoundError(msg)
 
     @classmethod
-    def final_validate(cls, deck: Self):  # pyright: ignore[reportIncompatibleMethodOverride]
+    def final_validate(cls, deck: Self):
         for llm_preset_id, llm_setting in deck.llm_presets.items():
-            inference_model = deck.get_required_inference_model(model_handle=llm_setting.llm_handle)
+            inference_model = deck.get_required_inference_model(model_handle=llm_setting.model)
             try:
                 cls._validate_llm_setting(llm_setting=llm_setting, inference_model=inference_model)
             except ConfigValidationError as exc:
@@ -132,13 +142,13 @@ class ModelDeck(ConfigModel):
         if inference_model.max_tokens is not None and (llm_setting_max_tokens := llm_setting.max_tokens):
             if llm_setting_max_tokens > inference_model.max_tokens:
                 msg = (
-                    f"LLM setting '{llm_setting.llm_handle}' has a max_tokens of {llm_setting_max_tokens}, "
+                    f"LLM setting '{llm_setting.model}' has a max_tokens of {llm_setting_max_tokens}, "
                     f"which is greater than the model's max_tokens of {inference_model.max_tokens}"
                 )
                 raise LLMSettingsValidationError(msg)
         if ModelConstraints.TEMPERATURE_MUST_BE_1 in inference_model.constraints and llm_setting.temperature != 1:
             msg = (
-                f"LLM setting '{llm_setting.llm_handle}' has a temperature of {llm_setting.temperature}, "
+                f"LLM setting '{llm_setting.model}' has a temperature of {llm_setting.temperature}, "
                 f"which is not allowed by the model's constraints: it must be 1"
             )
             raise LLMSettingsValidationError(msg)
@@ -165,8 +175,8 @@ class ModelDeck(ConfigModel):
 
     def validate_llm_presets(self) -> Self:
         for llm_preset_id, llm_setting in self.llm_presets.items():
-            if llm_setting.llm_handle not in self.inference_models:
-                msg = f"llm_handle '{llm_setting.llm_handle}' for llm_preset '{llm_preset_id}' not found in deck"
+            if llm_setting.model not in self.inference_models:
+                msg = f"llm_handle '{llm_setting.model}' for llm_preset '{llm_preset_id}' not found in deck"
                 raise LLMHandleNotFoundError(msg)
         return self
 
@@ -191,7 +201,7 @@ class ModelDeck(ConfigModel):
             for alias in alias_list:
                 if inference_model := self.get_optional_inference_model(model_handle=alias):
                     return inference_model
-        log.warning(f"Skipping model handle '{model_handle}' because it's not found in deck")
+        log.warning(f"Skipping model handle '{model_handle}' because it's not found in deck, it could be an external plugin.")
         return None
 
     def is_handle_defined(self, model_handle: str) -> bool:
@@ -201,7 +211,7 @@ class ModelDeck(ConfigModel):
         inference_model = self.get_optional_inference_model(model_handle=model_handle)
         if inference_model is None:
             msg = f"Model handle '{model_handle}' not found in deck"
-            raise LLMHandleNotFoundError(msg)
+            raise ModelNotFoundError(msg)
         if model_handle not in self.inference_models:
             log.dev(f"Model handle '{model_handle}' is an alias which resolves to '{inference_model.name}'")
         return inference_model

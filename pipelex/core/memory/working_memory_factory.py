@@ -7,12 +7,16 @@ from pydantic import BaseModel
 from pipelex import log
 from pipelex.client.protocol import CompactMemory, ImplicitMemory
 from pipelex.core.concepts.concept import ConceptBlueprint, SpecialDomain
-from pipelex.core.concepts.concept_native import NativeConceptEnum
+from pipelex.core.concepts.concept_native import NativeConceptCode
 from pipelex.core.memory.working_memory import MAIN_STUFF_NAME, StuffDict, WorkingMemory
-from pipelex.core.pipes.pipe_input import TypedNamedInputRequirement
+from pipelex.core.pipes.input_requirements import TypedNamedInputRequirement
+from pipelex.core.stuffs.image_content import ImageContent
+from pipelex.core.stuffs.list_content import ListContent
+from pipelex.core.stuffs.pdf_content import PDFContent
 from pipelex.core.stuffs.stuff import Stuff
-from pipelex.core.stuffs.stuff_content import ImageContent, ListContent, PDFContent, StuffContent, TextContent
+from pipelex.core.stuffs.stuff_content import StuffContent
 from pipelex.core.stuffs.stuff_factory import StuffFactory
+from pipelex.core.stuffs.text_content import TextContent
 from pipelex.exceptions import WorkingMemoryFactoryError
 from pipelex.hub import get_required_concept
 
@@ -22,7 +26,7 @@ class WorkingMemoryFactory(BaseModel):
     def make_from_text(
         cls,
         text: str,
-        concept_string: str = SpecialDomain.NATIVE + "." + NativeConceptEnum.TEXT,
+        concept_string: str = SpecialDomain.NATIVE + "." + NativeConceptCode.TEXT,
         name: str | None = "text",
     ) -> WorkingMemory:
         ConceptBlueprint.validate_concept_string(concept_string=concept_string)
@@ -38,7 +42,7 @@ class WorkingMemoryFactory(BaseModel):
     def make_from_image(
         cls,
         image_url: str,
-        concept_string: str = SpecialDomain.NATIVE + "." + NativeConceptEnum.IMAGE,
+        concept_string: str = SpecialDomain.NATIVE + "." + NativeConceptCode.IMAGE,
         name: str | None = "image",
     ) -> WorkingMemory:
         # TODO: validate that the concept is compatible with an image concept
@@ -54,7 +58,7 @@ class WorkingMemoryFactory(BaseModel):
     def make_from_pdf(
         cls,
         pdf_url: str,
-        concept_string: str = SpecialDomain.NATIVE + "." + NativeConceptEnum.PDF,
+        concept_string: str = SpecialDomain.NATIVE + "." + NativeConceptCode.PDF,
         name: str | None = "pdf",
     ) -> WorkingMemory:
         ConceptBlueprint.validate_concept_string(concept_string=concept_string)
@@ -107,7 +111,7 @@ class WorkingMemoryFactory(BaseModel):
                 continue
             text_content = TextContent(text=content)
             stuff_dict[name] = StuffFactory.make_stuff(
-                concept=get_required_concept(concept_string=SpecialDomain.NATIVE + "." + NativeConceptEnum.TEXT),
+                concept=get_required_concept(concept_string=SpecialDomain.NATIVE + "." + NativeConceptCode.TEXT),
                 content=text_content,
                 name=name,
                 code="",
@@ -189,11 +193,6 @@ class WorkingMemoryFactory(BaseModel):
         working_memory = cls.make_empty()
 
         for requirement in needed_inputs:
-            log.debug(
-                f"Creating dry run mock for '{requirement.variable_name}' with concept "
-                f"'{requirement.concept.code}' and class '{requirement.structure_class.__name__}'",
-            )
-
             try:
                 if not requirement.multiplicity:
                     mock_content = cls.create_mock_content(requirement)

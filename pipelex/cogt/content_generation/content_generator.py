@@ -4,19 +4,22 @@ from typing_extensions import override
 
 from pipelex import log
 from pipelex.cogt.content_generation.assignment_models import (
+    ExtractAssignment,
     ImgGenAssignment,
-    Jinja2Assignment,
     LLMAssignment,
     LLMAssignmentFactory,
     ObjectAssignment,
-    OcrAssignment,
+    TemplatingAssignment,
     TextThenObjectAssignment,
 )
 from pipelex.cogt.content_generation.content_generator_protocol import ContentGeneratorProtocol, update_job_metadata
+from pipelex.cogt.content_generation.extract_generate import extract_gen_pages
 from pipelex.cogt.content_generation.img_gen_generate import img_gen_image_list, img_gen_single_image
-from pipelex.cogt.content_generation.jinja2_generate import jinja2_gen_text
 from pipelex.cogt.content_generation.llm_generate import llm_gen_object, llm_gen_object_list, llm_gen_text
-from pipelex.cogt.content_generation.ocr_generate import ocr_gen_extract_pages
+from pipelex.cogt.content_generation.templating_generate import templating_gen_text
+from pipelex.cogt.extract.extract_input import ExtractInput
+from pipelex.cogt.extract.extract_job_components import ExtractJobConfig, ExtractJobParams
+from pipelex.cogt.extract.extract_output import ExtractOutput
 from pipelex.cogt.image.generated_image import GeneratedImage
 from pipelex.cogt.img_gen.img_gen_job_components import ImgGenJobConfig, ImgGenJobParams
 from pipelex.cogt.img_gen.img_gen_prompt import ImgGenPrompt
@@ -24,20 +27,17 @@ from pipelex.cogt.llm.llm_prompt import LLMPrompt
 from pipelex.cogt.llm.llm_prompt_factory_abstract import LLMPromptFactoryAbstract
 from pipelex.cogt.llm.llm_prompt_template import LLMPromptTemplate
 from pipelex.cogt.llm.llm_setting import LLMSetting
-from pipelex.cogt.ocr.ocr_input import OcrInput
-from pipelex.cogt.ocr.ocr_job_components import OcrJobConfig, OcrJobParams
-from pipelex.cogt.ocr.ocr_output import OcrOutput
+from pipelex.cogt.templating.template_category import TemplateCategory
+from pipelex.cogt.templating.templating_style import TemplatingStyle
 from pipelex.config import get_config
 from pipelex.pipeline.job_metadata import JobMetadata
-from pipelex.tools.templating.jinja2_template_category import Jinja2TemplateCategory
-from pipelex.tools.templating.templating_models import PromptingStyle
 from pipelex.tools.typing.pydantic_utils import BaseModelTypeVar
 
 
 class ContentGenerator(ContentGeneratorProtocol):
     @override
     @update_job_metadata
-    async def make_llm_text(  # pyright: ignore[reportIncompatibleMethodOverride]
+    async def make_llm_text(
         self,
         job_metadata: JobMetadata,
         llm_setting_main: LLMSetting,
@@ -57,7 +57,7 @@ class ContentGenerator(ContentGeneratorProtocol):
 
     @override
     @update_job_metadata
-    async def make_object_direct(  # pyright: ignore[reportIncompatibleMethodOverride]
+    async def make_object_direct(
         self,
         job_metadata: JobMetadata,
         object_class: type[BaseModelTypeVar],
@@ -80,7 +80,7 @@ class ContentGenerator(ContentGeneratorProtocol):
 
     @override
     @update_job_metadata
-    async def make_text_then_object(  # pyright: ignore[reportIncompatibleMethodOverride]
+    async def make_text_then_object(
         self,
         job_metadata: JobMetadata,
         object_class: type[BaseModelTypeVar],
@@ -127,7 +127,7 @@ class ContentGenerator(ContentGeneratorProtocol):
 
     @override
     @update_job_metadata
-    async def make_object_list_direct(  # pyright: ignore[reportIncompatibleMethodOverride]
+    async def make_object_list_direct(
         self,
         job_metadata: JobMetadata,
         object_class: type[BaseModelTypeVar],
@@ -150,7 +150,7 @@ class ContentGenerator(ContentGeneratorProtocol):
 
     @override
     @update_job_metadata
-    async def make_text_then_object_list(  # pyright: ignore[reportIncompatibleMethodOverride]
+    async def make_text_then_object_list(
         self,
         job_metadata: JobMetadata,
         object_class: type[BaseModelTypeVar],
@@ -196,7 +196,7 @@ class ContentGenerator(ContentGeneratorProtocol):
 
     @override
     @update_job_metadata
-    async def make_single_image(  # pyright: ignore[reportIncompatibleMethodOverride]
+    async def make_single_image(
         self,
         job_metadata: JobMetadata,
         img_gen_handle: str,
@@ -219,7 +219,7 @@ class ContentGenerator(ContentGeneratorProtocol):
 
     @override
     @update_job_metadata
-    async def make_image_list(  # pyright: ignore[reportIncompatibleMethodOverride]
+    async def make_image_list(
         self,
         job_metadata: JobMetadata,
         img_gen_handle: str,
@@ -242,37 +242,35 @@ class ContentGenerator(ContentGeneratorProtocol):
         return generated_image_list
 
     @override
-    async def make_jinja2_text(
+    async def make_templated_text(
         self,
         context: dict[str, Any],
-        jinja2_name: str | None = None,
-        jinja2: str | None = None,
-        prompting_style: PromptingStyle | None = None,
-        template_category: Jinja2TemplateCategory = Jinja2TemplateCategory.LLM_PROMPT,
+        template: str,
+        templating_style: TemplatingStyle | None = None,
+        template_category: TemplateCategory | None = None,
     ) -> str:
-        jinja2_assignment = Jinja2Assignment(
+        templating_assignment = TemplatingAssignment(
             context=context,
-            jinja2_name=jinja2_name,
-            jinja2=jinja2,
-            prompting_style=prompting_style,
-            template_category=template_category,
+            template=template,
+            templating_style=templating_style,
+            category=template_category or TemplateCategory.BASIC,
         )
-        return await jinja2_gen_text(jinja2_assignment=jinja2_assignment)
+        return await templating_gen_text(templating_assignment=templating_assignment)
 
     @override
-    async def make_ocr_extract_pages(
+    async def make_extract_pages(
         self,
         job_metadata: JobMetadata,
-        ocr_input: OcrInput,
-        ocr_handle: str,
-        ocr_job_params: OcrJobParams | None = None,
-        ocr_job_config: OcrJobConfig | None = None,
-    ) -> OcrOutput:
-        ocr_assignment = OcrAssignment(
+        extract_input: ExtractInput,
+        extract_handle: str,
+        extract_job_params: ExtractJobParams | None = None,
+        extract_job_config: ExtractJobConfig | None = None,
+    ) -> ExtractOutput:
+        extract_assignment = ExtractAssignment(
             job_metadata=job_metadata,
-            ocr_input=ocr_input,
-            ocr_handle=ocr_handle,
-            ocr_job_params=ocr_job_params or OcrJobParams.make_default_ocr_job_params(),
-            ocr_job_config=ocr_job_config or OcrJobConfig(),
+            extract_input=extract_input,
+            extract_handle=extract_handle,
+            extract_job_params=extract_job_params or ExtractJobParams.make_default_extract_job_params(),
+            extract_job_config=extract_job_config or ExtractJobConfig(),
         )
-        return await ocr_gen_extract_pages(ocr_assignment=ocr_assignment)
+        return await extract_gen_pages(extract_assignment=extract_assignment)

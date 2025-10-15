@@ -6,9 +6,7 @@ import pipelex.config
 import pipelex.pipelex
 from pipelex import log
 from pipelex.config import get_config
-from pipelex.core.concepts.concept_provider_abstract import ConceptProviderAbstract
-from pipelex.hub import get_concept_provider, get_report_delegate
-from tests.cases.registry import Fruit
+from pipelex.hub import get_report_delegate
 
 pytest_plugins = [
     "pipelex.test_extras.shared_pytest_plugins",
@@ -22,7 +20,7 @@ def reset_pipelex_config_fixture():
     # Code to run before each test
     Console().print("[magenta]pipelex setup[/magenta]")
     try:
-        pipelex_instance = pipelex.pipelex.Pipelex.make(relative_config_folder_path="../pipelex/libraries")
+        pipelex_instance = pipelex.pipelex.Pipelex.make()
         config = get_config()
         log.verbose(config, title="Test config")
         assert isinstance(config, pipelex.config.PipelexConfig)
@@ -35,35 +33,3 @@ def reset_pipelex_config_fixture():
     get_report_delegate().generate_report()
     Console().print("[magenta]pipelex teardown[/magenta]")
     pipelex_instance.teardown()
-
-
-@pytest.fixture(autouse=True)
-def pretty():
-    # Code to run before each test
-    return
-    # Code to run after each test
-
-
-# Test data fixtures
-@pytest.fixture(scope="session")
-def apple() -> Fruit:
-    """Apple fruit fixture."""
-    return Fruit(name="apple", color="red")
-
-
-@pytest.fixture(scope="session")
-def cherry() -> Fruit:
-    """Cherry fruit fixture."""
-    return Fruit(name="cherry", color="red")
-
-
-@pytest.fixture(scope="session")
-def blueberry() -> Fruit:
-    """Blueberry fruit fixture."""
-    return Fruit(name="blueberry", color="blue")
-
-
-@pytest.fixture(scope="module")
-def concept_provider() -> ConceptProviderAbstract:
-    """Concept provider fixture for testing concept compatibility."""
-    return get_concept_provider()

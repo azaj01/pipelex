@@ -1,10 +1,10 @@
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from pipelex.core.concepts.concept_blueprint import ConceptBlueprint
 from pipelex.core.pipes.exceptions import PipeBlueprintError
-from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
+from pipelex.core.pipes.input_requirement_blueprint import InputRequirementBlueprint
 from pipelex.tools.misc.string_utils import is_snake_case
 from pipelex.types import StrEnum
 
@@ -40,7 +40,7 @@ class AllowedPipeTypes(StrEnum):
     PIPE_IMG_GEN = "PipeImgGen"
     PIPE_COMPOSE = "PipeCompose"
     PIPE_LLM = "PipeLLM"
-    PIPE_OCR = "PipeOcr"
+    PIPE_OCR = "PipeExtract"
     # Pipe Controller
     PIPE_BATCH = "PipeBatch"
     PIPE_CONDITION = "PipeCondition"
@@ -55,11 +55,35 @@ class AllowedPipeTypes(StrEnum):
 class PipeBlueprint(BaseModel):
     model_config = ConfigDict(extra="forbid")
     source: str | None = None
-    category: Any
+    pipe_category: Any = Field(exclude=True)  # Technical field for Union discrimination, not user-facing
     type: Any  # TODO: Find a better way to handle this.
     description: str | None = None
     inputs: dict[str, str | InputRequirementBlueprint] | None = None
     output: str
+
+    @property
+    def pipe_dependencies(self) -> set[str]:
+        """Return the set of pipe codes that this pipe depends on.
+
+        This is overridden by PipeController subclasses to return their dependencies.
+        PipeOperators have no dependencies, so return an empty set.
+
+        Returns:
+            Set of pipe codes this pipe depends on
+        """
+        return set()
+
+    @property
+    def ordered_pipe_dependencies(self) -> list[str] | None:
+        """Return ordered dependencies if order matters (e.g., for PipeSequence steps).
+
+        This is overridden by controllers where dependency order is significant,
+        such as PipeSequence where steps should be processed in order.
+
+        Returns:
+            Ordered list of pipe codes if order matters, None otherwise
+        """
+        return None
 
     @field_validator("type", mode="after")
     @staticmethod
@@ -70,7 +94,7 @@ class PipeBlueprint(BaseModel):
             raise PipeBlueprintError(msg)
         return value
 
-    @field_validator("category", mode="after")
+    @field_validator("pipe_category", mode="after")
     @staticmethod
     def validate_pipe_category(value: Any) -> Any:
         """Validate that the pipe category is one of the allowed values."""

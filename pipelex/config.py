@@ -5,16 +5,15 @@ from pydantic import Field, field_validator
 
 from pipelex.cogt.config_cogt import Cogt
 from pipelex.cogt.model_backends.prompting_target import PromptingTarget
+from pipelex.cogt.templating.templating_style import TemplatingStyle
 from pipelex.exceptions import PipelexConfigError, StaticValidationErrorType
 from pipelex.hub import get_required_config
 from pipelex.language.plx_config import PlxConfig
-from pipelex.libraries.library_config import LibraryConfig
 from pipelex.pipeline.track.tracker_config import TrackerConfig
+from pipelex.system.configuration.config_model import ConfigModel
+from pipelex.system.configuration.config_root import ConfigRoot
 from pipelex.tools.aws.aws_config import AwsConfig
-from pipelex.tools.config.config_model import ConfigModel
-from pipelex.tools.config.config_root import ConfigRoot
 from pipelex.tools.log.log_config import LogConfig
-from pipelex.tools.templating.templating_models import PromptingStyle
 from pipelex.types import StrEnum
 
 
@@ -29,8 +28,8 @@ class StaticValidationConfig(ConfigModel):
     reactions: dict[StaticValidationErrorType, StaticValidationReaction]
 
     @field_validator("reactions", mode="before")
-    @staticmethod
-    def validate_reactions(value: dict[str, str]) -> dict[StaticValidationErrorType, StaticValidationReaction]:
+    @classmethod
+    def validate_reactions(cls, value: dict[str, str]) -> dict[StaticValidationErrorType, StaticValidationReaction]:
         return cast(
             "dict[StaticValidationErrorType, StaticValidationReaction]",
             ConfigModel.transform_dict_str_to_enum(
@@ -49,22 +48,17 @@ class DryRunConfig(ConfigModel):
     apply_to_jinja2_rendering: bool
     text_gen_truncate_length: int
     nb_list_items: int
-    nb_ocr_pages: int
+    nb_extract_pages: int
     image_urls: list[str]
     allowed_to_fail_pipes: list[str] = Field(default_factory=list)
 
     @field_validator("image_urls", mode="before")
-    @staticmethod
-    def validate_image_urls(value: list[str]) -> list[str]:
+    @classmethod
+    def validate_image_urls(cls, value: list[str]) -> list[str]:
         if not value:
             msg = "dry_run_config.image_urls must be a non-empty list"
             raise PipelexConfigError(msg)
         return value
-
-
-class GenericTemplateNames(ConfigModel):
-    structure_from_preliminary_text_user: str
-    structure_from_preliminary_text_system: str
 
 
 class StructureConfig(ConfigModel):
@@ -72,10 +66,10 @@ class StructureConfig(ConfigModel):
 
 
 class PromptingConfig(ConfigModel):
-    default_prompting_style: PromptingStyle
-    prompting_styles: dict[str, PromptingStyle]
+    default_prompting_style: TemplatingStyle
+    prompting_styles: dict[str, TemplatingStyle]
 
-    def get_prompting_style(self, prompting_target: PromptingTarget | None = None) -> PromptingStyle | None:
+    def get_prompting_style(self, prompting_target: PromptingTarget | None = None) -> TemplatingStyle | None:
         if prompting_target:
             return self.prompting_styles.get(prompting_target, self.default_prompting_style)
         return None
@@ -100,14 +94,23 @@ class ObserverConfig(ConfigModel):
     observer_dir: str
 
 
+class ScanConfig(ConfigModel):
+    excluded_dirs: frozenset[str]
+
+    @field_validator("excluded_dirs", mode="before")
+    @classmethod
+    def validate_excluded_dirs(cls, value: list[str] | frozenset[str]) -> frozenset[str]:
+        if isinstance(value, frozenset):
+            return value
+        return frozenset(value)
+
+
 class Pipelex(ConfigModel):
     feature_config: FeatureConfig
     log_config: LogConfig
     aws_config: AwsConfig
 
-    library_config: LibraryConfig
     static_validation_config: StaticValidationConfig
-    generic_template_names: GenericTemplateNames
     tracker_config: TrackerConfig
     structure_config: StructureConfig
     prompting_config: PromptingConfig
@@ -117,12 +120,30 @@ class Pipelex(ConfigModel):
     pipe_run_config: PipeRunConfig
     reporting_config: ReportingConfig
     observer_config: ObserverConfig
+    scan_config: ScanConfig
+
+
+class MigrationConfig(ConfigModel):
+    migration_maps: dict[str, dict[str, str]]
+
+    def text_in_renaming_keys(self, category: str, text: str) -> list[tuple[str, str]]:
+        renaming_map = self.migration_maps.get(category)
+        if not renaming_map:
+            return []
+        return [(key, value) for key, value in renaming_map.items() if text in key]
+
+    def text_in_renaming_values(self, category: str, text: str) -> list[tuple[str, str]]:
+        renaming_map = self.migration_maps.get(category)
+        if not renaming_map:
+            return []
+        return [(key, value) for key, value in renaming_map.items() if text in value]
 
 
 class PipelexConfig(ConfigRoot):
     session_id: str = shortuuid.uuid()
     cogt: Cogt
     pipelex: Pipelex
+    migration: MigrationConfig
 
 
 def get_config() -> PipelexConfig:

@@ -2,17 +2,17 @@ import pytest
 
 from pipelex import log, pretty_print
 from pipelex.core.concepts.concept_factory import ConceptFactory
-from pipelex.core.concepts.concept_native import NATIVE_CONCEPTS_DATA, NativeConceptEnum
+from pipelex.core.concepts.concept_native import NativeConceptCode
 from pipelex.core.memory.working_memory_factory import WorkingMemoryFactory
-from pipelex.core.pipes.pipe_run_params import PipeRunMode
-from pipelex.core.pipes.pipe_run_params_factory import PipeRunParamsFactory
-from pipelex.core.stuffs.stuff_content import TextContent
 from pipelex.core.stuffs.stuff_factory import StuffFactory
+from pipelex.core.stuffs.text_content import TextContent
 from pipelex.hub import get_pipe_router
 from pipelex.pipe_operators.func.pipe_func_blueprint import PipeFuncBlueprint
 from pipelex.pipe_operators.func.pipe_func_factory import PipeFuncFactory
-from pipelex.pipe_works.pipe_job_factory import PipeJobFactory
-from pipelex.tools.func_registry import func_registry
+from pipelex.pipe_run.pipe_job_factory import PipeJobFactory
+from pipelex.pipe_run.pipe_run_params import PipeRunMode
+from pipelex.pipe_run.pipe_run_params_factory import PipeRunParamsFactory
+from pipelex.system.registries.func_registry import func_registry
 from tests.cases.source_code import wrap_lines
 
 
@@ -45,7 +45,7 @@ if __name__ == "__main__":
         # Create stuff with the source code
         source_text_stuff = StuffFactory.make_stuff(
             name="source_text",
-            concept=ConceptFactory.make_native_concept(native_concept_data=NATIVE_CONCEPTS_DATA[NativeConceptEnum.TEXT]),
+            concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT),
             content=TextContent(text=sample_code),
         )
 
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         pipe_func_blueprint = PipeFuncBlueprint(
             description="Function pipe for wrapping lines",
             function_name="wrap_lines",
-            output=NativeConceptEnum.TEXT,
+            output=NativeConceptCode.TEXT,
         )
 
         pipe_job = PipeJobFactory.make_pipe_job(

@@ -8,10 +8,9 @@ from typing_extensions import override
 from pipelex import log
 from pipelex.config import get_config
 from pipelex.core.memory.working_memory import MAIN_STUFF_NAME, WorkingMemory
-from pipelex.core.pipes.pipe_input import PipeInputSpec
+from pipelex.core.pipes.input_requirements import InputRequirements
 from pipelex.core.pipes.pipe_output import PipeOutput
-from pipelex.core.pipes.pipe_run_params import BatchParams, PipeRunMode, PipeRunParams
-from pipelex.core.stuffs.stuff_content import ListContent, StuffContent
+from pipelex.core.stuffs.list_content import ListContent
 from pipelex.core.stuffs.stuff_factory import StuffFactory
 from pipelex.exceptions import (
     PipeInputError,
@@ -20,6 +19,7 @@ from pipelex.exceptions import (
 )
 from pipelex.hub import get_pipeline_tracker, get_required_pipe
 from pipelex.pipe_controllers.pipe_controller import PipeController
+from pipelex.pipe_run.pipe_run_params import BatchParams, PipeRunMode, PipeRunParams
 from pipelex.pipeline.job_metadata import JobMetadata
 from pipelex.types import Self
 
@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from collections.abc import Coroutine
 
     from pipelex.core.stuffs.stuff import Stuff
+    from pipelex.core.stuffs.stuff_content import StuffContent
 
 
 class PipeBatch(PipeController):
@@ -74,7 +75,7 @@ class PipeBatch(PipeController):
         return required_variables
 
     @override
-    def needed_inputs(self, visited_pipes: set[str] | None = None) -> PipeInputSpec:
+    def needed_inputs(self, visited_pipes: set[str] | None = None) -> InputRequirements:
         return self.inputs
 
     async def _run_batch_pipe(

@@ -5,20 +5,23 @@ from typing_extensions import override
 
 from pipelex import log
 from pipelex.cogt.content_generation.content_generator_protocol import ContentGeneratorProtocol, update_job_metadata
+from pipelex.cogt.extract.extract_input import ExtractInput
+from pipelex.cogt.extract.extract_job_components import ExtractJobConfig, ExtractJobParams
+from pipelex.cogt.extract.extract_output import ExtractedImageFromPage, ExtractOutput, Page
 from pipelex.cogt.image.generated_image import GeneratedImage
 from pipelex.cogt.img_gen.img_gen_job_components import ImgGenJobConfig, ImgGenJobParams
 from pipelex.cogt.img_gen.img_gen_prompt import ImgGenPrompt
 from pipelex.cogt.llm.llm_prompt import LLMPrompt
 from pipelex.cogt.llm.llm_prompt_factory_abstract import LLMPromptFactoryAbstract
 from pipelex.cogt.llm.llm_setting import LLMSetting
-from pipelex.cogt.ocr.ocr_input import OcrInput
-from pipelex.cogt.ocr.ocr_job_components import OcrJobConfig, OcrJobParams
-from pipelex.cogt.ocr.ocr_output import ExtractedImageFromPage, OcrOutput, Page
+from pipelex.cogt.templating.template_category import TemplateCategory
+from pipelex.cogt.templating.templating_style import TemplatingStyle
 from pipelex.config import get_config
 from pipelex.pipeline.job_metadata import JobMetadata
-from pipelex.tools.templating.jinja2_template_category import Jinja2TemplateCategory
-from pipelex.tools.templating.templating_models import PromptingStyle
+from pipelex.tools.jinja2.jinja2_parsing import check_jinja2_parsing
 from pipelex.tools.typing.pydantic_utils import BaseModelTypeVar
+
+DRY_BASE_64_IMAGE = "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mP8z8BQz0AEYBxVSF+FABJADveWkH6oAAAAAElFTkSuQmCC"
 
 
 class ContentGeneratorDry(ContentGeneratorProtocol):
@@ -32,7 +35,7 @@ class ContentGeneratorDry(ContentGeneratorProtocol):
 
     @override
     @update_job_metadata
-    async def make_llm_text(  # pyright: ignore[reportIncompatibleMethodOverride]
+    async def make_llm_text(
         self,
         job_metadata: JobMetadata,
         llm_setting_main: LLMSetting,
@@ -45,7 +48,7 @@ class ContentGeneratorDry(ContentGeneratorProtocol):
 
     @override
     @update_job_metadata
-    async def make_object_direct(  # pyright: ignore[reportIncompatibleMethodOverride]
+    async def make_object_direct(
         self,
         job_metadata: JobMetadata,
         object_class: type[BaseModelTypeVar],
@@ -69,7 +72,7 @@ class ContentGeneratorDry(ContentGeneratorProtocol):
 
     @override
     @update_job_metadata
-    async def make_text_then_object(  # pyright: ignore[reportIncompatibleMethodOverride]
+    async def make_text_then_object(
         self,
         job_metadata: JobMetadata,
         object_class: type[BaseModelTypeVar],
@@ -90,7 +93,7 @@ class ContentGeneratorDry(ContentGeneratorProtocol):
 
     @override
     @update_job_metadata
-    async def make_object_list_direct(  # pyright: ignore[reportIncompatibleMethodOverride]
+    async def make_object_list_direct(
         self,
         job_metadata: JobMetadata,
         object_class: type[BaseModelTypeVar],
@@ -113,7 +116,7 @@ class ContentGeneratorDry(ContentGeneratorProtocol):
 
     @override
     @update_job_metadata
-    async def make_text_then_object_list(  # pyright: ignore[reportIncompatibleMethodOverride]
+    async def make_text_then_object_list(
         self,
         job_metadata: JobMetadata,
         object_class: type[BaseModelTypeVar],
@@ -135,7 +138,7 @@ class ContentGeneratorDry(ContentGeneratorProtocol):
 
     @override
     @update_job_metadata
-    async def make_single_image(  # pyright: ignore[reportIncompatibleMethodOverride]
+    async def make_single_image(
         self,
         job_metadata: JobMetadata,
         img_gen_handle: str,
@@ -155,7 +158,7 @@ class ContentGeneratorDry(ContentGeneratorProtocol):
 
     @override
     @update_job_metadata
-    async def make_image_list(  # pyright: ignore[reportIncompatibleMethodOverride]
+    async def make_image_list(
         self,
         job_metadata: JobMetadata,
         img_gen_handle: str,
@@ -177,56 +180,55 @@ class ContentGeneratorDry(ContentGeneratorProtocol):
         ]
 
     @override
-    async def make_jinja2_text(
+    async def make_templated_text(
         self,
         context: dict[str, Any],
-        jinja2_name: str | None = None,
-        jinja2: str | None = None,
-        prompting_style: PromptingStyle | None = None,
-        template_category: Jinja2TemplateCategory = Jinja2TemplateCategory.LLM_PROMPT,
+        template: str,
+        templating_style: TemplatingStyle | None = None,
+        template_category: TemplateCategory | None = None,
     ) -> str:
-        # TODO: Use the code that checks if the jinja2 is a valid template
-        func_name = "make_jinja2_text"
+        check_jinja2_parsing(template_source=template, template_category=template_category or TemplateCategory.BASIC)
+        func_name = "make_templated_text"
         log.dev(f"🤡 DRY RUN: {self.__class__.__name__}.{func_name}")
-        jinja2_truncated = jinja2[: self._text_gen_truncate_length] if jinja2 else None
+        jinja2_truncated = template[: self._text_gen_truncate_length]
         return (
-            f"DRY RUN: {func_name} • context={context} • jinja2_name={jinja2_name} • "
-            f"jinja2={jinja2_truncated} • prompting_style={prompting_style} • template_category={template_category}"
+            f"DRY RUN: {func_name} • context={context} • "
+            f"jinja2={jinja2_truncated} • templating_style={templating_style} • template_category={template_category}"
         )
 
     @override
-    async def make_ocr_extract_pages(
+    async def make_extract_pages(
         self,
         job_metadata: JobMetadata,
-        ocr_input: OcrInput,
-        ocr_handle: str,
-        ocr_job_params: OcrJobParams | None = None,
-        ocr_job_config: OcrJobConfig | None = None,
-    ) -> OcrOutput:
-        func_name = "make_ocr_extract_pages"
+        extract_input: ExtractInput,
+        extract_handle: str,
+        extract_job_params: ExtractJobParams | None = None,
+        extract_job_config: ExtractJobConfig | None = None,
+    ) -> ExtractOutput:
+        func_name = "make_extract_pages"
         log.dev(f"🤡 DRY RUN: {self.__class__.__name__}.{func_name}")
-        if ocr_input.image_uri:
-            ocr_image_as_page = Page(
+        if extract_input.image_uri:
+            image_as_page = Page(
                 text="DRY RUN: OCR text",
                 extracted_images=[],
                 page_view=None,
             )
-            ocr_output = OcrOutput(
-                pages={1: ocr_image_as_page},
+            extract_output = ExtractOutput(
+                pages={1: image_as_page},
             )
         else:
-            nb_pages = get_config().pipelex.dry_run_config.nb_ocr_pages
+            nb_pages = get_config().pipelex.dry_run_config.nb_extract_pages
             pages = {
                 page_index: Page(
                     text="DRY RUN: OCR text",
                     extracted_images=[],
                     page_view=ExtractedImageFromPage(
                         image_id=f"page_view_{page_index}",
-                        base_64="",
+                        base_64=DRY_BASE_64_IMAGE,
                         caption="DRY RUN: OCR text",
                     ),
                 )
                 for page_index in range(1, nb_pages + 1)
             }
-            ocr_output = OcrOutput(pages=pages)
-        return ocr_output
+            extract_output = ExtractOutput(pages=pages)
+        return extract_output

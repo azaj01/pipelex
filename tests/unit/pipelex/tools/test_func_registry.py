@@ -6,8 +6,8 @@ import pytest
 from pytest import LogCaptureFixture
 
 from pipelex.core.memory.working_memory import WorkingMemory
-from pipelex.core.stuffs.stuff_content import TextContent
-from pipelex.tools.func_registry import FuncRegistry, FuncRegistryError
+from pipelex.core.stuffs.text_content import TextContent
+from pipelex.system.registries.func_registry import FuncRegistry, FuncRegistryError
 
 
 def sample_function():
@@ -54,10 +54,10 @@ def no_type_hints(working_memory):  # noqa: ARG001, ANN001 # pyright: ignore[rep
 
 
 # Type alias for test parameters
-TestParams = tuple[str, Callable[..., Any], bool]
+EligibilityTestCase = tuple[str, Callable[..., Any], bool]
 
 # Test data
-TEST_CASES: list[TestParams] = [
+TEST_CASES: list[EligibilityTestCase] = [
     # Valid cases
     ("valid_function", valid_function, True),
     ("valid_async_function", valid_async_function, True),

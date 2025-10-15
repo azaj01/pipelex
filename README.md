@@ -18,7 +18,7 @@ Stop reinventing AI workflows from scratch. With Pipelex, your proven methods be
 
   <p align="center">
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License"></a>
-    <a href="https://github.com/Pipelex/pipelex/actions/workflows/check-test-count-badge.yml"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Pipelex/pipelex/feature/pipe-builder/.badges/tests.json" alt="Tests"></a>
+    <a href="https://github.com/Pipelex/pipelex/actions/workflows/check-test-count-badge.yml"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Pipelex/pipelex/main/.badges/tests.json" alt="Tests"></a>
     <img src="https://img.shields.io/pypi/v/pipelex?logo=pypi&logoColor=white&color=blue&style=flat-square"
      alt="PyPI – latest release">
     <br/>
@@ -53,6 +53,7 @@ Stop reinventing AI workflows from scratch. With Pipelex, your proven methods be
 - [Quick start](#-quick-start)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
+  - [API Key Configuration](#api-key-configuration)
   - [Optional features](#optional-features)
 - [Contributing](#-contributing)
 - [Support](#-support)
@@ -77,8 +78,8 @@ type = "PipeLLM"
 description = "Extract buyer from purchase document"
 inputs = { purchase_document_text = "PurchaseDocumentText" }
 output = "Buyer"
-llm = "llm_to_extract_info"
-prompt_template = """
+model = "llm_to_extract_info"
+prompt = """
 Extract the first and last name of the buyer from this purchase document:
 @purchase_document_text
 """
@@ -121,6 +122,79 @@ poetry add pipelex
 uv pip install pipelex
 ```
 
+### API Key Configuration
+
+Pipelex supports two approaches for accessing AI models:
+
+#### Option A: Pipelex Inference (Optional & Free)
+
+Get a single API key that works with all providers (OpenAI, Anthropic, Google, Mistral, FAL, and more):
+
+1. **Get your API key:**
+   - Join our Discord community: [https://go.pipelex.com/discord](https://go.pipelex.com/discord)
+   - Request your free API key (no credit card required, limited time offer) in the [🔑・free-api-key](https://discord.com/channels/1369447918955921449/1418228010431025233) channel
+
+2. **Configure environment variables:**
+   ```bash
+   # Copy the example file
+   cp .env.example .env
+   
+   # Edit .env and add your Pipelex Inference API key
+   # PIPELEX_INFERENCE_API_KEY="your-api-key"
+   ```
+   
+   > **Note:** Pipelex automatically loads environment variables from `.env` files. No need to manually source or export them.
+
+3. **Verify backend configuration:**
+   - The `pipelex_inference` backend is already enabled in `.pipelex/inference/backends.toml`
+   - The default routing profile `pipelex_first` is configured to use Pipelex Inference
+
+#### Option B: Bring Your Own Keys
+
+Use your own API keys from individual providers (OpenAI, Anthropic, Google, Mistral, AWS Bedrock, Azure OpenAI, FAL):
+
+1. **Configure environment variables:**
+   ```bash
+   # Copy the example file
+   cp .env.example .env
+   
+   # Edit .env and add your provider API keys
+   # OPENAI_API_KEY="your-openai-key"
+   # ANTHROPIC_API_KEY="your-anthropic-key"
+   # GOOGLE_API_KEY="your-google-key"
+   # ... (add the keys you need)
+   ```
+
+2. **Configure backends:**
+   - Edit `.pipelex/inference/backends.toml` to enable/disable backends
+   - Set `enabled = true` for the backends you want to use
+   - Set `enabled = false` for backends you don't need
+
+3. **Select routing profile:**
+   - Edit `.pipelex/inference/routing_profiles.toml`
+   - Set `active = "custom_routing"` or create your own profile
+   - Configure which backend handles which models
+
+#### Option C: Mix & Match (Custom Routing)
+
+Combine Pipelex Inference with your own keys for maximum flexibility:
+
+1. **Configure environment variables:**
+   ```bash
+   # Copy and edit .env with both Pipelex and provider keys
+   cp .env.example .env
+   ```
+
+2. **Enable multiple backends:**
+   - Keep `pipelex_inference` enabled in `.pipelex/inference/backends.toml`
+   - Enable specific provider backends (e.g., `openai`, `fal`)
+
+3. **Create custom routing:**
+   - Edit `.pipelex/inference/routing_profiles.toml`
+   - Set up a hybrid profile routing some models to Pipelex, others to your backends
+
+See the [configuration documentation](https://docs.pipelex.com/pages/configuration/config-technical/inference-backend-config/) for detailed setup instructions.
+
 ### Optional Features
 
 The package supports the following additional features:
@@ -135,17 +209,17 @@ Install all extras:
 
 Using `pip`:
 ```bash
-pip install "pipelex[anthropic,google,mistralai,bedrock,fal]"
+pip install "pipelex[anthropic,google,google-genai,mistralai,bedrock,fal]"
 ```
 
 Using `poetry`:
 ```bash
-poetry add "pipelex[anthropic,google,mistralai,bedrock,fal,pypdfium2]"
+poetry add "pipelex[anthropic,google,google-genai,mistralai,bedrock,fal]"
 ```
 
 Using `uv`:
 ```bash
-uv pip install "pipelex[anthropic,google,mistralai,bedrock,fal]"
+uv pip install "pipelex[anthropic,google,google-genai,mistralai,bedrock,fal]"
 ```
 
 ---
@@ -178,12 +252,12 @@ type = "PipeLLM"
 description = "Analyze the draft tweet and identify areas for improvement"
 inputs = { draft_tweet = "DraftTweet" }
 output = "TweetAnalysis"
-llm = "llm_for_writing_analysis"
+model = "llm_for_writing_analysis"
 system_prompt = """
 You are an expert in social media optimization, particularly for tech content on Twitter/X.
 Your role is to analyze tech tweets and check if they display typical startup communication pitfalls.
 """
-prompt_template = """
+prompt = """
 Evaluate the tweet for these key issues:
 
 **Fluffiness** - Overuse of buzzwords without concrete meaning (e.g., "synergizing disruptive paradigms")
@@ -207,12 +281,12 @@ type = "PipeLLM"
 description = "Optimize the tweet based on the analysis"
 inputs = { draft_tweet = "DraftTweet", tweet_analysis = "TweetAnalysis", writing_style = "WritingStyle" }
 output = "OptimizedTweet"
-llm = "llm_for_social_post_writing"
+model = "llm_for_social_post_writing"
 system_prompt = """
 You are an expert in writing engaging tech tweets that drive meaningful discussions and engagement.
 Your goal is to rewrite tweets to be impactful and avoid the pitfalls identified in the analysis.
 """
-prompt_template = """
+prompt = """
 Rewrite this tech tweet to be more engaging and effective, based on the analysis:
 
 Original tweet:

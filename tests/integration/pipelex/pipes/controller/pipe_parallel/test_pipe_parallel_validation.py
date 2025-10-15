@@ -1,8 +1,8 @@
 from pipelex.core.concepts.concept_blueprint import ConceptBlueprint
 from pipelex.core.concepts.concept_factory import ConceptFactory
-from pipelex.core.pipes.pipe_input import PipeInputSpec
-from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
-from pipelex.hub import get_concept_provider, get_pipe_provider
+from pipelex.core.pipes.input_requirement_blueprint import InputRequirementBlueprint
+from pipelex.core.pipes.input_requirements import InputRequirements
+from pipelex.hub import get_concept_library, get_pipe_library
 from pipelex.pipe_controllers.parallel.pipe_parallel_blueprint import PipeParallelBlueprint
 from pipelex.pipe_controllers.parallel.pipe_parallel_factory import PipeParallelFactory
 from pipelex.pipe_controllers.sub_pipe_factory import SubPipeBlueprint
@@ -17,7 +17,7 @@ class TestPipeParallelValidation:
         """Test PipeParallel structure with a real pipe"""
         # Create a real PipeLLM that will infer inputs from the prompt template
         domain = "test_domain"
-        concept_library = get_concept_provider()
+        concept_library = get_concept_library()
         concept_blueprint = ConceptBlueprint(description="A test document")
         concept_1 = ConceptFactory.make_from_blueprint(
             domain=domain,
@@ -46,7 +46,7 @@ class TestPipeParallelValidation:
             },
             description="Analysis pipe for document processing",
             output=ConceptFactory.make_concept_string_with_domain(domain=domain, concept_code=concept_3.code),
-            prompt_template="Analyze this document:  \n@context\n@document",
+            prompt="Analyze this document:  \n@context\n@document",
         )
 
         real_pipe = PipeLLMFactory.make_from_blueprint(
@@ -55,8 +55,8 @@ class TestPipeParallelValidation:
             blueprint=pipe_llm_blueprint,
         )
 
-        pipe_provider = get_pipe_provider()
-        pipe_provider.add_new_pipe(pipe=real_pipe)
+        pipe_library = get_pipe_library()
+        pipe_library.add_new_pipe(pipe=real_pipe)
 
         # Verify the real pipe was created successfully
         assert real_pipe.domain == domain
@@ -98,7 +98,7 @@ class TestPipeParallelValidation:
         """Test basic PipeParallel creation and structure"""
         # Create a simple PipeParallel with proper inputs
         domain = "test_domain"
-        concept_library = get_concept_provider()
+        concept_library = get_concept_library()
         concept_blueprint = ConceptBlueprint(description="Lorem Ipsum")
         concept_1 = ConceptFactory.make_from_blueprint(
             domain=domain,
@@ -150,7 +150,7 @@ class TestPipeParallelValidation:
     def test_pipe_parallel_needed_inputs_structure(self):
         """Test that PipeParallel needed_inputs method can be called and returns expected structure"""
         domain = "test_domain"
-        concept_library = get_concept_provider()
+        concept_library = get_concept_library()
         concept_blueprint = ConceptBlueprint(description="A test document")
         concept_1 = ConceptFactory.make_from_blueprint(
             domain=domain,
@@ -194,8 +194,8 @@ class TestPipeParallelValidation:
         # Test that needed_inputs method can be called
         needed_inputs = pipe_parallel.needed_inputs()
 
-        # Verify it returns a PipeInputSpec object
-        assert isinstance(needed_inputs, PipeInputSpec)
+        # Verify it returns a PipeInput object
+        assert isinstance(needed_inputs, InputRequirements)
         assert hasattr(needed_inputs, "root")
         assert isinstance(needed_inputs.root, dict)
         # With no sub-pipes, should return empty inputs

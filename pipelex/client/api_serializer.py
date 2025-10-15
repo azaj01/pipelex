@@ -5,12 +5,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 from pipelex.client.protocol import CompactMemory
-from pipelex.core.concepts.concept_native import NativeConceptEnum
+from pipelex.core.concepts.concept_native import NativeConceptCode
 from pipelex.core.memory.working_memory import WorkingMemory
 from pipelex.core.pipes.pipe_output import PipeOutput
 
 if TYPE_CHECKING:
-    from pipelex.core.stuffs.stuff_content import TextContent
+    from pipelex.core.stuffs.text_content import TextContent
 
 
 class ApiSerializer:
@@ -36,7 +36,7 @@ class ApiSerializer:
             return compact_memory
 
         for stuff_name, stuff in working_memory.root.items():
-            if NativeConceptEnum.is_text(concept_code=stuff.concept.code):
+            if NativeConceptCode.is_text_concept(concept_code=stuff.concept.code):
                 stuff_content = cast("TextContent", stuff.content)
                 item_dict: dict[str, Any] = {
                     "concept_code": stuff.concept.code,

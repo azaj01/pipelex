@@ -8,48 +8,48 @@ from pipelex.cogt.content_generation.content_generator_dry import ContentGenerat
 from pipelex.cogt.content_generation.content_generator_protocol import ContentGeneratorProtocol
 from pipelex.cogt.llm.llm_prompt import LLMPrompt
 from pipelex.cogt.llm.llm_prompt_factory_abstract import LLMPromptFactoryAbstract
-from pipelex.cogt.llm.llm_prompt_spec import LLMPromptSpec
 from pipelex.cogt.llm.llm_prompt_template import LLMPromptTemplate
-from pipelex.cogt.llm.llm_setting import LLMChoice, LLMSetting, LLMSettingChoices
+from pipelex.cogt.llm.llm_setting import LLMModelChoice, LLMSetting, LLMSettingChoices
 from pipelex.cogt.models.model_deck_check import check_llm_choice_with_deck
+from pipelex.cogt.templating.template_category import TemplateCategory
 from pipelex.config import StaticValidationReaction, get_config
 from pipelex.core.concepts.concept_factory import ConceptFactory
-from pipelex.core.concepts.concept_native import NativeConceptEnum
+from pipelex.core.concepts.concept_native import NativeConceptCode
 from pipelex.core.domains.domain import Domain, SpecialDomain
 from pipelex.core.memory.working_memory import WorkingMemory
-from pipelex.core.pipes.pipe_input import PipeInputSpec
-from pipelex.core.pipes.pipe_input_factory import PipeInputSpecFactory
+from pipelex.core.pipes.input_requirements import InputRequirements
+from pipelex.core.pipes.input_requirements_factory import InputRequirementsFactory
 from pipelex.core.pipes.pipe_output import PipeOutput
-from pipelex.core.pipes.pipe_run_params import (
-    PipeOutputMultiplicity,
-    PipeRunParamKey,
-    PipeRunParams,
-    output_multiplicity_to_apply,
-)
-from pipelex.core.stuffs.stuff_content import ListContent, StructuredContent, StuffContent, TextContent
+from pipelex.core.stuffs.list_content import ListContent
+from pipelex.core.stuffs.stuff_content import StuffContent
 from pipelex.core.stuffs.stuff_factory import StuffFactory
+from pipelex.core.stuffs.text_content import TextContent
 from pipelex.exceptions import (
     PipeDefinitionError,
-    PipeInputError,
-    PipeInputNotFoundError,
     StaticValidationError,
     StaticValidationErrorType,
 )
 from pipelex.hub import (
     get_class_registry,
-    get_concept_provider,
+    get_concept_library,
     get_content_generator,
     get_model_deck,
+    get_native_concept,
     get_optional_pipe,
     get_required_concept,
     get_required_domain,
     get_required_pipe,
-    get_template,
 )
+from pipelex.pipe_operators.llm.llm_prompt_blueprint import LLMPromptBlueprint
 from pipelex.pipe_operators.llm.pipe_llm_blueprint import StructuringMethod
 from pipelex.pipe_operators.pipe_operator import PipeOperator
+from pipelex.pipe_run.pipe_run_params import (
+    PipeOutputMultiplicity,
+    PipeRunParamKey,
+    PipeRunParams,
+    output_multiplicity_to_apply,
+)
 from pipelex.pipeline.job_metadata import JobMetadata
-from pipelex.tools.templating.jinja2_template_category import Jinja2TemplateCategory
 from pipelex.tools.typing.structure_printer import StructurePrinter
 from pipelex.types import Self
 
@@ -60,7 +60,7 @@ class PipeLLMOutput(PipeOutput):
 
 class PipeLLM(PipeOperator[PipeLLMOutput]):
     type: Literal["PipeLLM"] = "PipeLLM"
-    llm_prompt_spec: LLMPromptSpec
+    llm_prompt_spec: LLMPromptBlueprint
     llm_choices: LLMSettingChoices | None = None
     structuring_method: StructuringMethod | None = None
     prompt_template_to_structure: str | None = None
@@ -68,38 +68,38 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
     output_multiplicity: PipeOutputMultiplicity | None = None
 
     @model_validator(mode="after")
-    def validate_inputs(self) -> Self:
-        self._validate_required_variables()
-        self._validate_inputs()
+    def _validate_inputs(self) -> Self:
+        self.validate_inputs()
         return self
 
     @model_validator(mode="after")
     def validate_output_concept_consistency(self) -> Self:
-        if self.structuring_method is not None and self.output.structure_class_name == NativeConceptEnum.TEXT:
+        if self.structuring_method is not None and self.output.structure_class_name == NativeConceptCode.TEXT:
             msg = (
                 f"Output concept '{self.output.code}' is considered a Text concept, "
-                f"so it cannot be structured. Maybe you forgot to add '{NativeConceptEnum.TEXT}' to the class registry?"
+                f"so it cannot be structured. Maybe you forgot to add '{NativeConceptCode.TEXT}' to the class registry?"
             )
             raise PipeDefinitionError(msg)
         return self
 
     @override
     def validate_with_libraries(self):
-        self._validate_inputs()
+        llm_config = get_config().cogt.llm_config
+        self.validate_inputs()
         self.llm_prompt_spec.validate_with_libraries()
         if self.prompt_template_to_structure:
-            get_template(template_name=self.prompt_template_to_structure)
+            llm_config.get_template(template_name=self.prompt_template_to_structure)
         if self.system_prompt_to_structure:
-            get_template(template_name=self.system_prompt_to_structure)
+            llm_config.get_template(template_name=self.system_prompt_to_structure)
         if self.llm_choices:
             for llm_choice in self.llm_choices.list_choices():
                 check_llm_choice_with_deck(llm_choice=llm_choice)
 
     @override
     def validate_output(self):
-        if get_concept_provider().is_compatible(
+        if get_concept_library().is_compatible(
             tested_concept=self.output,
-            wanted_concept=get_concept_provider().get_native_concept(native_concept=NativeConceptEnum.IMAGE),
+            wanted_concept=get_native_concept(native_concept=NativeConceptCode.IMAGE),
         ):
             msg = (
                 f"The output of a LLM pipe cannot be compatible with the Image concept. In the "
@@ -108,55 +108,34 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
             raise PipeDefinitionError(msg)
 
     @override
-    def needed_inputs(self, visited_pipes: set[str] | None = None) -> PipeInputSpec:
+    def needed_inputs(self, visited_pipes: set[str] | None = None) -> InputRequirements:
         """Needed inputs are the inputs needed to run the pipe, specified in the inputs attribute of the pipe"""
-        # The images are not tagged in the prompt_template.
-        # Therefore if an image is provided in the inputs, it becomes a needed input.
-        needed_inputs = PipeInputSpecFactory.make_empty()
-        concept_provider = get_concept_provider()
+        needed_inputs = InputRequirementsFactory.make_empty()
 
         for input_name, requirement in self.inputs.items:
-            if concept_provider.is_image_concept(concept=requirement.concept):
-                needed_inputs.add_requirement(
-                    variable_name=input_name,
-                    concept=concept_provider.get_native_concept(native_concept=NativeConceptEnum.IMAGE),
-                )
-            else:
-                needed_inputs.add_requirement(variable_name=input_name, concept=requirement.concept)
-
+            needed_inputs.add_requirement(variable_name=input_name, concept=requirement.concept)
         return needed_inputs
 
     @override
     def required_variables(self) -> set[str]:
         """Required variables are the variables that are used in the current prompt template or system prompt"""
-        required_variables: set[str] = set()
-        required_variables.update(self.llm_prompt_spec.required_variables())
-        return {variable_name for variable_name in required_variables if not variable_name.startswith("_")}
+        return {variable_name for variable_name in self.llm_prompt_spec.required_variables() if not variable_name.startswith("_")}
 
-    def _validate_required_variables(self) -> Self:
-        """This method checks that all required variables are in the inputs"""
-        required_variables = self.required_variables()
-        for required_variable_name in required_variables:
-            if required_variable_name not in self.inputs.variables:
-                msg = f"Required variable '{required_variable_name}' is not in the inputs of pipe {self.code}"
-                raise PipeDefinitionError(msg)
-        return self
-
-    def _validate_inputs(self):
-        concept_provider = get_concept_provider()
+    def validate_inputs(self):
         static_validation_config = get_config().pipelex.static_validation_config
         default_reaction = static_validation_config.default_reaction
         reactions = static_validation_config.reactions
+        # Those are the variables required in the prompt template or system prompt
+        required_variables = self.required_variables()
 
-        the_needed_inputs = self.needed_inputs()
-        # check all required variables are in the inputs
-        for named_input_requirement in the_needed_inputs.named_input_requirements:
-            if named_input_requirement.variable_name not in self.inputs.variables:
+        # 1: Check that all the required variables are actually in the inputs
+        for required_variable_name in required_variables:
+            if required_variable_name not in self.needed_inputs().variables:
                 missing_input_var_error = StaticValidationError(
                     error_type=StaticValidationErrorType.MISSING_INPUT_VARIABLE,
                     domain=self.domain,
                     pipe_code=self.code,
-                    variable_names=[named_input_requirement.variable_name],
+                    variable_names=[required_variable_name],
                 )
                 match reactions.get(StaticValidationErrorType.MISSING_INPUT_VARIABLE, default_reaction):
                     case StaticValidationReaction.IGNORE:
@@ -166,58 +145,23 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
                     case StaticValidationReaction.RAISE:
                         raise missing_input_var_error
 
-            # There is one case where the needed input is of specific concept: the user_images
-            if named_input_requirement.concept == concept_provider.get_native_concept(native_concept=NativeConceptEnum.IMAGE):
-                try:
-                    input_requirement_of_declared_input = self.inputs.get_required_input_requirement(
-                        variable_name=named_input_requirement.variable_name,
+        # 2: Check that all inputs are in the required variables
+        for input_name, requirement in self.needed_inputs().items:
+            if input_name not in required_variables:
+                explanation: str | None = None
+                if get_concept_library().is_image_concept(concept=requirement.concept):
+                    # We have an exraneous image input, the user probably forgot to add it into the prompt template
+                    explanation = (
+                        f"You have provided an image input named '{input_name}', but it is not referenced in the prompt template. "
+                        "Please add it to the prompt template."
                     )
-                except PipeInputNotFoundError as exc:
-                    msg = f"Input variable '{named_input_requirement.variable_name}' is not in this PipeLLM '{self.code}' input spec: {self.inputs}"
-                    raise PipeInputError(msg) from exc
-                if not concept_provider.is_compatible(
-                    tested_concept=input_requirement_of_declared_input.concept,
-                    wanted_concept=named_input_requirement.concept,
-                ):
-                    if named_input_requirement.variable_name != named_input_requirement.requirement_expression:
-                        # the required_input is a sub-attribute of the required variable
-                        # TODO: check that the sub-attribute is compatible with the concept code
-                        # let's check at least that the input is a structured concept
-                        input_concept = input_requirement_of_declared_input.concept
-                        input_concept_class_name = input_concept.structure_class_name
-                        input_concept_class = get_class_registry().get_required_subclass(name=input_concept_class_name, base_class=StuffContent)
-                        if issubclass(input_concept_class, StructuredContent):
-                            continue
-                    explanation = "The input provided for LLM Vision must be an image or a concept that refines image"
-                    if inadequate_concept := input_requirement_of_declared_input.concept:
-                        explanation += f",\nconcept = {inadequate_concept}"
-                    else:
-                        explanation += ",\nconcept not found"
 
-                    inadequate_input_concept_error = StaticValidationError(
-                        error_type=StaticValidationErrorType.INADEQUATE_INPUT_CONCEPT,
-                        domain=self.domain,
-                        pipe_code=self.code,
-                        variable_names=[named_input_requirement.variable_name],
-                        provided_concept_code=input_requirement_of_declared_input.concept.code,
-                        explanation=explanation,
-                    )
-                    match reactions.get(StaticValidationErrorType.INADEQUATE_INPUT_CONCEPT, default_reaction):
-                        case StaticValidationReaction.IGNORE:
-                            pass
-                        case StaticValidationReaction.LOG:
-                            log.error(inadequate_input_concept_error.desc())
-                        case StaticValidationReaction.RAISE:
-                            raise inadequate_input_concept_error
-
-        # Check that all inputs are in the required variables
-        for input_name in self.inputs.variables:
-            if input_name not in the_needed_inputs.required_names:
                 extraneous_input_var_error = StaticValidationError(
                     error_type=StaticValidationErrorType.EXTRANEOUS_INPUT_VARIABLE,
                     domain=self.domain,
                     pipe_code=self.code,
                     variable_names=[input_name],
+                    explanation=explanation,
                 )
                 match reactions.get(StaticValidationErrorType.EXTRANEOUS_INPUT_VARIABLE, default_reaction):
                     case StaticValidationReaction.IGNORE:
@@ -236,19 +180,20 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
         output_name: str | None = None,
         content_generator: ContentGeneratorProtocol | None = None,
     ) -> PipeLLMOutput:
+        llm_config = get_config().cogt.llm_config
         content_generator = content_generator or get_content_generator()
         # interpret / unwrap the arguments
         log.debug(f"PipeLLM pipe_code = {self.code}")
         output_concept = self.output
-        if self.output.code == SpecialDomain.NATIVE + "." + NativeConceptEnum.DYNAMIC:
+        if self.output.code == SpecialDomain.NATIVE + "." + NativeConceptCode.DYNAMIC:
             # TODO: This DYNAMIC_OUTPUT_CONCEPT should not be a field in the params attribute of PipeRunParams.
             # It should be an attribute of PipeRunParams.
             output_concept_code = pipe_run_params.dynamic_output_concept_code or pipe_run_params.params.get(PipeRunParamKey.DYNAMIC_OUTPUT_CONCEPT)
 
             if not output_concept_code:
-                output_concept_code = SpecialDomain.NATIVE + "." + NativeConceptEnum.TEXT
+                output_concept_code = SpecialDomain.NATIVE + "." + NativeConceptCode.TEXT
             else:
-                output_concept = get_concept_provider().get_required_concept(
+                output_concept = get_required_concept(
                     concept_string=ConceptFactory.make_concept_string_with_domain(domain=self.domain, concept_code=output_concept_code),
                 )
 
@@ -256,14 +201,13 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
             base_multiplicity=self.output_multiplicity,
             override_multiplicity=pipe_run_params.output_multiplicity,
         )
-        log.debug(f"multiplicity_resolution: {multiplicity_resolution}")
         applied_output_multiplicity = multiplicity_resolution.resolved_multiplicity
         is_multiple_output = multiplicity_resolution.is_multiple_outputs_enabled
         fixed_nb_output = multiplicity_resolution.specific_output_count
 
         # Collect what LLM settings we have for this particular PipeLLM
-        llm_for_text_choice: LLMChoice | None = None
-        llm_for_object_choice: LLMChoice | None = None
+        llm_for_text_choice: LLMModelChoice | None = None
+        llm_for_object_choice: LLMModelChoice | None = None
         if self.llm_choices:
             llm_for_text_choice = self.llm_choices.for_text
             llm_for_object_choice = self.llm_choices.for_object
@@ -272,7 +216,7 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
 
         # Choice of main LLM for text first from this PipeLLM setting (self.llm_choices)
         # or from the llm_choice_overrides or fallback on the llm_choice_defaults
-        llm_setting_or_preset_id_for_text: LLMChoice = (
+        llm_setting_or_preset_id_for_text: LLMModelChoice = (
             llm_for_text_choice or model_deck.llm_choice_overrides.for_text or model_deck.llm_choice_defaults.for_text
         )
         llm_setting_main: LLMSetting = model_deck.get_llm_setting(llm_choice=llm_setting_or_preset_id_for_text)
@@ -280,18 +224,18 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
         # Choice of main LLM for object from this PipeLLM setting (self.llm_choices)
         # OR FROM THE llm_for_text_choice (if any)
         # then fallback on the llm_choice_overrides or llm_choice_defaults
-        llm_setting_or_preset_id_for_object: LLMChoice = (
+        llm_setting_or_preset_id_for_object: LLMModelChoice = (
             llm_for_object_choice or llm_for_text_choice or model_deck.llm_choice_overrides.for_object or model_deck.llm_choice_defaults.for_object
         )
         llm_setting_for_object: LLMSetting = model_deck.get_llm_setting(llm_choice=llm_setting_or_preset_id_for_object)
 
-        if (not self.llm_prompt_spec.prompting_style) and (
-            inference_model := model_deck.get_optional_inference_model(model_handle=llm_setting_main.llm_handle)
+        if (not self.llm_prompt_spec.templating_style) and (
+            inference_model := model_deck.get_optional_inference_model(model_handle=llm_setting_main.model)
         ):
             # Note: the case where we don't get an inference model corresponds to the use of an external LLM Plugin
             # TODO: improve this by making it possible to get the inference model for external LLM Plugins
             prompting_target = llm_setting_main.prompting_target or inference_model.prompting_target
-            self.llm_prompt_spec.prompting_style = get_config().pipelex.prompting_config.get_prompting_style(
+            self.llm_prompt_spec.templating_style = get_config().pipelex.prompting_config.get_prompting_style(
                 prompting_target=prompting_target,
             )
 
@@ -312,11 +256,7 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
         # we acknowledge the code here with llm_prompt_1 and llm_prompt_2 is overly complex and should be refactored.
 
         the_content: StuffContent
-        log.debug(f"output_concept.structure_class_name: {output_concept.structure_class_name}")
-        log.debug(f"TextContent.__class__.__name__: {TextContent.__class__.__name__}")
-        log.debug(f"is_multiple_output: {is_multiple_output}")
         if output_concept.structure_class_name == "TextContent" and not is_multiple_output:
-            log.debug(f"PipeLLM generating a single text output: {self.__class__.__name__}_gen_text")
             llm_prompt_1_for_text = await self.llm_prompt_spec.make_llm_prompt(
                 output_concept_string=output_concept.concept_string,
                 context_provider=working_memory,
@@ -355,7 +295,7 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
                         prompt_template_to_structure = (
                             self.prompt_template_to_structure
                             or domain.prompt_template_to_structure
-                            or get_template(template_name="structure_from_preliminary_text_user")
+                            or llm_config.get_template(template_name="structure_from_preliminary_text_user")
                         )
                         system_prompt = self.system_prompt_to_structure or domain.system_prompt
                         llm_prompt_2_proto = LLMPrompt(
@@ -375,7 +315,7 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
                 prompt_template_to_structure = (
                     self.prompt_template_to_structure
                     or domain.prompt_template_to_structure
-                    or get_template(template_name="structure_from_preliminary_text_user")
+                    or llm_config.get_template(template_name="structure_from_preliminary_text_user")
                 )
                 system_prompt = self.system_prompt_to_structure or domain.system_prompt
                 llm_prompt_2_proto = LLMPrompt(
@@ -390,7 +330,7 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
                 llm_prompt_2_factory = None
 
             output_structure_prompt: str | None = None
-            if get_config().cogt.llm_config.is_structure_prompt_enabled:
+            if llm_config.is_structure_prompt_enabled:
                 output_structure_prompt = await PipeLLM.get_output_structure_prompt(
                     concept_string=pipe_run_params.dynamic_output_concept_code or output_concept.concept_string,
                     is_with_preliminary_text=is_with_preliminary_text,
@@ -543,11 +483,16 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
         if not class_structure:
             return None
         class_structure_str = "\n".join(class_structure)
+        llm_config = get_config().cogt.llm_config
+        if is_with_preliminary_text:
+            template_source = llm_config.get_template(template_name="output_structure_prompt")
+        else:
+            template_source = llm_config.get_template(template_name="output_structure_prompt_no_preliminary_text")
 
-        return await get_content_generator().make_jinja2_text(
+        return await get_content_generator().make_templated_text(
             context={
                 "class_structure_str": class_structure_str,
             },
-            template_category=Jinja2TemplateCategory.LLM_PROMPT,
-            jinja2_name="output_structure_prompt" if is_with_preliminary_text else "output_structure_prompt_no_preliminary_text",
+            template=template_source,
+            template_category=TemplateCategory.LLM_PROMPT,
         )

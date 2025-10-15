@@ -2,16 +2,16 @@ from pydantic import BaseModel
 
 from pipelex import log
 from pipelex.core.memory.working_memory import WorkingMemory
-from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
+from pipelex.core.pipes.input_requirement_blueprint import InputRequirementBlueprint
 from pipelex.core.pipes.pipe_output import PipeOutput
-from pipelex.core.pipes.pipe_run_params import BatchParams, PipeOutputMultiplicity, PipeRunMode, PipeRunParams
-from pipelex.core.stuffs.stuff_content import ListContent
+from pipelex.core.stuffs.list_content import ListContent
 from pipelex.exceptions import PipeInputError, WorkingMemoryStuffNotFoundError
 from pipelex.hub import get_pipe_router, get_pipeline_tracker, get_required_pipe
 from pipelex.pipe_controllers.batch.pipe_batch_blueprint import PipeBatchBlueprint
 from pipelex.pipe_controllers.batch.pipe_batch_factory import PipeBatchFactory
 from pipelex.pipe_controllers.condition.pipe_condition import PipeCondition
-from pipelex.pipe_works.pipe_job_factory import PipeJobFactory
+from pipelex.pipe_run.pipe_job_factory import PipeJobFactory
+from pipelex.pipe_run.pipe_run_params import BatchParams, PipeOutputMultiplicity, PipeRunMode, PipeRunParams
 from pipelex.pipeline.job_metadata import JobMetadata
 
 
@@ -30,7 +30,6 @@ class SubPipe(BaseModel):
         sub_pipe_run_params: PipeRunParams,
     ) -> PipeOutput:
         """Run or dry run a single operation self."""
-        log.debug(f"SubPipe {self.pipe_code} to generate {self.output_name}")
         if self.output_multiplicity:
             sub_pipe_run_params.output_multiplicity = self.output_multiplicity
         sub_pipe_run_params.batch_params = self.batch_params
@@ -48,6 +47,7 @@ class SubPipe(BaseModel):
                 )
                 raise PipeInputError(msg) from exc
 
+            item_stuff_requirement = sub_pipe.inputs.get_required_input_requirement(variable_name=batch_params.input_item_stuff_name)
             pipe_batch_blueprint = PipeBatchBlueprint(
                 description=f"Batch processing for {self.pipe_code}",
                 branch_pipe_code=self.pipe_code,
@@ -56,7 +56,7 @@ class SubPipe(BaseModel):
                 input_item_name=batch_params.input_item_stuff_name,
                 inputs={
                     batch_params.input_item_stuff_name: InputRequirementBlueprint(
-                        concept=sub_pipe.inputs.root[batch_params.input_item_stuff_name].concept.concept_string,
+                        concept=item_stuff_requirement.concept.concept_string,
                     ),
                 },
             )
@@ -109,7 +109,6 @@ class SubPipe(BaseModel):
         else:
             # Case 3: Normal processing
             required_variables = sub_pipe.required_variables()
-            log.debug(required_variables, title=f"Required variables for {self.pipe_code}")
             required_stuff_names = {rv for rv in required_variables if not rv.startswith("_")}
             try:
                 required_stuffs = working_memory.get_stuffs(names=required_stuff_names)

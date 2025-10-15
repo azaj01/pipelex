@@ -1,17 +1,15 @@
-from pathlib import Path
 from typing import Any
 
 import pytest
 from pytest import FixtureRequest
 
 from pipelex import log, pretty_print
-from pipelex.config import get_config
 from pipelex.core.memory.working_memory_factory import WorkingMemoryFactory
-from pipelex.core.pipes.pipe_run_params import PipeOutputMultiplicity, PipeRunMode
-from pipelex.core.pipes.pipe_run_params_factory import PipeRunParamsFactory
 from pipelex.core.stuffs.stuff import Stuff
-from pipelex.hub import get_library_manager, get_pipe_router, get_required_pipe
-from pipelex.pipe_works.pipe_job_factory import PipeJobFactory
+from pipelex.hub import get_pipe_router, get_required_pipe
+from pipelex.pipe_run.pipe_job_factory import PipeJobFactory
+from pipelex.pipe_run.pipe_run_params import PipeOutputMultiplicity, PipeRunMode
+from pipelex.pipe_run.pipe_run_params_factory import PipeRunParamsFactory
 from pipelex.pipeline.activity.activity_handler import ActivityHandlerForResultFiles
 from pipelex.pipeline.job_metadata import JobMetadata
 from tests.integration.pipelex.test_data import PipeTestCases
@@ -19,7 +17,7 @@ from tests.integration.pipelex.test_data import PipeTestCases
 
 @pytest.mark.dry_runnable
 @pytest.mark.llm
-@pytest.mark.ocr
+@pytest.mark.extract
 @pytest.mark.inference
 @pytest.mark.asyncio(loop_scope="class")
 class TestPipeRunningVariants:
@@ -120,11 +118,13 @@ class TestPipeRunningVariants:
         exception: type[Exception],
         expected_error_message: str,
     ):
-        failing_pipelines_file_paths = get_config().pipelex.library_config.failing_pipelines_file_paths
-        library_manager = get_library_manager()
-        library_manager.load_libraries(
-            library_file_paths=[Path(failing_pipeline_file_path) for failing_pipeline_file_path in failing_pipelines_file_paths],
-        )
+        # failing_pipelines_file_paths = get_config().pipelex.library_config.failing_pipelines_file_paths
+        # library_manager = get_library_manager()
+        # Reset library to avoid pipe name collisions from previous test runs
+        # library_manager.reset()
+        # library_manager.load_libraries(
+        #     library_file_paths=[Path(failing_pipeline_file_path) for failing_pipeline_file_path in failing_pipelines_file_paths],
+        # )
 
         log.verbose(f"This pipe '{pipe_code}' is supposed to cause an error of type: {exception.__name__}")
         with pytest.raises(exception) as exc:

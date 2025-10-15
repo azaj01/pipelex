@@ -1,5 +1,174 @@
 # Changelog
 
+## [v0.12.0] - 2025-10-15
+
+### Highlights - Moving fast and breaking things
+
+- Added the new builder pipeline system for auto-generating Pipelex bundles from user briefs
+  - it's a pipeline to generate pipelines, and it works!
+  - the pipeline definitions are in `pipelex_libraries/pipelines/base_library/builder/`
+  - removed the previous draft which was named `meta_pipeline.plx`
+
+**Breaking changes... for good!**
+
+We tried to group all the renamings we wanted to do which impact our language, so that you get one migration to apply and then we will be way more stable in the future releases.
+
+This is all in the spirit of making Pipelex a declarative language, where you express what you want to do, and the system will figure out how to do it. So our focus inwas to make the Pipelex language easier to understand and use for non-technical users, and at the same time use more consistent and obvious words that developers are used to.
+
+**💡 Pro tip:** To make migration easier, pass the [migration guide](https://github.com/PipelexLab/pipelex/blob/main/pipelex/kit/migrations/migrate_0.11.0_0.12.0.md) to your favorite SWE agent (Cursor, Claude Code, github copilot, etc.) and let it handle the bulk of the changes!
+
+- **Removed centralized `pipelex_libraries` folder system**
+  - Pipelines are now auto-discovered from anywhere in your project—no special directory required
+  - No config path parameters needed in `Pipelex.make()` or CLI commands (just call `Pipelex.make()`)
+  - Custom functions require `@pipe_func()` decorator for auto-discovery
+  - Structure classes auto-discovered (must inherit from `StructuredContent`)
+  - Configuration stays at repository root in `.pipelex/` directory
+  - See [migration guide](https://github.com/PipelexLab/pipelex/blob/main/pipelex/kit/migrations/migrate_0.11.0_0.12.0.md) for details on reorganizing your project structure
+
+- General changes
+  - renamed `definition` fields to `description` across all cases
+
+- Renamed **PipeJinja2** to **PipeCompose**
+  - the fact that our templating engine is Jinja2 is a technnical detail, not fundamental to the language, especially since we included a pre-processor enabling insertion of variables in prompts using `@variable` or `$variable`, in addition to the jinja2 syntax `{{ variable }}`
+  - renamed `jinja2` field to `template` for the same reason
+  - for more control, instead of providing a string for the `template` field, you can also use a nested `template` section with `template`, `category` and `templating_style` fields
+
+- Renamed **PipeOCR** to **PipeExtract**
+  - this is to account for various text extraction techniques from images and docs, including but not only OCR; e.g. we now have integrated the `pypdfium2` package which can extract text and images from PDF, when it's actually real text (not an image), and soon we'll add support for other document extraction models solutions
+  - removed obligation to name your document input `ocr_input`, it can now be named whatever you want as long as it's a single input and it's either an `Image` or a `PDF` or some concept refining PDF or Image
+  - renamed `ocr_page_contents_from_pdf` to `extract_page_contents_from_pdf`
+  - renamed `ocr_page_contents_and_views_from_pdf` to `extract_page_contents_and_views_from_pdf`
+  - introduced model settings and presets for extract models like we had for LLMs
+  - renamed `ocr_model` to `model` for choice of model, preset, or explicit setting and introduced `base_ocr_mistral` as an alias to `mistral-ocr`
+
+- **PipeLLM** field renames
+  - image inputs must now be tagged in the prompt like all other inputs; you can just drop their names at the beginning or end of the prompt, or you can reference them in meaningful sentences to guide the Visual LLM, e.g. "Analyze the colors in $some_photo and the shapes in $some_painting." 
+  - renamed `prompt_template` field to `prompt`
+  - renamed `llm` field to `model`
+  - renamed `llm_to_structure` field to `model_to_structure`
+
+- **PipeImgGen** field renames
+  - renamed `img_gen` field to `model` for choice of model, preset, or explicit setting
+  - removed some technical settings such as `nb_steps` from the pipe attributes, instead you can set these as model settings or model presets
+  - introduced model settings and presets for image generation models like we had for LLMs
+
+- **PipeCondition** field renames
+  - renamed `pipe_map` to `outcomes`
+  - renamed `default_pipe_code` to `default_outcome` and it's now a required field, because we need to know what to do if the expression doesn't match any key in the outcomes map; if you don't know what to do in that case, then it's a failure and you can use the `fail` value
+
+- **Configuration file changes** (`.pipelex/` directory)
+  - Renamed parameter `llm_handle` to `model` across all LLM presets in deck files
+  - Renamed parameter `img_gen_handle` to `model` across all image generation presets in deck files
+  - Renamed parameter `ocr_handle` to `model` in extraction presets
+  - Renamed `ocr` section to `extract` throughout configuration files
+  - Renamed `ocr_config` to `extract_config` in `pipelex.toml`
+  - Renamed `base_ocr_pypdfium2` to `base_extract_pypdfium2`
+  - Renamed `is_auto_setup_preset_ocr` to `is_auto_setup_preset_extract`
+  - Renamed `nb_ocr_pages` to `nb_extract_pages`
+  - Updated pytest marker from 'ocr' to 'extract'
+
+### Added
+ - Added `cheap-gpt` model alias for `gpt-4o-mini`
+ - Added `cheap_llm_for_vision` preset using `gemini-2.5-flash-lite`
+ - Added `llm_for_testing_vision` and `llm_for_testing_vision_structured` presets for vision testing
+ - Added `is_dump_text_prompts_enabled` and `is_dump_response_text_enabled` configuration flags to have the console display everything that goes in and out of the LLMs
+ - Added `generic_templates` section in `llm_config` with structure extraction prompts
+ - Added useful error messages with migration configuration maps pin-pointing the fields to rename for config and plx files
+ - Added improved error message for `PipeFunc` when function not found in registry, mentioning `@pipe_func()` decorator requirement since v0.12.0
+ - Added pytest filterwarnings to ignore deprecated class-based config warnings
+ - Added `Flow` class that represents the flow of pipe signatures
+ - Added `pipe-builder` command `flow` to generate flow view from pipeline brief
+ - Added `FlowFactory` class to create Flow from PipelexBundleSpec or PLX files
+ - Added `sort_pipes_by_dependencies()` function for topological sorting of pipes
+ - Added `pipe_sorter.py` module for pipe dependency sorting utilities
+ - Added `search_for_nested_image_fields_in_structure_class()` method to Concept class
+ - Added `image_field_search.py` module with utilities to search for image fields in structure classes
+ - Added `pipe_dependencies` property to PipeBlueprint and controller blueprints
+ - Added `ordered_pipe_dependencies` property to PipeBlueprint for ordered dependencies
+ - Added `get_native_concept()` function to hub
+ - Added `get_pipes()` function to hub
+ - Added `remove_concepts_by_codes()` method to ConceptLibraryAbstract
+ - Added `remove_pipes_by_codes()` method to PipeLibraryAbstract
+ - Added template preprocessing with `preprocess_template()` function
+ - Added better dependency checking for optional SDK packages (anthropic, mistralai, boto3, aioboto3)
+ - Added `MissingDependencyError` exception for missing optional dependencies
+ - Added `library_utils.py` module with utility functions for PLX file discovery using `importlib.resources`
+ - Added `class_utils.py` module with `are_classes_equivalent()` and `has_compatible_field()` functions
+ - Added comprehensive unit tests for `CostRegistry`, `WorkingMemory`, and `ModuleInspector`
+ - Added `ScanConfig` class with configurable excluded directories for library scanning
+ - Added CSV export capabilities to `CostRegistry` with `save_to_csv()` and `to_records()` methods
+ - Added default configuration template in `pipelex/kit/configs/pipelex.toml`
+
+### Changed
+ - Replaced package `toml` by `tomli` which is more modern and faster
+ - Updated Gemini 2.0 model from `gemini-2.0-flash-exp` to `gemini-2.0-flash` with new pricing (input: $0.10, output: $0.40 per million tokens)
+ - Updated Gemini 2.5 Series comment from '(when available)' to stable release
+ - Updated `base-claude` from `claude-4-sonnet` to `claude-4.5-sonnet` across all presets
+ - Updated kajson dependency from version `0.3.0` to `0.3.1`
+ - Updated httpx dependency to `>=0.23.0,<1.0.0` for broader compatibility
+ - Cleanup env example and better explain how to set up keys in README and docs
+ - Changed Gemini routing from `google` backend to `pipelex_inference` backend
+ - **BREAKING:** Major module reorganization - moved `tools/config/`, `tools/exceptions.py`, `tools/environment.py`, `tools/runtime_manager.py` to `system/` package structure (`system/configuration/`, `system/exceptions.py`, `system/environment.py`, `system/runtime.py`)
+ - **BREAKING:** Reorganized registry modules from `tools/` to `system/registries/` (affects `class_registry_utils`, `func_registry`, `func_registry_utils`, `registry_models`)
+ - **BREAKING:** Split `pipelex.core.stuffs.stuff_content` module into individual files per content type (affects imports: `StructuredContent`, `TextContent`, `ImageContent`, `ListContent`, `PDFContent`, `PageContent`, `NumberContent`, `HtmlContent`, `MermaidContent`, `TextAndImagesContent`)
+ - **BREAKING:** Renamed package `pipelex.pipe_works` to `pipelex.pipe_run` and moved `PipeRunParams` classes into it
+ - **BREAKING:** Cost reporting changed from Excel (xlsx) to CSV format using native Python csv module instead of pandas
+ - Renamed `ConfigManager` to `ConfigLoader`
+ - Renamed `PipelexRegistryModels` to `CoreRegistryModels`
+ - Renamed `PipelexTestModels` to `TestRegistryModels`
+ - Renamed `generate_jinja2_context()` to `generate_context()` in `WorkingMemory` and `ContextProviderAbstract`
+ - Renamed `ConceptProviderAbstract` to `ConceptLibraryAbstract`
+ - Renamed `DomainProviderAbstract` to `DomainLibraryAbstract`
+ - Renamed `PipeProviderAbstract` to `PipeLibraryAbstract`
+ - Renamed `PipeInputSpec` to `InputRequirements`
+ - Renamed `PipeInputSpecFactory` to `InputRequirementsFactory`
+ - Renamed `pipe_input.py` to `input_requirements.py`
+ - Renamed `pipe_input_factory.py` to `input_requirements_factory.py`
+ - Renamed `pipe_input_blueprint.py` to `input_requirement_blueprint.py`
+ - Changed hub methods from `get_*_provider()` to `get_*_library()` pattern
+ - Changed hub methods from `set_*_provider()` to `set_*_library()` pattern
+ - Changed `PipeLLM` validation to check all inputs are in required variables
+ - Updated `LLMPromptSpec` to handle image collections (lists/tuples) in addition to single images
+ - Changed Mermaid diagram URL generation from `/img/` to `/svg/` endpoint
+ - Changed `PipeLLMPromptTemplate.make_llm_prompt()` to private method `_make_llm_prompt()`
+ - Updated pipe-builder prompts to include concept specs for better context
+ - Updated `PipelexBundleSpec.to_blueprint()` to sort pipes by dependencies before creating bundle
+ - Changed exception base class from `PipelexError` to `PipelexException` throughout codebase
+ - Updated Makefile pyright target to use `--pythonpath` flag correctly
+ - Enhanced `LibraryManager` to use `importlib.resources` for reliable PLX file discovery across all installation modes (wheel, source, relative path)
+ - Simplified `FuncRegistryUtils` to exclusively register functions with `@pipe_func` decorator (removed `decorator_names` and `require_decorator` parameters)
+ - Updated `ReportingManager` to get config directly instead of via constructor parameter
+ - Updated PipeFunc documentation to reflect `@pipe_func()` decorator requirement and auto-discovery from anywhere in project
+ - Added warnings about module-level code execution during auto-discovery to PipeFunc and StructuredContent documentation
+
+### Fixed
+ - Fixed Makefile target `pyright` to use correct pythonpath flag
+ - Fixed bug with inputs of the `PipeLLM` where image inputs couldn't be used and tagged in prompts
+ - Fixed image input handling in `LLMPromptSpec` to support both single images and image collections
+ - Fixed template preprocessing to handle jinja2 templates correctly
+ - Fixed hard dependencies by moving imports to function scope in model_lists.py
+ - Updated README badge URL to point to main branch instead of feature/pipe-builder branch
+
+### Removed
+ - Removed centralized `pipelex_libraries` folder system and `pipelex init libraries` command
+ - Removed config path parameters from `Pipelex.make()` (`relative_config_folder_path`, `config_folder_path`, `from_file`)
+ - Removed Gemini 1.5 series models: `gemini-1.5-pro`, `gemini-1.5-flash`, and `gemini-1.5-flash-8b`
+ - Removed `base_templates.toml` file (generic prompts moved to `pipelex.toml`)
+ - Removed `gpt-5-mini` from possible models in pipe-builder
+ - Removed useless functions in `LLMJobFactory`: `make_llm_job_from_prompt_factory()`, `make_llm_job_from_prompt_template()`, `make_llm_job_from_prompt_contents()`
+ - Removed `add_or_update_pipe()` method from PipeLibrary
+ - Removed `get_optional_library_manager()` method from PipelexHub
+ - Removed `get_optional_domain_provider()` and `get_optional_concept_provider()` methods from hub
+ - Removed unused test fixtures (apple, cherry, blueberry, concept_provider, pretty) from conftest.py
+ - Removed some Vision/Image description pipes from the base library, because we doubt they were useful as they were
+ - Removed pandas and openpyxl dependencies (including stubs: pandas-stubs, types-openpyxl)
+ - Removed Excel file generation for cost reports and `to_dataframe()` method from `CostRegistry`
+ - Removed `should_warn_if_already_registered` parameter from `func_registry.register_function()`
+ - Removed `decorator_names` and `require_decorator` parameters from `FuncRegistryUtils` methods
+ - Removed `_find_plx_files_in_dir()` and `_get_pipelex_plx_files_from_dirs()` methods from `LibraryManager` (refactored to `library_utils` module)
+ - Removed hardcoded excluded directories from `ClassRegistryUtils` and `FuncRegistryUtils` (now use `ScanConfig`)
+ - Removed `are_classes_equivalent()` and `has_compatible_field()` methods from `ClassRegistryUtils` (moved to `class_utils` module)
+
 ## [v0.11.0] - 2025-10-01
 
 ### Highlights
@@ -47,7 +216,7 @@
 ### Changed
 
 - ⚠️ Breaking changes:
-  - Renamed `ocr_handle` to `ocr_model` in `PipeOcr` blueprint, so you'll need to update your PLX code accordingly
+  - Renamed `ocr_handle` to `ocr_model` in `PipeExtract` blueprint, so you'll need to update your PLX code accordingly
   - Updated .env.example file with slightly modified key names (more standard).
 - OCR system now uses InferenceModelSpec with unified model handles
 - Renamed `get_llm_deck()` to `get_model_deck()` and updated parameter names from `llm_handle` to `model_handle`
@@ -310,11 +479,11 @@ Simplified input memory:
 - New method `create_mock_content` in `WorkingMemoryFactory` for creating mock content for requirements.
 
 ### Changed
-- Refactored `PipeInputSpec` to use `InputRequirement` and `TypedNamedInputRequirement` classes instead of plain strings for input specifications.
+- Refactored `PipeInput` to use `InputRequirement` and `TypedNamedInputRequirement` classes instead of plain strings for input specifications.
 - Updated `WorkingMemoryFactory` to handle `ImplicitMemory` instead of `CompactMemory`.
 - Replaced `ExecutePipelineException` with `PipelineInputError` in `execute_pipeline` function.
-- Updated `PipeBatch`, `PipeCondition`, `PipeParallel`, `PipeSequence`, `PipeFunc`, `PipeImgGen`, `PipeCompose`, `PipeLLM`, and `PipeOcr` classes to use `InputRequirement` for input handling.
-- Updated `PipeInputSpec` creation in various test files to use `make_from_dict` method.
+- Updated `PipeBatch`, `PipeCondition`, `PipeParallel`, `PipeSequence`, `PipeFunc`, `PipeImgGen`, `PipeCompose`, `PipeLLM`, and `PipeExtract` classes to use `InputRequirement` for input handling.
+- Updated `PipeInput` creation in various test files to use `make_from_dict` method.
 - Updated `pyproject.toml` to exclude `pypdfium2` version `4.30.1`.
 - Updated `Jinja2TemplateCategory` to handle HTML and Markdown templates differently.
 
@@ -567,7 +736,7 @@ Simplified input memory:
 ### Tooling Improvements
 
 - Pipeline tracking: restored **visual flowchart generation using Mermaid**
-- Enhanced dry run configuration: added more granular control with `nb_list_items`, `nb_ocr_pages`, and `image_urls`
+- Enhanced dry run configuration: added more granular control with `nb_list_items`, `nb_extract_pages`, and `image_urls`
 - New feature flags: better control over pipeline tracking, activity tracking, and reporting
 - Improved OCR configuration: handle image file type for Mistral-OCR, added `default_page_views_dpi` setting
 - Enhanced LLM configuration: **better prompting for structured generation with automatic schema insertion** for two-step structuring: generate plain text and then structure via Json
@@ -616,7 +785,7 @@ Simplified input memory:
 ### Highlights
 
 - **Structured Input Specifications**: Pipe inputs are now defined as a dictionary mapping a required variable name to a concept code (`required_variable` -> `concept_code`). This replaces the previous single `input` field and allows for multiple, named inputs, making pipes more powerful and explicit. This is a **breaking change**.
-- **Static Validation for Inference Pipes**: You can now catch configuration and input mistakes in your pipelines *before* running any operations. This static validation checks `PipeLLM`, `PipeOcr`, and `PipeImgGen`. Static validation for controller pipes (PipeSequence, PipeParallel…) will come in a future release.
+- **Static Validation for Inference Pipes**: You can now catch configuration and input mistakes in your pipelines *before* running any operations. This static validation checks `PipeLLM`, `PipeExtract`, and `PipeImgGen`. Static validation for controller pipes (PipeSequence, PipeParallel…) will come in a future release.
     - Configure the behavior for different error types using the `static_validation_config` section in your settings. For each error type, choose to `raise`, `log`, or `ignore`.
 - **Dry Run Mode for Zero-Cost Pipeline Validation**: A powerful dry-run mode allows you to test entire pipelines without making any actual inference calls. It's fast, costs nothing, works offline, and is perfect for linting and validating pipeline logic.
     - The new `dry_run_config` lets you control settings, like disabling Jinja2 rendering during a dry run.
@@ -773,7 +942,7 @@ is_reporting_enabled = true
 
 ## [v0.2.1] - 2025-05-22
 
-- Added `OcrWorkerAbstract` and `MistralOcrWorker`, along with `PipeOcr` for OCR processing of images and PDFs.
+- Added `OcrWorkerAbstract` and `MistralOcrWorker`, along with `PipeExtract` for OCR processing of images and PDFs.
 - Introduced `MissionManager` for managing missions, cost reports, and activity tracking.
 - Added detection and handling for pipe stack overflow, configurable with `pipe_stack_limit`.
 - More possibilities for dependency injection and better class structure.

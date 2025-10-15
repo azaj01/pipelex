@@ -7,18 +7,19 @@ PROJECT_NAME := $(shell grep '^name = ' pyproject.toml | sed -E 's/name = "(.*)"
 
 # The "?" is used to make the variable optional, so that it can be overridden by the user.
 PYTHON_VERSION ?= 3.11
-VENV_PYTHON := $(VIRTUAL_ENV)/bin/python
-VENV_PYTEST := $(VIRTUAL_ENV)/bin/pytest
-VENV_RUFF := $(VIRTUAL_ENV)/bin/ruff
-VENV_PYRIGHT := $(VIRTUAL_ENV)/bin/pyright
-VENV_MYPY := $(VIRTUAL_ENV)/bin/mypy
-VENV_PIPELEX := $(VIRTUAL_ENV)/bin/pipelex
-VENV_MKDOCS := $(VIRTUAL_ENV)/bin/mkdocs
-VENV_PYLINT := $(VIRTUAL_ENV)/bin/pylint
+# Note: VENV_* variables include quotes to handle paths with spaces (e.g., "My Projects/pipelex")
+VENV_PYTHON := "$(VIRTUAL_ENV)/bin/python"
+VENV_PYTEST := "$(VIRTUAL_ENV)/bin/pytest"
+VENV_RUFF := "$(VIRTUAL_ENV)/bin/ruff"
+VENV_PYRIGHT := "$(VIRTUAL_ENV)/bin/pyright"
+VENV_MYPY := "$(VIRTUAL_ENV)/bin/mypy"
+VENV_PIPELEX := "$(VIRTUAL_ENV)/bin/pipelex"
+VENV_MKDOCS := "$(VIRTUAL_ENV)/bin/mkdocs"
+VENV_PYLINT := "$(VIRTUAL_ENV)/bin/pylint"
 
 UV_MIN_VERSION = $(shell grep -m1 'required-version' pyproject.toml | sed -E 's/.*= *"([^<>=, ]+).*/\1/')
 
-USUAL_PYTEST_MARKERS := "(dry_runnable or not (inference or llm or img_gen or ocr)) and not (needs_output or pipelex_api)"
+USUAL_PYTEST_MARKERS := "(dry_runnable or not (inference or llm or img_gen or extract)) and not (needs_output or pipelex_api)"
 
 define PRINT_TITLE
     $(eval PROJECT_PART := [$(PROJECT_NAME)])
@@ -57,8 +58,7 @@ make cft                      - Shorthand -> config-template
 
 make cleanenv                 - Remove virtual env and lock files
 make cleanderived             - Remove extraneous compiled files, caches, logs, etc.
-make cleanlibraries           - Remove pipelex_libraries
-make cleanall                 - Remove all -> cleanenv + cleanderived + cleanlibraries
+make cleanall                 - Remove all -> cleanenv + cleanderived
 
 make merge-check-ruff-lint    - Run ruff merge check without updating files
 make merge-check-ruff-format  - Run ruff merge check without updating files
@@ -75,11 +75,14 @@ make test-quiet               - Run unit tests without prints (no inference)
 make tq                       - Shorthand -> test-quiet
 make test-with-prints         - Run tests with prints (no inference)
 make tp                       - Shorthand -> test-with-prints
+make tb                       - Shorthand -> `make test-with-prints TEST=test_boot`
 make test-inference           - Run unit tests only for inference (with prints)
 make ti                       - Shorthand -> test-inference
 make tip                      - Shorthand -> test-inference-with-prints (parallelized inference tests)
-make test-ocr                 - Run unit tests only for ocr (with prints)
-make to                       - Shorthand -> test-ocr
+make test-llm			      - Run unit tests only for llm (with prints)
+make tl                       - Shorthand -> test-llm
+make test-extract             - Run unit tests only for extract (with prints)
+make te                       - Shorthand -> test-extract
 make test-img-gen             - Run unit tests only for img_gen (with prints)
 make test-g					  - Shorthand -> test-img-gen
 
@@ -103,9 +106,9 @@ export HELP
 .PHONY: \
 	all help env lock install update build \
 	format lint pyright mypy pylint \
-	cleanderived cleanenv cleanlibraries cleanall \
+	cleanderived cleanenv cleanall \
 	test test-xdist t test-quiet tq test-with-prints tp test-inference ti \
-	test-img-gen tg test-ocr to codex-tests gha-tests \
+	test-llm tl test-img-gen tg test-extract te codex-tests gha-tests \
 	run-all-tests run-manual-trigger-gha-tests run-gha_disabled-tests \
 	validate v check c cc \
 	merge-check-ruff-lint merge-check-ruff-format merge-check-mypy merge-check-pyright \
@@ -132,17 +135,17 @@ check-uv:
 
 env: check-uv
 	$(call PRINT_TITLE,"Creating virtual environment")
-	@if [ ! -d $(VIRTUAL_ENV) ]; then \
+	@if [ ! -d "$(VIRTUAL_ENV)" ]; then \
 		echo "Creating Python virtual env in \`${VIRTUAL_ENV}\`"; \
-		uv venv $(VIRTUAL_ENV) --python $(PYTHON_VERSION); \
+		uv venv "$(VIRTUAL_ENV)" --python $(PYTHON_VERSION); \
 	else \
 		echo "Python virtual env already exists in \`${VIRTUAL_ENV}\`"; \
 	fi
-	@echo "Using Python: $$($(VENV_PYTHON) --version) from $$(which $$(readlink -f $(VENV_PYTHON)))"
+	@echo "Using Python: $$($(VENV_PYTHON) --version) from $$(readlink $(VENV_PYTHON) 2>/dev/null || echo $(VENV_PYTHON))"
 
 install: env
 	$(call PRINT_TITLE,"Installing dependencies")
-	@. $(VIRTUAL_ENV)/bin/activate && \
+	@. "$(VIRTUAL_ENV)/bin/activate" && \
 	uv sync --all-extras && \
 	echo "Installed Pipelex dependencies in ${VIRTUAL_ENV} with all extras.";
 
@@ -159,7 +162,7 @@ update: env
 
 validate: env
 	$(call PRINT_TITLE,"Running setup sequence")
-	$(VENV_PIPELEX) validate all -c pipelex/libraries
+	$(VENV_PIPELEX) validate all
 
 build: env
 	$(call PRINT_TITLE,"Building the wheels")
@@ -196,17 +199,12 @@ cleanenv:
 	find . -type d -wholename './.venv' -exec rm -rf {} + && \
 	echo "Cleaned up virtual env and dependency lock files";
 
-cleanlibraries:
-	$(call PRINT_TITLE,"Erasing derived files and directories")
-	@find . -type d -wholename './pipelex_libraries' -exec rm -rf {} + && \
-	echo "Cleaned up pipelex_libraries";
-
 cleanconfig:
 	$(call PRINT_TITLE,"Erasing config files and directories")
 	@find . -type d -wholename './.pipelex' -exec rm -rf {} + && \
 	echo "Cleaned up .pipelex";
 
-cleanall: cleanderived cleanenv cleanlibraries cleanconfig
+cleanall: cleanderived cleanenv cleanconfig
 	@echo "Cleaned up all derived files and directories";
 
 ##########################################################################################
@@ -283,20 +281,25 @@ test-with-prints: env
 tp: test-with-prints
 	@echo "> done: tp = test-with-prints"
 
+tb: env
+	$(call PRINT_TITLE,"Unit testing a simple boot")
+	@echo "• Running unit test test_boot"
+	$(VENV_PYTEST) -s -m $(USUAL_PYTEST_MARKERS) -k "test_boot" $(if $(filter 1,$(VERBOSE)),-v,$(if $(filter 2,$(VERBOSE)),-vv,$(if $(filter 3,$(VERBOSE)),-vvv,)));
+
 test-inference-with-prints: env
 	$(call PRINT_TITLE,"Unit testing")
 	@if [ -n "$(TEST)" ]; then \
-		$(VENV_PYTEST) --pipe-run-mode live -m "inference and not img_gen" -s -k "$(TEST)" $(if $(filter 1,$(VERBOSE)),-v,$(if $(filter 2,$(VERBOSE)),-vv,$(if $(filter 3,$(VERBOSE)),-vvv,))); \
+		$(VENV_PYTEST) --pipe-run-mode live -m "inference" -s -k "$(TEST)" $(if $(filter 1,$(VERBOSE)),-v,$(if $(filter 2,$(VERBOSE)),-vv,$(if $(filter 3,$(VERBOSE)),-vvv,))); \
 	else \
-		$(VENV_PYTEST) --pipe-run-mode live -m "inference and not img_gen" -s $(if $(filter 1,$(VERBOSE)),-v,$(if $(filter 2,$(VERBOSE)),-vv,$(if $(filter 3,$(VERBOSE)),-vvv,))); \
+		$(VENV_PYTEST) --pipe-run-mode live -m "inference" -s $(if $(filter 1,$(VERBOSE)),-v,$(if $(filter 2,$(VERBOSE)),-vv,$(if $(filter 3,$(VERBOSE)),-vvv,))); \
 	fi
 
 test-inference-fast: env
 	$(call PRINT_TITLE,"Unit testing")
 	@if [ -n "$(TEST)" ]; then \
-		$(VENV_PYTEST) -n auto --pipe-run-mode live -m "inference and not img_gen" -s -k "$(TEST)" $(if $(filter 1,$(VERBOSE)),-v,$(if $(filter 2,$(VERBOSE)),-vv,$(if $(filter 3,$(VERBOSE)),-vvv,))); \
+		$(VENV_PYTEST) -n auto --pipe-run-mode live -m "inference" -s -k "$(TEST)" $(if $(filter 1,$(VERBOSE)),-v,$(if $(filter 2,$(VERBOSE)),-vv,$(if $(filter 3,$(VERBOSE)),-vvv,))); \
 	else \
-		$(VENV_PYTEST) -n auto --pipe-run-mode live -m "inference and not img_gen" -s $(if $(filter 1,$(VERBOSE)),-v,$(if $(filter 2,$(VERBOSE)),-vv,$(if $(filter 3,$(VERBOSE)),-vvv,))); \
+		$(VENV_PYTEST) -n auto --pipe-run-mode live -m "inference" -s $(if $(filter 1,$(VERBOSE)),-v,$(if $(filter 2,$(VERBOSE)),-vv,$(if $(filter 3,$(VERBOSE)),-vvv,))); \
 	fi
 
 tip: test-inference-with-prints
@@ -308,24 +311,35 @@ ti: test-inference-fast
 ti-dry: env
 	$(call PRINT_TITLE,"Unit testing")
 	@if [ -n "$(TEST)" ]; then \
-		$(VENV_PYTEST) --pipe-run-mode dry --exitfirst -m "inference and not img_gen" -s -k "$(TEST)" $(if $(filter 1,$(VERBOSE)),-v,$(if $(filter 2,$(VERBOSE)),-vv,$(if $(filter 3,$(VERBOSE)),-vvv,))); \
+		$(VENV_PYTEST) --pipe-run-mode dry --exitfirst -m "inference" -s -k "$(TEST)" $(if $(filter 1,$(VERBOSE)),-v,$(if $(filter 2,$(VERBOSE)),-vv,$(if $(filter 3,$(VERBOSE)),-vvv,))); \
 	else \
-		$(VENV_PYTEST) --pipe-run-mode dry --exitfirst -m "inference and not img_gen" -s $(if $(filter 1,$(VERBOSE)),-v,$(if $(filter 2,$(VERBOSE)),-vv,$(if $(filter 3,$(VERBOSE)),-vvv,))); \
+		$(VENV_PYTEST) --pipe-run-mode dry --exitfirst -m "inference" -s $(if $(filter 1,$(VERBOSE)),-v,$(if $(filter 2,$(VERBOSE)),-vv,$(if $(filter 3,$(VERBOSE)),-vvv,))); \
 	fi
 
-test-ocr: env
-	$(call PRINT_TITLE,"Unit testing ocr")
+test-llm: env
+	$(call PRINT_TITLE,"Unit testing LLM")
 	@if [ -n "$(TEST)" ]; then \
-		$(VENV_PYTEST) --pipe-run-mode live --exitfirst -m "ocr" -s -k "$(TEST)" $(if $(filter 1,$(VERBOSE)),-v,$(if $(filter 2,$(VERBOSE)),-vv,$(if $(filter 3,$(VERBOSE)),-vvv,))); \
+		$(VENV_PYTEST) --pipe-run-mode live --exitfirst -m "llm" -s -k "$(TEST)" $(if $(filter 1,$(VERBOSE)),-v,$(if $(filter 2,$(VERBOSE)),-vv,$(if $(filter 3,$(VERBOSE)),-vvv,))); \
 	else \
-		$(VENV_PYTEST) --pipe-run-mode live --exitfirst -m "ocr" -s $(if $(filter 1,$(VERBOSE)),-v,$(if $(filter 2,$(VERBOSE)),-vv,$(if $(filter 3,$(VERBOSE)),-vvv,))); \
+		$(VENV_PYTEST) --pipe-run-mode live --exitfirst -m "llm" -s $(if $(filter 1,$(VERBOSE)),-v,$(if $(filter 2,$(VERBOSE)),-vv,$(if $(filter 3,$(VERBOSE)),-vvv,))); \
 	fi
 
-to: test-ocr
-	@echo "> done: to = test-ocr"
+tl: test-llm
+	@echo "> done: tl = test-llm"
+
+test-extract: env
+	$(call PRINT_TITLE,"Unit testing Extract")
+	@if [ -n "$(TEST)" ]; then \
+		$(VENV_PYTEST) --pipe-run-mode live --exitfirst -m "extract" -s -k "$(TEST)" $(if $(filter 1,$(VERBOSE)),-v,$(if $(filter 2,$(VERBOSE)),-vv,$(if $(filter 3,$(VERBOSE)),-vvv,))); \
+	else \
+		$(VENV_PYTEST) --pipe-run-mode live --exitfirst -m "extract" -s $(if $(filter 1,$(VERBOSE)),-v,$(if $(filter 2,$(VERBOSE)),-vv,$(if $(filter 3,$(VERBOSE)),-vvv,))); \
+	fi
+
+te: test-extract
+	@echo "> done: te = test-extract"
 
 test-img-gen: env
-	$(call PRINT_TITLE,"Unit testing")
+	$(call PRINT_TITLE,"Unit testing Image Generation")
 	@if [ -n "$(TEST)" ]; then \
 		$(VENV_PYTEST) --pipe-run-mode live --exitfirst -m "img_gen" -s -k "$(TEST)" $(if $(filter 1,$(VERBOSE)),-v,$(if $(filter 2,$(VERBOSE)),-vv,$(if $(filter 3,$(VERBOSE)),-vvv,))); \
 	else \
@@ -381,7 +395,7 @@ lint: env
 
 pyright: env
 	$(call PRINT_TITLE,"Typechecking with pyright")
-	@$(VENV_PYRIGHT) . --project pyproject.toml
+	$(VENV_PYRIGHT) --pythonpath $(VENV_PYTHON) --project pyproject.toml
 
 mypy: env
 	$(call PRINT_TITLE,"Typechecking with mypy")
@@ -406,7 +420,7 @@ merge-check-ruff-lint: env check-unused-imports
 
 merge-check-pyright: env
 	$(call PRINT_TITLE,"Typechecking with pyright")
-	$(VENV_PYRIGHT) --pythonpath $(VIRTUAL_ENV)/bin/python3
+	$(VENV_PYRIGHT) --pythonpath $(VENV_PYTHON)
 
 merge-check-mypy: env
 	$(call PRINT_TITLE,"Typechecking with mypy")

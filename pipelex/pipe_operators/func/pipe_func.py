@@ -7,15 +7,17 @@ from pipelex import log
 from pipelex.core.concepts.concept_factory import ConceptFactory
 from pipelex.core.memory.working_memory import WorkingMemory
 from pipelex.core.memory.working_memory_factory import WorkingMemoryFactory
-from pipelex.core.pipes.pipe_input import PipeInputSpec, TypedNamedInputRequirement
+from pipelex.core.pipes.input_requirements import InputRequirements, TypedNamedInputRequirement
 from pipelex.core.pipes.pipe_output import PipeOutput
-from pipelex.core.pipes.pipe_run_params import PipeRunParams
-from pipelex.core.stuffs.stuff_content import ListContent, StuffContent, TextContent
+from pipelex.core.stuffs.list_content import ListContent
+from pipelex.core.stuffs.stuff_content import StuffContent
 from pipelex.core.stuffs.stuff_factory import StuffFactory
+from pipelex.core.stuffs.text_content import TextContent
 from pipelex.exceptions import DryRunError
 from pipelex.pipe_operators.pipe_operator import PipeOperator
+from pipelex.pipe_run.pipe_run_params import PipeRunParams
 from pipelex.pipeline.job_metadata import JobMetadata
-from pipelex.tools.func_registry import func_registry
+from pipelex.system.registries.func_registry import func_registry
 
 
 class PipeFuncOutput(PipeOutput):
@@ -31,7 +33,7 @@ class PipeFunc(PipeOperator[PipeFuncOutput]):
         return set()
 
     @override
-    def needed_inputs(self, visited_pipes: set[str] | None = None) -> PipeInputSpec:
+    def needed_inputs(self, visited_pipes: set[str] | None = None) -> InputRequirements:
         return self.inputs
 
     @override

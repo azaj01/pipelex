@@ -1,4 +1,8 @@
-from mistralai import Mistral, OCRImageObject, OCRResponse
+import os
+
+import aiofiles
+import mistralai
+from mistralai import Mistral
 from mistralai.models import (
     ContentChunk,
     ImageURLChunk,
@@ -18,10 +22,10 @@ from openai.types.chat import (
 )
 
 from pipelex.cogt.exceptions import PromptImageFormatError
+from pipelex.cogt.extract.extract_output import ExtractedImageFromPage, ExtractOutput, Page
 from pipelex.cogt.image.prompt_image import PromptImage, PromptImageBase64, PromptImagePath, PromptImageUrl
 from pipelex.cogt.llm.llm_job import LLMJob
 from pipelex.cogt.model_backends.backend import InferenceBackend
-from pipelex.cogt.ocr.ocr_output import ExtractedImageFromPage, OcrOutput, Page
 from pipelex.cogt.usage.token_category import NbTokensByCategoryDict, TokenCategory
 from pipelex.plugins.openai.openai_factory import OpenAIFactory
 from pipelex.tools.misc.base_64_utils import load_binary_as_base64
@@ -111,32 +115,31 @@ class MistralFactory:
         return nb_tokens_by_category
 
     @classmethod
-    async def make_ocr_output_from_mistral_response(
+    async def make_extract_output_from_mistral_response(
         cls,
-        mistral_ocr_response: OCRResponse,
+        mistral_extract_response: mistralai.OCRResponse,
         should_include_images: bool = False,
-        # export_dir: Optional[str] = None,
-    ) -> OcrOutput:
+    ) -> ExtractOutput:
         pages: dict[int, Page] = {}
-        for ocr_response_page in mistral_ocr_response.pages:
+        for response_page in mistral_extract_response.pages:
             page = Page(
-                text=ocr_response_page.markdown,
+                text=response_page.markdown,
                 extracted_images=[],
             )
             if should_include_images:
-                for mistral_ocr_image_obj in ocr_response_page.images:
+                for mistral_ocr_image_obj in response_page.images:
                     extracted_image = cls.make_extracted_image_from_page_from_mistral_ocr_image_obj(mistral_ocr_image_obj)
                     page.extracted_images.append(extracted_image)
-            pages[ocr_response_page.index] = page
+            pages[response_page.index] = page
 
-        return OcrOutput(
+        return ExtractOutput(
             pages=pages,
         )
 
     @classmethod
     def make_extracted_image_from_page_from_mistral_ocr_image_obj(
         cls,
-        mistral_ocr_image_obj: OCRImageObject,
+        mistral_ocr_image_obj: mistralai.OCRImageObject,
     ) -> ExtractedImageFromPage:
         return ExtractedImageFromPage(
             image_id=mistral_ocr_image_obj.id,
@@ -146,3 +149,31 @@ class MistralFactory:
             bottom_right_y=mistral_ocr_image_obj.bottom_right_y,
             base_64=mistral_ocr_image_obj.image_base64 if mistral_ocr_image_obj.image_base64 else None,
         )
+
+    #########################################################
+    # Utils
+    #########################################################
+    @classmethod
+    async def upload_file_to_mistral_for_ocr(
+        cls,
+        mistral_client: Mistral,
+        file_path: str,
+    ) -> str:
+        """Upload a local file to Mistral.
+
+        Args:
+            file_path: Path to the local file to upload
+            mistral_client: Mistral client
+
+        Returns:
+            ID of the uploaded file
+
+        """
+        async with aiofiles.open(file_path, "rb") as file:  # pyright: ignore[reportUnknownMemberType]
+            file_content = await file.read()
+
+        uploaded_file = await mistral_client.files.upload_async(
+            file={"file_name": os.path.basename(file_path), "content": file_content},
+            purpose="ocr",
+        )
+        return uploaded_file.id

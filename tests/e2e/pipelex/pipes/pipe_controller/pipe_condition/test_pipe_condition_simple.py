@@ -4,16 +4,16 @@ import pytest
 
 from pipelex import pretty_print
 from pipelex.core.concepts.concept_factory import ConceptFactory
-from pipelex.core.concepts.concept_native import NativeConceptEnum
+from pipelex.core.concepts.concept_native import NativeConceptCode
 from pipelex.core.domains.domain import SpecialDomain
 from pipelex.core.memory.working_memory_factory import WorkingMemoryFactory
-from pipelex.core.pipes.pipe_input import TypedNamedInputRequirement
-from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
-from pipelex.core.pipes.pipe_run_params import PipeRunMode
-from pipelex.core.pipes.pipe_run_params_factory import PipeRunParamsFactory
+from pipelex.core.pipes.input_requirement_blueprint import InputRequirementBlueprint
+from pipelex.core.pipes.input_requirements import TypedNamedInputRequirement
 from pipelex.exceptions import DryRunError
 from pipelex.pipe_controllers.condition.pipe_condition_blueprint import PipeConditionBlueprint
 from pipelex.pipe_controllers.condition.pipe_condition_factory import PipeConditionFactory
+from pipelex.pipe_run.pipe_run_params import PipeRunMode
+from pipelex.pipe_run.pipe_run_params_factory import PipeRunParamsFactory
 from pipelex.pipeline.job_metadata import JobMetadata
 from tests.test_pipelines.pipe_controllers.pipe_condition.pipe_condition import CategoryInput
 
@@ -28,10 +28,10 @@ class TestPipeConditionSimple:
         pipe_condition_blueprint = PipeConditionBlueprint(
             description="Test condition that should fail",
             inputs={"user_category": InputRequirementBlueprint(concept="test_pipe_condition.CategoryInput")},
-            output=f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}",
+            output=f"{SpecialDomain.NATIVE}.{NativeConceptCode.TEXT}",
             expression_template="{{ user_category.category }}",
-            pipe_map={"small": "process_small", "medium": "process_medium", "large": "process_large"},
-            default_pipe_code="process_small",
+            outcomes={"small": "process_small", "medium": "process_medium", "large": "process_large"},
+            default_outcome="process_small",
         )
 
         pipe_condition = PipeConditionFactory.make_from_blueprint(
@@ -62,10 +62,10 @@ class TestPipeConditionSimple:
         pipe_condition_blueprint = PipeConditionBlueprint(
             description="Test condition that should succeed",
             inputs={"user_status": InputRequirementBlueprint(concept="test_pipe_condition.CategoryInput")},
-            output=f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}",
+            output=f"{SpecialDomain.NATIVE}.{NativeConceptCode.TEXT}",
             expression_template="{{ user_status.category }}",
-            pipe_map={"active": "process_small", "inactive": "process_medium", "pending": "process_large"},
-            default_pipe_code="process_small",
+            outcomes={"active": "process_small", "inactive": "process_medium", "pending": "process_large"},
+            default_outcome="process_small",
         )
 
         pipe_condition = PipeConditionFactory.make_from_blueprint(

@@ -6,9 +6,10 @@ import pytest
 from pydantic import Field
 
 from pipelex.core.memory.working_memory import WorkingMemory
-from pipelex.core.stuffs.stuff_content import StructuredContent, TextContent
-from pipelex.tools.func_registry import func_registry
-from pipelex.tools.func_registry_utils import FuncRegistryUtils
+from pipelex.core.stuffs.structured_content import StructuredContent
+from pipelex.core.stuffs.text_content import TextContent
+from pipelex.system.registries.func_registry import func_registry
+from pipelex.system.registries.func_registry_utils import FuncRegistryUtils
 
 
 class FilePath(StructuredContent):
@@ -22,6 +23,9 @@ class CodebaseFileContent(StructuredContent):
 
 class TestCases:
     VALID_ASYNC_FUNCTION = """
+from pipelex.system.registries.func_registry import pipe_func
+
+@pipe_func()
 async def read_file_content(working_memory: WorkingMemory) -> ListContent[CodebaseFileContent]:
     '''Read the content of related codebase files.'''
 
@@ -42,7 +46,10 @@ async def read_file_content(working_memory: WorkingMemory) -> ListContent[Codeba
 """
 
     VALID_SYNC_FUNCTION = """
+from pipelex.system.registries.func_registry import pipe_func
+
 # Sync function - should be accepted
+@pipe_func()
 def sync_function(working_memory: WorkingMemory) -> StructuredContent:
     '''This should be registered - sync functions are now eligible.'''
     pass
@@ -122,7 +129,9 @@ from typing import List
 from pydantic import Field
 
 from pipelex.core.memory.working_memory import WorkingMemory
-from pipelex.core.stuffs.stuff_content import ListContent, StructuredContent
+from pipelex.core.stuffs.list_content import ListContent
+from pipelex.core.stuffs.structured_content import StructuredContent
+from pipelex.core.stuffs.text_content import TextContent
 
 
 class FilePath(StructuredContent):
@@ -168,8 +177,10 @@ class CodebaseFileContent(StructuredContent):
             root_file = Path(temp_dir) / "root_functions.py"
             root_file.write_text("""
 from pipelex.core.memory.working_memory import WorkingMemory
-from pipelex.core.stuffs.stuff_content import TextContent
+from pipelex.core.stuffs.text_content import TextContent
+from pipelex.system.registries.func_registry import pipe_func
 
+@pipe_func()
 async def root_function(working_memory: WorkingMemory) -> TextContent:
     return TextContent(text="root")
 """)
@@ -178,8 +189,10 @@ async def root_function(working_memory: WorkingMemory) -> TextContent:
             nested_file = nested_dir / "nested_functions.py"
             nested_file.write_text("""
 from pipelex.core.memory.working_memory import WorkingMemory
-from pipelex.core.stuffs.stuff_content import TextContent
+from pipelex.core.stuffs.text_content import TextContent
+from pipelex.system.registries.func_registry import pipe_func
 
+@pipe_func()
 async def nested_function(working_memory: WorkingMemory) -> TextContent:
     return TextContent(text="nested")
 """)

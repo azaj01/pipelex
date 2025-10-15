@@ -1,11 +1,12 @@
+from pipelex.cogt.exceptions import LLMConfigError
 from pipelex.cogt.img_gen.img_gen_job_components import ImgGenJobConfig, ImgGenJobParams, ImgGenJobParamsDefaults
 from pipelex.cogt.llm.llm_job_components import LLMJobConfig
 from pipelex.plugins.fal.fal_config import FalConfig
-from pipelex.tools.config.config_model import ConfigModel
+from pipelex.system.configuration.config_model import ConfigModel
 from pipelex.tools.misc.file_utils import find_files_in_dir
 
 
-class OcrConfig(ConfigModel):
+class ExtractConfig(ConfigModel):
     page_output_text_file_name: str
     default_page_views_dpi: int
 
@@ -31,12 +32,22 @@ class LLMConfig(ConfigModel):
     llm_job_config: LLMJobConfig
     is_structure_prompt_enabled: bool
     default_max_images: int
+    is_dump_text_prompts_enabled: bool
+    is_dump_response_text_enabled: bool
+    generic_templates: dict[str, str]
+
+    def get_template(self, template_name: str) -> str:
+        template = self.generic_templates.get(template_name)
+        if not template:
+            msg = f"Template '{template_name}' not found in generic_templates"
+            raise LLMConfigError(msg)
+        return template
 
 
 class InferenceManagerConfig(ConfigModel):
     is_auto_setup_preset_llm: bool
     is_auto_setup_preset_img_gen: bool
-    is_auto_setup_preset_ocr: bool
+    is_auto_setup_preset_extract: bool
 
 
 class InferenceConfig(ConfigModel):
@@ -54,7 +65,7 @@ class InferenceConfig(ConfigModel):
         return f"{self.inference_config_path}/backends/{backend_name}.toml"
 
     def get_model_deck_paths(self) -> list[str]:
-        """Get all LLM deck TOML file paths sorted alphabetically."""
+        """Get all Model deck TOML file paths sorted alphabetically."""
         model_deck_paths = [
             str(path)
             for path in find_files_in_dir(
@@ -72,4 +83,4 @@ class Cogt(ConfigModel):
     inference_manager_config: InferenceManagerConfig
     llm_config: LLMConfig
     img_gen_config: ImgGenConfig
-    ocr_config: OcrConfig
+    extract_config: ExtractConfig

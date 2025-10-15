@@ -5,16 +5,15 @@ from pydantic import model_validator
 from typing_extensions import override
 
 from pipelex import log
+from pipelex.cogt.templating.template_category import TemplateCategory
 from pipelex.config import StaticValidationReaction, get_config
 from pipelex.core.concepts.concept_factory import ConceptFactory
-from pipelex.core.concepts.concept_native import NATIVE_CONCEPTS_DATA, NativeConceptEnum, NativeConceptManager
+from pipelex.core.concepts.concept_native import NativeConceptCode
 from pipelex.core.memory.working_memory import WorkingMemory
-from pipelex.core.pipes.pipe_input import PipeInputSpec
-from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
-from pipelex.core.pipes.pipe_input_factory import PipeInputSpecFactory
+from pipelex.core.pipes.input_requirement_blueprint import InputRequirementBlueprint
+from pipelex.core.pipes.input_requirements import InputRequirements
+from pipelex.core.pipes.input_requirements_factory import InputRequirementsFactory
 from pipelex.core.pipes.pipe_output import PipeOutput
-from pipelex.core.pipes.pipe_run_params import PipeRunParams
-from pipelex.core.pipes.specific_pipe import SpecificPipe, SpecificPipeCodesEnum
 from pipelex.exceptions import (
     DryRunError,
     PipeConditionError,
@@ -25,31 +24,34 @@ from pipelex.exceptions import (
     StaticValidationErrorType,
     WorkingMemoryStuffNotFoundError,
 )
-from pipelex.hub import get_content_generator, get_optional_pipe, get_pipe_router, get_pipeline_tracker, get_required_pipe, get_template_provider
-from pipelex.pipe_controllers.condition.pipe_condition_details import PipeConditionDetails, PipeConditionPipeMap
+from pipelex.hub import get_content_generator, get_optional_pipe, get_pipe_router, get_pipeline_tracker, get_required_pipe
+from pipelex.pipe_controllers.condition.pipe_condition_details import PipeConditionDetails
+from pipelex.pipe_controllers.condition.special_outcome import SpecialOutcome
 from pipelex.pipe_controllers.pipe_controller import PipeController
-from pipelex.pipe_works.pipe_job_factory import PipeJobFactory
+from pipelex.pipe_run.pipe_job_factory import PipeJobFactory
+from pipelex.pipe_run.pipe_run_params import PipeRunParams
 from pipelex.pipeline.job_metadata import JobMetadata
-from pipelex.tools.templating.jinja2_required_variables import detect_jinja2_required_variables
-from pipelex.tools.templating.jinja2_template_category import Jinja2TemplateCategory
+from pipelex.tools.jinja2.jinja2_required_variables import detect_jinja2_required_variables
 from pipelex.tools.typing.validation_utils import has_exactly_one_among_attributes_from_list
 from pipelex.types import Self
+
+ConditionOutcomeMap = dict[str, str | SpecialOutcome]
 
 
 class PipeCondition(PipeController):
     type: Literal["PipeCondition"] = "PipeCondition"
     expression_template: str | None = None
     expression: str | None = None
-    pipe_map: PipeConditionPipeMap
-    default_pipe_code: str | None = None
+    outcome_map: ConditionOutcomeMap
+    default_outcome: str | SpecialOutcome
     add_alias_from_expression_to: str | None = None
 
     @property
     def mapped_pipe_codes(self) -> set[str]:
-        codes = set(self.pipe_map.values())
-        if self.default_pipe_code:
-            codes.add(self.default_pipe_code)
-        return codes - set(SpecificPipeCodesEnum.value_list())
+        codes = set(self.outcome_map.values())
+        if self.default_outcome:
+            codes.add(self.default_outcome)
+        return codes - set(SpecialOutcome.value_list())
 
     #########################################################################################
     # Validation
@@ -63,7 +65,7 @@ class PipeCondition(PipeController):
             pipe = get_required_pipe(pipe_code=pipe_code)
             if self.output.concept_string not in (
                 pipe.output.concept_string,
-                NativeConceptManager.get_native_concept_string(NativeConceptEnum.DYNAMIC),
+                NativeConceptCode.DYNAMIC.concept_string,
             ):
                 msg = (
                     f"The output concept code '{self.output.concept_string}' of the pipe '{self.code}' is "
@@ -82,8 +84,8 @@ class PipeCondition(PipeController):
         return PipeConditionDetails(
             code=shortuuid.uuid()[:5],
             test_expression=self.expression or self.applied_expression_template,
-            pipe_map=self.pipe_map,
-            default_pipe_code=self.default_pipe_code,
+            outcomes=self.outcome_map,
+            default_pipe_code=self.default_outcome,
             evaluated_expression=evaluated_expression,
             chosen_pipe_code=chosen_pipe_code,
         )
@@ -104,17 +106,14 @@ class PipeCondition(PipeController):
     @override
     def required_variables(self) -> set[str]:
         required_variables: set[str] = set()
-        # TODO: use jinja2 directly without going though a pipe
         # Variables from the expression/expression_template
         expression_required_variables = detect_jinja2_required_variables(
-            template_category=Jinja2TemplateCategory.LLM_PROMPT,
-            template_provider=get_template_provider(),
-            jinja2_name=None,
-            jinja2=self.applied_expression_template,
+            template_category=TemplateCategory.EXPRESSION,
+            template_source=self.applied_expression_template,
         )
         required_variables.update(expression_required_variables)
 
-        # Variables from the pipe_map
+        # Variables from the outcomes map and default_outcome
         for pipe_code in self.pipe_dependencies():
             required_variables.update(get_required_pipe(pipe_code=pipe_code).required_variables())
         return required_variables
@@ -127,25 +126,23 @@ class PipeCondition(PipeController):
         return self
 
     @override
-    def needed_inputs(self, visited_pipes: set[str] | None = None) -> PipeInputSpec:
+    def needed_inputs(self, visited_pipes: set[str] | None = None) -> InputRequirements:
         if visited_pipes is None:
             visited_pipes = set()
 
         # If we've already visited this pipe, stop recursion
         if self.code in visited_pipes:
-            return PipeInputSpecFactory.make_empty()
+            return InputRequirementsFactory.make_empty()
 
         # Add this pipe to visited set for recursive calls
         visited_pipes_with_current = visited_pipes | {self.code}
 
-        needed_inputs = PipeInputSpecFactory.make_empty()
+        needed_inputs = InputRequirementsFactory.make_empty()
 
         # 1. Add the variables from the expression/expression_template
         required_variables = detect_jinja2_required_variables(
-            template_category=Jinja2TemplateCategory.LLM_PROMPT,
-            template_provider=get_template_provider(),
-            jinja2_name=None,
-            jinja2=self.applied_expression_template,
+            template_category=TemplateCategory.EXPRESSION,
+            template_source=self.applied_expression_template,
         )
 
         for var_name in required_variables:
@@ -155,7 +152,7 @@ class PipeCondition(PipeController):
                 needed_inputs.add_requirement(
                     variable_name=var_name,
                     concept=ConceptFactory.make_native_concept(
-                        native_concept_data=NATIVE_CONCEPTS_DATA[NativeConceptEnum.ANYTHING],
+                        native_concept_code=NativeConceptCode.ANYTHING,
                     ),
                 )
 
@@ -172,8 +169,8 @@ class PipeCondition(PipeController):
 
     @model_validator(mode="after")
     def validate_inputs(self) -> Self:
-        if not self.pipe_map:
-            msg = f"Pipe'{self.code}'(PipeCondition) must have at least one mapping in pipe_map"
+        if not self.outcome_map:
+            msg = f"Pipe'{self.code}'(PipeCondition) must have at least one mapping in outcomes"
             raise PipeDefinitionError(message=msg, domain_code=self.domain, pipe_code=self.code, description=self.description)
 
         # Skip validation during model creation - it will be done in validate_with_libraries()
@@ -249,13 +246,12 @@ class PipeCondition(PipeController):
             PipeConditionError: If expression evaluation fails or no matching pipe is found
         """
         content_generator = get_content_generator()
-        # Evaluate the expression using Jinja2 templating
 
-        # TODO: create a proper category instead of using Jinja2TemplateCategory.LLM_PROMPT
-        evaluated_expression = await content_generator.make_jinja2_text(
-            context=working_memory.generate_jinja2_context(),
-            jinja2=self.applied_expression_template,
-            template_category=Jinja2TemplateCategory.LLM_PROMPT,
+        # Evaluate the expression using templating
+        evaluated_expression = await content_generator.make_templated_text(
+            context=working_memory.generate_context(),
+            template=self.applied_expression_template,
+            template_category=TemplateCategory.EXPRESSION,
         )
 
         # Validate the evaluated expression
@@ -288,7 +284,7 @@ class PipeCondition(PipeController):
         # TODO: restore pipe_layer feature
         # pipe_run_params.push_pipe_code(pipe_code=pipe_code)
 
-        # Convert PipeInputSpec to blueprint format
+        # Convert PipeInput to blueprint format
         inputs_blueprint: dict[str, str | InputRequirementBlueprint] = {}
         for var_name, requirement in self.inputs.root.items():
             inputs_blueprint[var_name] = InputRequirementBlueprint(
@@ -298,21 +294,14 @@ class PipeCondition(PipeController):
 
         evaluated_expression = await self._evaluate_expression(working_memory=working_memory)
 
-        # Select the pipe based on the evaluated expression
-        chosen_pipe_code = self.pipe_map.get(evaluated_expression, self.default_pipe_code)
-
-        # Validate that a pipe code was found
-        if not chosen_pipe_code:
-            error_msg = f"No pipe code found for evaluated expression '{evaluated_expression}' in pipe {self.code}:"
-            error_msg += f"\n\nExpression: {self.applied_expression_template}"
-            error_msg += f"\n\nPipe map: {self.pipe_map}"
-            raise PipeConditionError(error_msg)
+        # Select the outcome based on the evaluated expression
+        outcome = self.outcome_map.get(evaluated_expression, self.default_outcome)
 
         # Handle continue case
-        if SpecificPipe.is_continue(chosen_pipe_code):
+        if SpecialOutcome.is_continue(outcome):
             return PipeOutput(working_memory=working_memory)
 
-        chosen_pipe = get_required_pipe(pipe_code=chosen_pipe_code)
+        chosen_pipe = get_required_pipe(pipe_code=outcome)
 
         # Create condition details for tracking
         condition_details = self._make_pipe_condition_details(
@@ -322,7 +311,6 @@ class PipeCondition(PipeController):
 
         # Get required variables and validate they exist in working memory
         required_variables = chosen_pipe.required_variables()
-        log.debug(required_variables, title=f"Required variables for PipeCondition '{self.code}'")
         required_stuff_names = {required_variable for required_variable in required_variables if not required_variable.startswith("_")}
         try:
             required_stuffs = working_memory.get_stuffs(names=required_stuff_names)
@@ -396,10 +384,8 @@ class PipeCondition(PipeController):
         # 2. Validate that the expression template is valid
         try:
             required_variables = detect_jinja2_required_variables(
-                template_category=Jinja2TemplateCategory.LLM_PROMPT,
-                template_provider=get_template_provider(),
-                jinja2_name=None,
-                jinja2=self.applied_expression_template,
+                template_category=TemplateCategory.EXPRESSION,
+                template_source=self.applied_expression_template,
             )
             log.debug(f"Expression template is valid, requires variables: {required_variables}")
         except Exception as exc:
@@ -413,22 +399,22 @@ class PipeCondition(PipeController):
                 pipe_code=self.code,
             ) from exc
 
-        # 3. Validate that all pipes in the pipe_map exist
-        all_pipe_codes = set(self.pipe_map.values())
-        if self.default_pipe_code:
-            all_pipe_codes.add(self.default_pipe_code)
-        all_pipe_codes -= set(SpecificPipeCodesEnum.value_list())
+        # 3. Validate that all values in the outcomes map (appart from special outcomes) do exist as pipe codes
+        all_pipe_codes = set(self.outcome_map.values())
+        if self.default_outcome:
+            all_pipe_codes.add(self.default_outcome)
+        all_pipe_codes -= set(SpecialOutcome.value_list())
 
         missing_pipes = [pipe_code for pipe_code in all_pipe_codes if not get_optional_pipe(pipe_code=pipe_code)]
 
         if missing_pipes:
             error_msg = (
                 f"Dry run failed for PipeCondition '{self.code}': missing pipes: {', '.join(missing_pipes)}. "
-                f"Pipe map: {self.pipe_map}, default: {self.default_pipe_code}"
+                f"Pipe map: {self.outcome_map}, default: {self.default_outcome}"
             )
             raise DryRunError(message=error_msg, pipe_code=self.code)
 
-        # Here, it should launch the dry run of all the pipes in the pipe_map
+        # Here, it should launch the dry run of all the pipes in the outcomes map
         for pipe_code in self.mapped_pipe_codes:
             pipe = get_required_pipe(pipe_code=pipe_code)
             await pipe.run_pipe(

@@ -1,8 +1,8 @@
 from typing import Protocol
 
+from pipelex.cogt.extract.extract_worker_abstract import ExtractWorkerAbstract
 from pipelex.cogt.img_gen.img_gen_worker_abstract import ImgGenWorkerAbstract
 from pipelex.cogt.llm.llm_worker_abstract import LLMWorkerAbstract
-from pipelex.cogt.ocr.ocr_worker_abstract import OcrWorkerAbstract
 
 
 class InferenceManagerProtocol(Protocol):
@@ -32,7 +32,7 @@ class InferenceManagerProtocol(Protocol):
     def get_img_gen_worker(self, img_gen_handle: str) -> ImgGenWorkerAbstract: ...
 
     ####################################################################################################
-    # OCR Workers
+    # Extract Workers
     ####################################################################################################
 
-    def get_ocr_worker(self, model_handle: str) -> OcrWorkerAbstract: ...
+    def get_extract_worker(self, extract_handle: str) -> ExtractWorkerAbstract: ...

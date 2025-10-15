@@ -3,13 +3,13 @@ from pytest import FixtureRequest
 
 from pipelex import pretty_print
 from pipelex.cogt.exceptions import LLMHandleNotFoundError
+from pipelex.cogt.extract.extract_input import ExtractInput
+from pipelex.cogt.extract.extract_job_components import ExtractJobConfig, ExtractJobParams
+from pipelex.cogt.extract.extract_output import ExtractOutput
 from pipelex.cogt.image.generated_image import GeneratedImage
 from pipelex.cogt.img_gen.img_gen_prompt import ImgGenPrompt
 from pipelex.cogt.llm.llm_prompt import LLMPrompt
 from pipelex.cogt.llm.llm_setting import LLMSetting
-from pipelex.cogt.ocr.ocr_input import OcrInput
-from pipelex.cogt.ocr.ocr_job_components import OcrJobConfig, OcrJobParams
-from pipelex.cogt.ocr.ocr_output import OcrOutput
 from pipelex.hub import get_content_generator, get_model_deck
 from pipelex.pipeline.job_metadata import JobMetadata
 from tests.cases import ImageTestCases, PDFTestCases
@@ -115,48 +115,48 @@ class TestContentGenerator:
         assert isinstance(image, GeneratedImage)
 
     @pytest.mark.usefixtures("request")
-    async def test_make_jinja2_text(self):
+    async def test_make_templated_text(self):
         context = {
             "the_answer": "elementary, my dear Watson",
         }
 
-        jinja2_text: str = await get_content_generator().make_jinja2_text(
+        jinja2_text: str = await get_content_generator().make_templated_text(
             context=context,
-            jinja2="The answer is: {{ the_answer }}",
+            template="The answer is: {{ the_answer }}",
         )
         assert isinstance(jinja2_text, str)
         assert jinja2_text == "The answer is: elementary, my dear Watson"
 
-    @pytest.mark.ocr
+    @pytest.mark.extract
     @pytest.mark.inference
-    async def test_make_ocr_extract_pages_from_image(self, ocr_handle_from_image: str, request: FixtureRequest):
-        ocr_output = await get_content_generator().make_ocr_extract_pages(
+    async def test_make_extract_pages_from_image(self, extract_handle_from_image: str, request: FixtureRequest):
+        extract_output = await get_content_generator().make_extract_pages(
             job_metadata=JobMetadata(job_name=request.node.originalname),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
-            ocr_handle=ocr_handle_from_image,
-            ocr_input=OcrInput(image_uri=ImageTestCases.IMAGE_FILE_PATH_PNG),
-            ocr_job_params=OcrJobParams.make_default_ocr_job_params(),
-            ocr_job_config=OcrJobConfig(),
+            extract_handle=extract_handle_from_image,
+            extract_input=ExtractInput(image_uri=ImageTestCases.IMAGE_FILE_PATH_PNG),
+            extract_job_params=ExtractJobParams.make_default_extract_job_params(),
+            extract_job_config=ExtractJobConfig(),
         )
-        pretty_print(ocr_output, title="ocr_extract_pages")
-        assert isinstance(ocr_output, OcrOutput)
+        pretty_print(extract_output, title="extract_pages")
+        assert isinstance(extract_output, ExtractOutput)
 
-    @pytest.mark.ocr
+    @pytest.mark.extract
     @pytest.mark.inference
-    async def test_make_ocr_extract_pages_from_pdf(self, ocr_handle: str, request: FixtureRequest):
-        ocr_output = await get_content_generator().make_ocr_extract_pages(
+    async def test_make_extract_pages_from_pdf(self, extract_handle: str, request: FixtureRequest):
+        extract_output = await get_content_generator().make_extract_pages(
             job_metadata=JobMetadata(job_name=request.node.originalname),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
-            ocr_handle=ocr_handle,
-            ocr_input=OcrInput(pdf_uri=PDFTestCases.PDF_FILE_PATH_1),
-            ocr_job_params=OcrJobParams.make_default_ocr_job_params(),
-            ocr_job_config=OcrJobConfig(),
+            extract_handle=extract_handle,
+            extract_input=ExtractInput(pdf_uri=PDFTestCases.PDF_FILE_PATH_1),
+            extract_job_params=ExtractJobParams.make_default_extract_job_params(),
+            extract_job_config=ExtractJobConfig(),
         )
-        pretty_print(ocr_output, title="ocr_extract_pages")
-        assert isinstance(ocr_output, OcrOutput)
+        pretty_print(extract_output, title="extract_pages")
+        assert isinstance(extract_output, ExtractOutput)
 
     @pytest.mark.llm
     @pytest.mark.inference
     async def test_make_llm_text_with_error(self, request: FixtureRequest):
-        llm_setting_main = LLMSetting(llm_handle="bad_handle_to_test_failure", temperature=0.5, max_tokens=100)
+        llm_setting_main = LLMSetting(model="bad_handle_to_test_failure", temperature=0.5, max_tokens=100)
         with pytest.raises(LLMHandleNotFoundError) as excinfo:
             await get_content_generator().make_llm_text(
                 job_metadata=JobMetadata(job_name=request.node.originalname),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]

@@ -31,11 +31,11 @@ class TestModelDeckGetOptionalInferenceModel:
             aliases=aliases or {},
             llm_presets={},
             llm_choice_defaults=LLMSettingChoicesDefaults(
-                for_text=LLMSetting(llm_handle="default_text", temperature=0.7, max_tokens=1000),
-                for_object=LLMSetting(llm_handle="default_object", temperature=0.1, max_tokens=1000),
+                for_text=LLMSetting(model="default_text", temperature=0.7, max_tokens=1000),
+                for_object=LLMSetting(model="default_object", temperature=0.1, max_tokens=1000),
             ),
-            ocr_presets={},
-            ocr_choice_default="base_ocr_mistral",
+            extract_presets={},
+            extract_choice_default="base_ocr_mistral",
             img_gen_presets={},
             img_gen_choice_default="base_img_gen",
         )
@@ -61,7 +61,9 @@ class TestModelDeckGetOptionalInferenceModel:
 
         # Assert
         assert result is None
-        mock_log.warning.assert_called_once_with("Skipping model handle 'nonexistent-model' because it's not found in deck")
+        mock_log.warning.assert_called_once_with(
+            "Skipping model handle 'nonexistent-model' because it's not found in deck, it could be an external plugin."
+        )
 
     def test_simple_string_alias_resolution_success(self, mocker: MockerFixture):
         # Arrange
@@ -88,7 +90,7 @@ class TestModelDeckGetOptionalInferenceModel:
         assert result is None
         mock_log.debug.assert_called_once_with("Redirection for 'best-gpt': nonexistent-model")
         # The final warning is about the original alias, not the target
-        mock_log.warning.assert_called_with("Skipping model handle 'best-gpt' because it's not found in deck")
+        mock_log.warning.assert_called_with("Skipping model handle 'best-gpt' because it's not found in deck, it could be an external plugin.")
 
     def test_list_alias_resolution_first_success(self, mocker: MockerFixture):
         # Arrange
@@ -176,7 +178,9 @@ class TestModelDeckGetOptionalInferenceModel:
         assert result is None
         # Empty list evaluates to False, so no debug log is called
         mock_log.debug.assert_not_called()
-        mock_log.warning.assert_called_once_with("Skipping model handle 'empty-alias' because it's not found in deck")
+        mock_log.warning.assert_called_once_with(
+            "Skipping model handle 'empty-alias' because it's not found in deck, it could be an external plugin."
+        )
 
     def test_circular_alias_prevention(self, mocker: MockerFixture):
         # Note: The current implementation doesn't have explicit circular reference detection,
@@ -253,7 +257,9 @@ class TestModelDeckGetOptionalInferenceModel:
 
         # Assert
         assert result is None
-        mock_log.warning.assert_called_once_with(f"Skipping model handle '{llm_handle}' because it's not found in deck")
+        mock_log.warning.assert_called_once_with(
+            f"Skipping model handle '{llm_handle}' because it's not found in deck, it could be an external plugin."
+        )
 
     def test_logging_behavior(self, mocker: MockerFixture):
         # Arrange
@@ -268,4 +274,4 @@ class TestModelDeckGetOptionalInferenceModel:
         mock_log.debug.assert_called_with("Redirection for 'test-alias': target-model")
 
         # The final warning is about the original alias, not the target
-        mock_log.warning.assert_called_with("Skipping model handle 'test-alias' because it's not found in deck")
+        mock_log.warning.assert_called_with("Skipping model handle 'test-alias' because it's not found in deck, it could be an external plugin.")

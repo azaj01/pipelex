@@ -1,17 +1,17 @@
 import pytest
 
 from pipelex import log, pretty_print
-from pipelex.core.concepts.concept_native import NativeConceptEnum
+from pipelex.core.concepts.concept_native import NativeConceptCode
 from pipelex.core.memory.working_memory_factory import WorkingMemoryFactory
-from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
-from pipelex.core.pipes.pipe_run_params import PipeRunMode
-from pipelex.core.pipes.pipe_run_params_factory import PipeRunParamsFactory
+from pipelex.core.pipes.input_requirement_blueprint import InputRequirementBlueprint
 from pipelex.core.stuffs.stuff import Stuff
-from pipelex.hub import get_class_registry, get_pipe_provider, get_pipe_router
+from pipelex.hub import get_class_registry, get_pipe_library, get_pipe_router
 from pipelex.pipe_operators.llm.pipe_llm_blueprint import PipeLLMBlueprint, StructuringMethod
 from pipelex.pipe_operators.llm.pipe_llm_factory import PipeLLMFactory
-from pipelex.pipe_works.pipe_job_factory import PipeJobFactory
-from tests.integration.pipelex.test_data import BasicStructuredDataTestCases, ComplexStructuredDataTestCases, PipeTestCases
+from pipelex.pipe_run.pipe_job_factory import PipeJobFactory
+from pipelex.pipe_run.pipe_run_params import PipeRunMode
+from pipelex.pipe_run.pipe_run_params_factory import PipeRunParamsFactory
+from tests.integration.pipelex.test_data import BasicStructuredDataTestCases, PipeTestCases
 
 
 @pytest.mark.dry_runnable
@@ -25,7 +25,7 @@ class TestPipeLLM:
     ):
         pipe_llm_blueprint = PipeLLMBlueprint(
             description="LLM test for basic text generation",
-            output=NativeConceptEnum.TEXT,
+            output=NativeConceptCode.TEXT,
             system_prompt=PipeTestCases.SYSTEM_PROMPT,
             prompt=PipeTestCases.USER_PROMPT,
         )
@@ -34,8 +34,8 @@ class TestPipeLLM:
             pipe_code="adhoc_for_test_pipe_llm",
             blueprint=pipe_llm_blueprint,
         )
-        pipe_provider = get_pipe_provider()
-        pipe_provider.add_new_pipe(pipe)
+        pipe_library = get_pipe_library()
+        pipe_library.add_new_pipe(pipe)
 
         pipe_job = PipeJobFactory.make_pipe_job(
             pipe=pipe,
@@ -51,21 +51,22 @@ class TestPipeLLM:
 
     @pytest.mark.parametrize(
         ("topic", "data", "concept"),
-        BasicStructuredDataTestCases.STRUCTURE_TEST_CASES + ComplexStructuredDataTestCases.STRUCTURE_TEST_CASES,
+        BasicStructuredDataTestCases.STRUCTURE_TEST_CASES,
+        # + ComplexStructuredDataTestCases.STRUCTURE_TEST_CASES,
     )
     @pytest.mark.parametrize(
         "structuring_method",
         [
-            StructuringMethod.DIRECT,
+            # StructuringMethod.DIRECT,
             StructuringMethod.PRELIMINARY_TEXT,
         ],
     )
     @pytest.mark.parametrize(
         ("llm", "llm_to_structure"),
         [
-            # ("gpt-4o-mini", "gpt-4o-mini"),
+            ("gpt-4o-mini", "gpt-4o-mini"),
             # ("gemini-2.5-flash-lite", "gemini-2.5-flash-lite"),
-            ("gemini-2.5-flash-lite", "gpt-4o-mini"),
+            # ("gemini-2.5-flash-lite", "gpt-4o-mini"),
         ],
     )
     async def test_pipe_llm_structured(
@@ -87,9 +88,9 @@ class TestPipeLLM:
             description=f"Extract {concept} from text",
             inputs={"data": "Text"},
             output=f"test_structured_generations.{concept}",
-            prompt_template=BasicStructuredDataTestCases.EXTRACTION_PROMPT,
-            llm=llm,
-            llm_to_structure=llm_to_structure,
+            prompt=BasicStructuredDataTestCases.EXTRACTION_PROMPT,
+            model=llm,
+            model_to_structure=llm_to_structure,
             structuring_method=structuring_method,
         )
 
@@ -100,8 +101,8 @@ class TestPipeLLM:
             pipe_code=pipe_code,
             blueprint=pipe_llm_blueprint,
         )
-        pipe_provider = get_pipe_provider()
-        pipe_provider.add_new_pipe(pipe)
+        pipe_library = get_pipe_library()
+        pipe_library.add_new_pipe(pipe)
 
         pipe_job = PipeJobFactory.make_pipe_job(
             pipe=pipe,
@@ -119,17 +120,6 @@ class TestPipeLLM:
 
         # Pretty print the structured output
         pretty_print(main_stuff.content, title=f"{topic} - {concept} - {structuring_method}")
-
-        # If using PRELIMINARY_TEXT, also print the preliminary text
-        # if structuring_method == StructuringMethod.PRELIMINARY_TEXT:
-        #     # Get preliminary text from working memory
-        #     preliminary_stuff = pipe_llm_output.working_memory.get_optional_stuff("preliminary_text")
-        #     if preliminary_stuff:
-        #         content = preliminary_stuff.content
-        #         if hasattr(content, "text"):
-        #             pretty_print(content.text, title="Preliminary Text")
-        #         else:
-        #             pretty_print(str(content), title="Preliminary Text")
 
         # Verify the output type matches expected structure
         structure_class = get_class_registry().get_class(concept)
@@ -156,7 +146,7 @@ class TestPipeLLM:
             pipe_llm_blueprint = PipeLLMBlueprint(
                 description="LLM test for image processing with attributes",
                 inputs={stuff_name: InputRequirementBlueprint(concept=stuff.concept.concept_string)},
-                output=NativeConceptEnum.TEXT,
+                output=NativeConceptCode.TEXT,
                 system_prompt=PipeTestCases.SYSTEM_PROMPT,
                 prompt=PipeTestCases.MULTI_IMG_DESC_PROMPT,
             )

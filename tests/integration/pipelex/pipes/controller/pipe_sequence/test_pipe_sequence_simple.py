@@ -8,17 +8,17 @@ from pytest import FixtureRequest
 from pipelex import pretty_print
 from pipelex.core.concepts.concept_blueprint import ConceptBlueprint
 from pipelex.core.concepts.concept_factory import ConceptFactory
-from pipelex.core.concepts.concept_native import NATIVE_CONCEPTS_DATA, NativeConceptEnum
+from pipelex.core.concepts.concept_native import NativeConceptCode
 from pipelex.core.memory.working_memory_factory import WorkingMemoryFactory
-from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
-from pipelex.core.pipes.pipe_run_params import PipeRunMode
-from pipelex.core.pipes.pipe_run_params_factory import PipeRunParamsFactory
-from pipelex.core.stuffs.stuff_content import TextContent
+from pipelex.core.pipes.input_requirement_blueprint import InputRequirementBlueprint
 from pipelex.core.stuffs.stuff_factory import StuffFactory
-from pipelex.hub import get_concept_provider
+from pipelex.core.stuffs.text_content import TextContent
+from pipelex.hub import get_concept_library, get_native_concept
 from pipelex.pipe_controllers.sequence.pipe_sequence_blueprint import PipeSequenceBlueprint
 from pipelex.pipe_controllers.sequence.pipe_sequence_factory import PipeSequenceFactory
 from pipelex.pipe_controllers.sub_pipe_blueprint import SubPipeBlueprint
+from pipelex.pipe_run.pipe_run_params import PipeRunMode
+from pipelex.pipe_run.pipe_run_params_factory import PipeRunParamsFactory
 from pipelex.pipeline.job_metadata import JobMetadata
 
 
@@ -37,9 +37,9 @@ class TestPipeSequenceSimple:
             blueprint=ConceptBlueprint(description="Lorem Ipsum"),
             concept_codes_from_the_same_domain=["TestConcept1"],
         )
-        concept_library = get_concept_provider()
+        concept_library = get_concept_library()
         concept_library.add_concepts([concept_1])
-        concept_2 = concept_library.get_native_concept(native_concept=NativeConceptEnum.TEXT)
+        concept_2 = get_native_concept(native_concept=NativeConceptCode.TEXT)
 
         # Create PipeSequence instance - pipes are loaded from PLX files
         pipe_sequence_blueprint = PipeSequenceBlueprint(
@@ -60,7 +60,7 @@ class TestPipeSequenceSimple:
 
         # Create test data - single text input
         input_text_stuff = StuffFactory.make_stuff(
-            concept=ConceptFactory.make_native_concept(native_concept_data=NATIVE_CONCEPTS_DATA[NativeConceptEnum.TEXT]),
+            concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT),
             content=TextContent(text="hello world"),
             name="input_text",
         )
