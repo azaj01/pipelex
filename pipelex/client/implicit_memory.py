@@ -55,6 +55,7 @@ stuff_data13 = MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4"))
 
 # It should look in all the library for the concept with the same name.
 # If no search domains are provided and we find 2 or more concepts with the same name, it should raise an error.
+# If no concept is found, it should raise an error.
 
 stuff13 = Stuff(
     stuff_code="stuff_code",
@@ -69,6 +70,7 @@ stuff_data14 = [MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")), My
 # It should look in all the library for the concept with the same name.
 # If no search domains are provided and we find 2 or more concepts with the same name, it should raise an error.
 # EVERY item of the list should be of the same type. Otherwise it should raise an error.
+# If no concept is found, it should raise an error.
 
 stuff14 = Stuff(
     stuff_code="stuff_code",
