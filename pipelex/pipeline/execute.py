@@ -99,6 +99,8 @@ async def execute_pipeline(
         pipe_run_mode=pipe_run_mode,
     )
 
+    from pipelex import pretty_print
+    pretty_print(working_memory)
     pipe_job = PipeJobFactory.make_pipe_job(
         pipe=pipe,
         pipe_run_params=pipe_run_params,

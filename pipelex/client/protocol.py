@@ -8,6 +8,7 @@ from pipelex.core.memory.working_memory import WorkingMemory
 from pipelex.core.stuffs.stuff_content import StuffContent
 from pipelex.pipe_run.pipe_run_params import PipeOutputMultiplicity
 from pipelex.types import StrEnum
+from pipelex.core.pipes.pipe_output import PipeOutput
 
 # StuffContentOrData represents all possible formats for implicit memory input:
 # Case 1: Direct content (no 'concept' key)
@@ -30,8 +31,8 @@ StuffContentOrData = (
     | Sequence[StuffContent]  # Case 1.4 (covariant - accepts list[TextContent], etc.)
     | DictStuffContent  # Case 2.1, 2.2, 2.3, 2.4, 2.5, 2.6
 )
+DictMemory = dict[str, DictStuffContent]  # Special case of ImplicitMemory (Case 2.1, 2.2, 2.3, 2.4, 2.5, 2.6)
 ImplicitMemory = dict[str, StuffContentOrData]
-DictMemory = dict[str, DictStuffContent]  # Special case of ImplicitMemory
 
 
 class PipelineState(StrEnum):
@@ -90,11 +91,9 @@ class PipelineResponse(ApiResponse):
     """
 
     created_at: str
-    pipeline_state: PipelineState
     finished_at: str | None = None
-    pipeline_run_id: str
-    pipe_output: DictMemory | None = None
-    main_stuff_name: str
+    pipeline_state: PipelineState
+    pipe_output: PipeOutput | None = None
 
 
 @runtime_checkable
