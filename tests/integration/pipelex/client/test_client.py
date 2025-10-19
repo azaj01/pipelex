@@ -112,11 +112,12 @@ class TestPipelexApiClient:
 
             pretty_print(pipeline_reponse, title="PIPELINE RESPONSE")
             # Verify result
-            assert pipeline_reponse.pipeline_run_id is not None
+            assert pipeline_reponse.pipe_output
+            assert pipeline_reponse.pipe_output.pipeline_run_id is not None
             assert pipeline_reponse.pipeline_state == PipelineState.COMPLETED
             assert pipeline_reponse.pipe_output is not None
 
-            working_memory = pipeline_reponse.pipe_output["dict_memory"]
+            working_memory = pipeline_reponse.pipe_output.working_memory
 
             # Verify question structure
             assert working_memory["question"] == {

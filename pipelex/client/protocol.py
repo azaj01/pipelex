@@ -5,10 +5,10 @@ from pydantic import BaseModel
 from typing_extensions import runtime_checkable
 
 from pipelex.core.memory.working_memory import WorkingMemory
+from pipelex.core.pipes.pipe_output import PipeOutput
 from pipelex.core.stuffs.stuff_content import StuffContent
 from pipelex.pipe_run.pipe_run_params import PipeOutputMultiplicity
 from pipelex.types import StrEnum
-from pipelex.core.pipes.pipe_output import PipeOutput
 
 # StuffContentOrData represents all possible formats for implicit memory input:
 # Case 1: Direct content (no 'concept' key)
