@@ -15,7 +15,7 @@ class ConceptLibraryAbstract(ABC):
         pass
 
     @abstractmethod
-    def remove_concepts_by_codes(self, concept_codes: list[str]) -> None:
+    def remove_concepts_by_concept_strings(self, concept_strings: list[str]) -> None:
         pass
 
     @abstractmethod

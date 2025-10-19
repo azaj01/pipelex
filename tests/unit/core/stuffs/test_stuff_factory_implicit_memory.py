@@ -1,24 +1,24 @@
 import os
+from typing import Any
 
 import pytest
 
 from pipelex import log
 from pipelex.client.protocol import StuffContentOrData
-from pipelex.core.concepts.concept_blueprint import ConceptBlueprint
 from pipelex.core.concepts.concept_factory import ConceptFactory
 from pipelex.core.stuffs.structured_content import StructuredContent
 from pipelex.core.stuffs.stuff import Stuff
 from pipelex.core.stuffs.stuff_factory import StuffFactory
 from pipelex.hub import get_concept_library
 from pipelex.system.registries.class_registry_utils import ClassRegistryUtils
-from tests.unit.core.stuffs.data import TestData
+from tests.unit.core.stuffs.data import TEST_CASES
 
 
 @pytest.fixture(scope="class")
 def setup_test_concept():
     # Register the class in the class registry
     ClassRegistryUtils.register_classes_in_file(
-        file_path=os.path.join(os.path.dirname(__file__), "test_stuff_factory_implicit_memory.py"),
+        file_path=os.path.join(os.path.dirname(__file__), "data.py"),
         base_class=StructuredContent,
         is_include_imported=False,
     )
@@ -37,51 +37,62 @@ def setup_test_concept():
     concept_library.add_new_concept(concept=concept)
 
     # Create a concept that is not native.Text but initiable by str
-    concept_not_native_text = ConceptFactory.make_from_blueprint(
+    concept_not_native_text = ConceptFactory.make(
         domain="test_domain",
         concept_code="MyConceptNotNativeText",
-        blueprint=ConceptBlueprint(
-            description="Test concept for unit tests",
-        ),
+        description="Test concept for unit tests",
+        structure_class_name="MyConceptNotNativeText",
+        refines="native.Text",
     )
     concept_library.add_new_concept(concept=concept_not_native_text)
 
     yield concept
 
     # Cleanup after test
-    concept_library.remove_concepts_by_codes(concept_codes=["MyConcept", "MyConceptNotNativeText"])
+    concept_library.remove_concepts_by_concept_strings(concept_strings=["test_domain.MyConcept", "test_domain.MyConceptNotNativeText"])
 
 
 class TestStuffFactoryImplicitMemory:
-    """Test Case 1: Direct content without 'concept' key.
+    """Test StuffFactory with implicit memory input formats.
 
-    This covers cases where stuff_content_or_data is directly:
-    - A string (1.1)
-    - A list of strings (1.2)
-    - A StuffContent object (1.3)
-    - A list of StuffContent objects (1.4)
+    This covers cases where stuff_content_or_data is:
+    - Case 1: Direct content (no 'concept' key)
+      - A string (1.1)
+      - A list of strings (1.2)
+      - A StuffContent object (1.3)
+      - A list of StuffContent objects (1.4)
+    - Case 2: Dict with 'concept' AND 'content' keys
+      - String content (2.1, 2.1b, 2.1c)
+      - List of strings (2.2, 2.2b)
+      - StuffContent object (2.3)
+      - List of StuffContent objects (2.4)
+      - Dict content (2.5)
+      - List of dicts (2.6)
     """
 
     @pytest.mark.parametrize(
         ("test_name", "stuff_content_or_data", "stuff_name", "stuff_code", "expected_stuff"),
-        TestData.CASE,
+        TEST_CASES,
     )
-    def test_case(
+    def test_implicit_memory_case(
         self,
+        setup_test_concept: Any,
         test_name: str,
         stuff_content_or_data: StuffContentOrData,
         stuff_name: str,
         stuff_code: str,
         expected_stuff: Stuff,
     ):
-        log.info(f"Test Case 1: Direct content without concept key. {test_name}")
+        log.info(f"Testing case: {test_name}")
         log.debug(f"setup_test_concept: {setup_test_concept}")
+
         result = StuffFactory.make_stuff_from_stuff_content_or_data(
             name=stuff_name,
             code=stuff_code,
             stuff_content_or_data=stuff_content_or_data,
         )
-        assert result == expected_stuff
+
+        assert result == expected_stuff, f"Failed for test case: {test_name}"
 
 
 # class TestStuffFactoryImplicitMemoryEdgeCases:
