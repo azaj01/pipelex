@@ -135,8 +135,9 @@ The `inputs` field uses **ImplicitMemory** format - a smart, flexible way to pro
 - 1.1: String → `"my text"`
 - 1.2: List of strings → `["text1", "text2"]`
 - 1.3: StuffContent object → `MyClass(arg1="value")`
+  - 1.3a: Regular StuffContent → Infer concept from class name
+  - 1.3b: ListContent[StuffContent] → Infer concept from first item's class (subcase)
 - 1.4: List of StuffContent objects → `[MyClass(...), MyClass(...)]`
-- 1.5: ListContent of StuffContent objects → `ListContent(items=[MyClass(...), MyClass(...)])`
 
 **Case 2: Explicit Format** - Use `{"concept": "...", "content": "..."}` for control
 - 2.1: String with concept → `{"concept": "Text", "content": "my text"}`
@@ -218,7 +219,9 @@ inputs = {
 - All items must be of the same type
 - Concept resolution follows the same rules as 1.3
 
-### 1.5: ListContent of StuffContent Objects
+### 1.3b: ListContent of StuffContent Objects (Subcase of 1.3)
+
+Since `ListContent` is itself a `StuffContent`, this is a special subcase of 1.3 where the content is inferred from the items inside rather than from the `ListContent` class itself.
 
 Provide a `ListContent` object containing StuffContent items (Python clients):
 
@@ -235,14 +238,19 @@ inputs = {
 ```
 
 **Key Differences from Case 1.4:**
-- Case 1.4 uses a plain Python list: `[item1, item2]`
-- Case 1.5 uses a `ListContent` wrapper: `ListContent(items=[item1, item2])`
+- Case 1.4 uses a plain Python list: `[item1, item2]` → Creates a new `ListContent` wrapper
+- Case 1.3b uses an existing `ListContent` wrapper: `ListContent(items=[item1, item2])` → Uses the wrapper directly
+
+**Why is this a subcase of 1.3?**
+- `ListContent` is a subclass of `StuffContent`
+- But we don't infer the concept from "ListContent" itself
+- Instead, we look inside and infer from the first item's class
 
 **Requirements:**
 - All items within the `ListContent` must be subclasses of `StuffContent`
 - All items must be of the same type
 - The `ListContent` cannot be empty
-- Concept resolution follows the same rules as 1.3 (inferred from the first item's class name)
+- Concept resolution follows Case 1.3 rules (inferred from the first item's class name, not from ListContent)
 
 **Use Case:** This format is useful when you already have data wrapped in a `ListContent` object from a previous pipeline execution or when working with Pipelex's internal data structures.
 

@@ -3,7 +3,7 @@ from typing import Any
 
 import pytest
 
-from pipelex import log
+from pipelex import log, pretty_print
 from pipelex.client.protocol import StuffContentOrData
 from pipelex.core.concepts.concept_factory import ConceptFactory
 from pipelex.core.stuffs.structured_content import StructuredContent
@@ -86,11 +86,14 @@ class TestStuffFactoryImplicitMemory:
         log.info(f"Testing case: {test_name}")
         log.debug(f"setup_test_concept: {setup_test_concept}")
 
+
         result = StuffFactory.make_stuff_from_stuff_content_or_data(
             name=stuff_name,
             code=stuff_code,
             stuff_content_or_data=stuff_content_or_data,
         )
+        pretty_print(result, title=f"Result for test case: {test_name}")
+        pretty_print(expected_stuff, title=f"Expected stuff for test case: {test_name}")
 
         assert result == expected_stuff, f"Failed for test case: {test_name}"
 

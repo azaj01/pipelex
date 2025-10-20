@@ -52,6 +52,42 @@ TEST_CASES: list[tuple[str, StuffContentOrData, str, str, Stuff]] = [
             ),
         ),
     ),
+    # Case 1.2b: Content is a TextContent object (native concept)
+    (
+        "case-1.2b-text-content-object",
+        TextContent(text="Lorem Ipsum"),
+        "stuff_name",
+        "stuff_code",
+        Stuff(
+            stuff_name="stuff_name",
+            stuff_code="stuff_code",
+            concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT),
+            content=TextContent(text="Lorem Ipsum"),
+        ),
+    ),
+    # Case 1.2c: Content is a list of TextContent objects (native concept)
+    (
+        "case-1.2c-list-of-text-content-objects",
+        [
+            TextContent(text="Lorem Ipsum 1"),
+            TextContent(text="Lorem Ipsum 2"),
+            TextContent(text="Lorem Ipsum 3"),
+        ],
+        "stuff_name",
+        "stuff_code",
+        Stuff(
+            stuff_name="stuff_name",
+            stuff_code="stuff_code",
+            concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT),
+            content=ListContent(
+                items=[
+                    TextContent(text="Lorem Ipsum 1"),
+                    TextContent(text="Lorem Ipsum 2"),
+                    TextContent(text="Lorem Ipsum 3"),
+                ]
+            ),
+        ),
+    ),
     # Case 1.3: Content is a StuffContent object
     (
         "case-1.3-stuff-content-object",

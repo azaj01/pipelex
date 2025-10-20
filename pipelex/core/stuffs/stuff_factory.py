@@ -133,8 +133,9 @@ class StuffFactory:
             1.1: str → TextContent with Text concept
             1.2: list[str] → ListContent[TextContent] with Text concept
             1.3: StuffContent → Use the StuffContent, infer concept from class name
+                1.3a: Regular StuffContent → Infer concept from the class itself
+                1.3b (was 1.5): ListContent[StuffContent] → Infer concept from first item's class
             1.4: list[StuffContent] → ListContent[StuffContent], infer concept from first item
-            1.5: ListContent[StuffContent] → Use the ListContent, infer concept from first item
 
         Case 2: Dict with 'concept' AND 'content' keys
             2.1/2.1b: {"concept": "Text"/"native.Text", "content": str} → TextContent with Text concept
@@ -160,9 +161,42 @@ class StuffFactory:
 
             # Case 1.3: StuffContent object → Infer concept from class name
             if issubclass(type(stuff_content_or_data), StuffContent):
-                # Get the concept from the StuffContent class name
-                content_class_name = stuff_content_or_data.__class__.__name__
                 stuff_content = cast("StuffContent", stuff_content_or_data)
+                
+                # Case 1.3b: Special handling for ListContent (subcase of 1.3)
+                if isinstance(stuff_content_or_data, ListContent):
+                    list_content = cast("ListContent[StuffContent]", stuff_content_or_data)
+                    
+                    if len(list_content.items) == 0:
+                        msg = f"Cannot create Stuff '{name}' from empty ListContent"
+                        raise StuffFactoryError(msg)
+                    
+                    first_item = list_content.items[0]
+                    
+                    # Check that items are StuffContent
+                    if not isinstance(first_item, StuffContent):  # pyright: ignore[reportUnnecessaryIsInstance]
+                        msg = (
+                            f"Trying to create a Stuff '{name}' from a ListContent but "
+                            f"the items are not StuffContent. First item is of type {type(first_item).__name__}. "
+                            "ListContent items must be subclasses of StuffContent."
+                        )
+                        raise StuffFactoryError(msg)
+                    
+                    # Check all items are of the same type
+                    for item in list_content.items:
+                        if not isinstance(item, type(first_item)):
+                            msg = (
+                                f"Trying to create a Stuff '{name}' from a ListContent of '{type(first_item).__name__}' "
+                                f"but the items are not of the same type. Especially, items {item} is of type {type(item).__name__}. "
+                                "Every items of the list should be an identical type."
+                            )
+                            raise StuffFactoryError(msg)
+                    
+                    # Get concept from first item's class name
+                    content_class_name = type(first_item).__name__
+                else:
+                    # Case 1.3a: Regular StuffContent → Get concept from the StuffContent class name itself
+                    content_class_name = stuff_content_or_data.__class__.__name__
 
                 # Check if it's a native concept
                 if "Content" in content_class_name and NativeConceptCode.is_native_concept(concept_code=content_class_name.split("Content")[0]):
@@ -247,49 +281,6 @@ class StuffFactory:
                 else:
                     msg = f"Cannot create Stuff from list of {type(first_item)}. Type should be {StuffContentOrData}."
                     raise StuffFactoryError(msg)
-
-            # Case 1.5: ListContent[StuffContent] → Use the ListContent, infer concept from first item
-            if isinstance(stuff_content_or_data, ListContent):
-                list_content_15 = cast("ListContent[StuffContent]", stuff_content_or_data)
-
-                if len(list_content_15.items) == 0:
-                    msg = f"Cannot create Stuff '{name}' from empty ListContent"
-                    raise StuffFactoryError(msg)
-
-                first_item = list_content_15.items[0]
-                content_class_name = type(first_item).__name__
-
-                # Check all items are of the same type
-                for item in list_content_15.items:
-                    if not isinstance(item, type(first_item)):
-                        msg = (
-                            f"Trying to create a Stuff '{name}' from a ListContent of '{type(first_item).__name__}' "
-                            f"but the items are not of the same type. Especially, items {item} is of type {type(item).__name__}. "
-                            "Every items of the list should be an identical type."
-                        )
-                        raise StuffFactoryError(msg)
-
-                # Check if it's a native concept
-                if "Content" in content_class_name and NativeConceptCode.is_native_concept(concept_code=content_class_name.split("Content")[0]):
-                    concept = get_native_concept(native_concept=NativeConceptCode(content_class_name.split("Content")[0]))
-                else:
-                    try:
-                        concept = concept_library.get_required_concept_from_concept_string_or_code(
-                            concept_string_or_code=content_class_name, search_domains=search_domains
-                        )
-                    except ConceptLibraryConceptNotFoundError as exc:
-                        msg = (
-                            f"Trying to create a Stuff '{name}' from a ListContent but "
-                            f"the concept of name '{content_class_name}' is not found in the library"
-                        )
-                        raise StuffFactoryError(msg) from exc
-
-                return cls.make_stuff(
-                    concept=concept,
-                    content=list_content_15,
-                    name=name,
-                    code=code,
-                )
 
         # ==================== CASE 2: Dict with 'concept' AND 'content' keys ====================
         if not isinstance(stuff_content_or_data, dict):
