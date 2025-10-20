@@ -6,6 +6,7 @@ from typing import Any, cast
 
 from pipelex.client.protocol import PipelineInputs
 from pipelex.core.memory.working_memory import WorkingMemory
+from pipelex.core.stuffs.stuff import DictStuff
 
 
 class ApiSerializer:
@@ -34,10 +35,10 @@ class ApiSerializer:
             content_dict = stuff.content.model_dump(serialize_as_any=True)
             clean_content = cls._clean_and_format_content(content_dict)
 
-            pipeline_inputs[stuff_name] = {
-                "concept": stuff.concept.code,
-                "content": clean_content,
-            }
+            pipeline_inputs[stuff_name] = DictStuff(
+                concept=stuff.concept.code,
+                content=clean_content,
+            )
 
         return pipeline_inputs
 

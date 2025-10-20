@@ -338,21 +338,8 @@ class StuffFactory:
                 )
                 raise StuffFactoryError(msg)
 
-            dict_stuff_code = stuff_content_or_data["stuff_code"]
-            dict_stuff_name_in_dict = stuff_content_or_data.get("stuff_name")
-            concept_string = stuff_content_or_data["concept"]
-            content = stuff_content_or_data["content"]
-
-            # Validate: if both dict_stuff_name and name argument are provided, they must match
-            if dict_stuff_name_in_dict is not None and name is not None and dict_stuff_name_in_dict != name:
-                msg = (
-                    f"Trying to create a Stuff from a DictStuff but the stuff_name in the dict ('{dict_stuff_name_in_dict}') "
-                    f"does not match the name argument ('{name}'). They must be equal if both are provided."
-                )
-                raise StuffFactoryError(msg)
-
-            # Use dict's stuff_name if present, otherwise fallback to name argument
-            dict_stuff_name = dict_stuff_name_in_dict if dict_stuff_name_in_dict is not None else name
+            concept_string = stuff_content_or_data.concept
+            content = stuff_content_or_data.content
 
             # Get the concept from the library
             try:
@@ -373,8 +360,7 @@ class StuffFactory:
                     raise StuffFactoryError(msg)
 
                 return cls.make_stuff(
-                    name=dict_stuff_name,
-                    code=dict_stuff_code,
+                    name=name,
                     concept=concept,
                     content=the_class.model_validate(obj=content),
                 )
@@ -385,8 +371,7 @@ class StuffFactory:
                     value=content,
                 )
                 return cls.make_stuff(
-                    name=dict_stuff_name,
-                    code=dict_stuff_code,
+                    name=name,
                     concept=concept,
                     content=stuff_content,
                 )

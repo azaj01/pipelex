@@ -201,8 +201,5 @@ class DictStuff(CustomBaseModel):
     """
 
     model_config = ConfigDict(extra="forbid", strict=True)
-
-    stuff_code: str
-    stuff_name: str | None = None
     concept: str
     content: dict[str, Any]

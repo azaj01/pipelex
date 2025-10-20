@@ -26,8 +26,6 @@ class PipelineResponseFactory:
         # Convert each Stuff → DictStuff by dumping only the content
         for stuff_name, stuff in working_memory.root.items():
             dict_stuff = DictStuff(
-                stuff_code=stuff.stuff_code,
-                stuff_name=stuff.stuff_name,
                 concept=stuff.concept.concept_string,
                 content=stuff.content.model_dump(serialize_as_any=True),
             )
