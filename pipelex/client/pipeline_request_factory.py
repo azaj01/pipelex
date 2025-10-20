@@ -15,6 +15,7 @@ class PipelineRequestFactory:
         output_name: str | None = None,
         output_multiplicity: PipeOutputMultiplicity | None = None,
         dynamic_output_concept_code: str | None = None,
+        plx_content: str | None = None,
     ) -> PipelineRequest:
         """Create a PipelineRequest from a WorkingMemory object.
 
@@ -23,7 +24,7 @@ class PipelineRequestFactory:
             output_name: Name of the output slot to write to
             output_multiplicity: Output multiplicity setting
             dynamic_output_concept_code: Override for the dynamic output concept code
-
+            plx_content: Content of the pipeline bundle to execute
         Returns:
             PipelineRequest with the working memory serialized to reduced format
 
@@ -33,6 +34,7 @@ class PipelineRequestFactory:
             output_name=output_name,
             output_multiplicity=output_multiplicity,
             dynamic_output_concept_code=dynamic_output_concept_code,
+            plx_content=plx_content,
         )
 
     @staticmethod
@@ -51,4 +53,5 @@ class PipelineRequestFactory:
             output_name=request_body.get("output_name"),
             output_multiplicity=request_body.get("output_multiplicity"),
             dynamic_output_concept_code=request_body.get("dynamic_output_concept_code"),
+            plx_content=request_body.get("plx_content"),
         )

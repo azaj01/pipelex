@@ -81,6 +81,7 @@ class PipelineRequest(BaseModel):
         output_name (str | None): Name of the output slot to write to
         output_multiplicity (PipeOutputMultiplicity | None): Output multiplicity setting
         dynamic_output_concept_code (str | None): Override for the dynamic output concept code
+        plx_content (str | None): Content of the pipeline bundle to execute
 
     """
 
@@ -88,6 +89,7 @@ class PipelineRequest(BaseModel):
     output_name: str | None = None
     output_multiplicity: PipeOutputMultiplicity | None = None
     dynamic_output_concept_code: str | None = None
+    plx_content: str | None = None
 
 
 class PipelineResponse(ApiResponse):
@@ -100,6 +102,7 @@ class PipelineResponse(ApiResponse):
         finished_at (str | None): Timestamp when the pipeline finished, if completed
         pipe_output (SerializedPipeOutput | None): Output data from the pipeline execution (working_memory dict + pipeline_run_id)
         main_stuff_name (str | None): Name of the main stuff in the pipeline output
+        pipe_structures (dict[str, Any] | None): Structure of the pipeline to execute
 
     """
 
@@ -109,6 +112,7 @@ class PipelineResponse(ApiResponse):
     finished_at: str | None = None
     pipe_output: SerializedPipeOutput | None = None
     main_stuff_name: str | None = None
+    pipe_structures: dict[str, Any] | None = None
 
 
 @runtime_checkable
