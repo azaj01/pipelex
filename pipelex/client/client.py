@@ -92,7 +92,7 @@ class PipelexClient(PipelexProtocol):
             raise ValueError(msg)
 
         if inputs is not None:
-            working_memory = WorkingMemoryFactory.make_from_implicit_memory(implicit_memory=inputs)
+            working_memory = WorkingMemoryFactory.make_from_pipeline_inputs(pipeline_inputs=inputs)
 
         pipeline_request = PipelineRequestFactory.make_from_working_memory(
             working_memory=working_memory,
@@ -119,7 +119,7 @@ class PipelexClient(PipelexProtocol):
             raise ValueError(msg)
 
         if inputs is not None:
-            working_memory = WorkingMemoryFactory.make_from_implicit_memory(implicit_memory=inputs)
+            working_memory = WorkingMemoryFactory.make_from_pipeline_inputs(pipeline_inputs=inputs)
 
         pipeline_request = PipelineRequestFactory.make_from_working_memory(
             working_memory=working_memory,

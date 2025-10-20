@@ -128,7 +128,7 @@ class StuffFactory:
         code: str | None = None,
         search_domains: list[str] | None = None,
     ) -> Stuff:
-        """Create a Stuff from StuffContentOrData covering all implicit memory cases.
+        """Create a Stuff from StuffContentOrData covering all pipeline inputs cases.
 
         Case 1: Direct content (no 'concept' key)
             1.1: str → TextContent with Text concept

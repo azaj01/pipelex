@@ -64,7 +64,7 @@ def setup_test_concept():
 
 
 class TestStuffFactoryImplicitMemory:
-    """Test StuffFactory with implicit memory input formats.
+    """Test StuffFactory with pipeline inputs input formats.
 
     This covers cases where stuff_content_or_data is:
     - Case 1: Direct content (no 'concept' key)

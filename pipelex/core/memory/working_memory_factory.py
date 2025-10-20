@@ -123,15 +123,15 @@ class WorkingMemoryFactory(BaseModel):
         return WorkingMemory(root={})
 
     @classmethod
-    def make_from_implicit_memory(
+    def make_from_pipeline_inputs(
         cls,
-        implicit_memory: PipelineInputs,
+        pipeline_inputs: PipelineInputs,
         search_domains: list[str] | None = None,
     ) -> WorkingMemory:
-        """Create a WorkingMemory from a implicit memory dictionary.
+        """Create a WorkingMemory from a pipeline inputs dictionary.
 
         Args:
-            implicit_memory: Dictionary in the format from API serialization
+            pipeline_inputs: Dictionary in the format from API serialization
             search_domains: List of domains to search for concepts
 
         Returns:
@@ -140,7 +140,7 @@ class WorkingMemoryFactory(BaseModel):
         """
         working_memory = cls.make_empty()
 
-        for stuff_key, stuff_content_or_data in implicit_memory.items():
+        for stuff_key, stuff_content_or_data in pipeline_inputs.items():
             stuff = StuffFactory.make_stuff_from_stuff_content_or_data(
                 name=stuff_key,
                 stuff_content_or_data=stuff_content_or_data,

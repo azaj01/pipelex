@@ -12,7 +12,7 @@ from pipelex.core.stuffs.stuff_content import StuffContent
 from pipelex.pipe_run.pipe_run_params import PipeOutputMultiplicity
 from pipelex.types import StrEnum
 
-# StuffContentOrData represents all possible formats for implicit memory input:
+# StuffContentOrData represents all possible formats for pipeline inputs input:
 # Case 1: Direct content (no 'concept' key)
 #   - 1.1: str (simple string)
 #   - 1.2: Sequence[str] (list of strings)
@@ -78,7 +78,7 @@ class PipelineRequest(BaseModel):
 
     """
 
-    inputs: Annotated[PipelineInputs | WorkingMemory | None, SkipValidation] = None
+    inputs: Annotated[PipelineInputs | None, SkipValidation] = None
     output_name: str | None = None
     output_multiplicity: PipeOutputMultiplicity | None = None
     dynamic_output_concept_code: str | None = None

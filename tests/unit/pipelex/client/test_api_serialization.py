@@ -90,14 +90,14 @@ class TestApiSerialization:
         return WorkingMemoryFactory.make_from_single_stuff(stuff=stuff)
 
     def test_serialize_working_memory_with_datetime(self, datetime_content_memory: WorkingMemory):
-        implicit_memory = ApiSerializer.serialize_working_memory_for_api(datetime_content_memory)
+        pipeline_inputs = ApiSerializer.serialize_working_memory_for_api(datetime_content_memory)
 
         # Should have one entry for the datetime content
-        assert len(implicit_memory) == 1
-        assert "project_meeting" in implicit_memory
+        assert len(pipeline_inputs) == 1
+        assert "project_meeting" in pipeline_inputs
 
         # Check the dict structure
-        datetime_blueprint = implicit_memory["project_meeting"]
+        datetime_blueprint = pipeline_inputs["project_meeting"]
         assert isinstance(datetime_blueprint, dict)
         assert datetime_blueprint["concept"] == "DateTimeEvent"
 
@@ -122,14 +122,14 @@ class TestApiSerialization:
         assert "__class__" not in content
 
     def test_api_serialized_memory_is_json_serializable(self, datetime_content_memory: WorkingMemory):
-        implicit_memory = ApiSerializer.serialize_working_memory_for_api(datetime_content_memory)
+        pipeline_inputs = ApiSerializer.serialize_working_memory_for_api(datetime_content_memory)
 
         # This should NOT raise an exception now
-        json_string = json.dumps(implicit_memory)
+        json_string = json.dumps(pipeline_inputs)
         roundtrip = json.loads(json_string)
 
         # Verify roundtrip works
-        assert roundtrip == implicit_memory
+        assert roundtrip == pipeline_inputs
 
         # Verify datetime fields are strings
         content = roundtrip["project_meeting"]["content"]
@@ -138,22 +138,22 @@ class TestApiSerialization:
         assert isinstance(content["created_at"], str)
 
     def test_serialize_text_content(self, text_content_memory: WorkingMemory):
-        implicit_memory = ApiSerializer.serialize_working_memory_for_api(text_content_memory)
+        pipeline_inputs = ApiSerializer.serialize_working_memory_for_api(text_content_memory)
 
-        assert len(implicit_memory) == 1
-        assert "sample_text" in implicit_memory
+        assert len(pipeline_inputs) == 1
+        assert "sample_text" in pipeline_inputs
 
-        text_blueprint = cast("dict[str, Any]", implicit_memory["sample_text"])
+        text_blueprint = cast("dict[str, Any]", pipeline_inputs["sample_text"])
         assert text_blueprint["concept"] == NativeConceptCode.TEXT
         assert text_blueprint["content"] == {"text": "Sample text content"}
 
     def test_serialize_number_content(self, number_content_memory: WorkingMemory):
-        implicit_memory = ApiSerializer.serialize_working_memory_for_api(number_content_memory)
+        pipeline_inputs = ApiSerializer.serialize_working_memory_for_api(number_content_memory)
 
-        assert len(implicit_memory) == 1
-        assert "pi_value" in implicit_memory
+        assert len(pipeline_inputs) == 1
+        assert "pi_value" in pipeline_inputs
 
-        number_blueprint = cast("dict[str, Any]", implicit_memory["pi_value"])
+        number_blueprint = cast("dict[str, Any]", pipeline_inputs["pi_value"])
         assert number_blueprint["concept"] == NativeConceptCode.NUMBER
         assert isinstance(number_blueprint["content"], dict)
         assert number_blueprint["content"]["number"] == 3.14159

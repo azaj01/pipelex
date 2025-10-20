@@ -26,20 +26,20 @@ class ApiSerializer:
             PipelineInputs ready for API transmission with datetime strings and no __class__/__module__.
 
         """
-        implicit_memory: PipelineInputs = {}
+        pipeline_inputs: PipelineInputs = {}
         if working_memory is None:
-            return implicit_memory
+            return pipeline_inputs
 
         for stuff_name, stuff in working_memory.root.items():
             content_dict = stuff.content.model_dump(serialize_as_any=True)
             clean_content = cls._clean_and_format_content(content_dict)
 
-            implicit_memory[stuff_name] = {
+            pipeline_inputs[stuff_name] = {
                 "concept": stuff.concept.code,
                 "content": clean_content,
             }
 
-        return implicit_memory
+        return pipeline_inputs
 
     @classmethod
     def _clean_and_format_content(cls, content: Any) -> Any:

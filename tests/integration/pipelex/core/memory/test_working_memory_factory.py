@@ -13,14 +13,14 @@ if TYPE_CHECKING:
 
 class TestWorkingMemoryFactory:
     def test_make_from_compact_memory_with_text_content(self):
-        implicit_memory: PipelineInputs = {
+        pipeline_inputs: PipelineInputs = {
             "text_item": {
                 "concept": NativeConceptCode.TEXT,
                 "content": "Hello, world!",
             },
         }
 
-        working_memory = WorkingMemoryFactory.make_from_implicit_memory(implicit_memory=implicit_memory)
+        working_memory = WorkingMemoryFactory.make_from_pipeline_inputs(pipeline_inputs=pipeline_inputs)
 
         assert working_memory is not None
         assert "text_item" in working_memory.root
@@ -32,7 +32,7 @@ class TestWorkingMemoryFactory:
 
     def test_make_from_compact_memory_with_complex_nested_content(self):
         """Test deserialization of compact memory with complex nested structured content."""
-        implicit_memory: PipelineInputs = {
+        pipeline_inputs: PipelineInputs = {
             "complex_page": {
                 "concept": NativeConceptCode.PAGE,
                 "content": {
@@ -60,7 +60,7 @@ class TestWorkingMemoryFactory:
             },
         }
 
-        working_memory = WorkingMemoryFactory.make_from_implicit_memory(implicit_memory=implicit_memory)
+        working_memory = WorkingMemoryFactory.make_from_pipeline_inputs(pipeline_inputs=pipeline_inputs)
 
         assert working_memory is not None
         assert "complex_page" in working_memory.root
@@ -113,16 +113,16 @@ class TestWorkingMemoryFactory:
 
     def test_make_from_compact_memory_empty(self):
         """Test deserialization of empty compact memory."""
-        implicit_memory: PipelineInputs = {}
+        pipeline_inputs: PipelineInputs = {}
 
-        working_memory = WorkingMemoryFactory.make_from_implicit_memory(implicit_memory=implicit_memory)
+        working_memory = WorkingMemoryFactory.make_from_pipeline_inputs(pipeline_inputs=pipeline_inputs)
 
         assert working_memory is not None
         assert len(working_memory.root) == 0
 
     def test_make_from_compact_memory_multiple_items(self):
         """Test deserialization of compact memory with multiple items."""
-        implicit_memory: PipelineInputs = {
+        pipeline_inputs: PipelineInputs = {
             "text1": {
                 "concept": NativeConceptCode.TEXT,
                 "content": "First text",
@@ -133,7 +133,7 @@ class TestWorkingMemoryFactory:
             },
         }
 
-        working_memory = WorkingMemoryFactory.make_from_implicit_memory(implicit_memory=implicit_memory)
+        working_memory = WorkingMemoryFactory.make_from_pipeline_inputs(pipeline_inputs=pipeline_inputs)
 
         assert working_memory is not None
         assert len(working_memory.root) == 2

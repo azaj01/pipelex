@@ -39,7 +39,7 @@ async def execute_pipeline(
     pipe_code:
         The code of the pipe to execute.
     inputs:
-        Optional implicit memory or working memory to pass to the pipe.
+        Optional pipeline inputs or working memory to pass to the pipe.
     output_name:
         Name of the output slot to write to.
     output_multiplicity:
@@ -71,8 +71,8 @@ async def execute_pipeline(
         if isinstance(inputs, WorkingMemory):
             working_memory = inputs
         else:
-            working_memory = WorkingMemoryFactory.make_from_implicit_memory(
-                implicit_memory=inputs,
+            working_memory = WorkingMemoryFactory.make_from_pipeline_inputs(
+                pipeline_inputs=inputs,
                 search_domains=search_domains,
             )
 
