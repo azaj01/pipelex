@@ -4,9 +4,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, cast
 
-from pipelex.client.protocol import DictMemory, ImplicitMemory
+from pipelex.client.protocol import ImplicitMemory
 from pipelex.core.memory.working_memory import WorkingMemory
-from pipelex.core.pipes.pipe_output import PipeOutput
 
 
 class ApiSerializer:
@@ -41,19 +40,6 @@ class ApiSerializer:
             }
 
         return implicit_memory
-
-    @classmethod
-    def serialize_pipe_output_for_api(cls, pipe_output: PipeOutput) -> DictMemory:
-        """Convert PipeOutput to API-ready format.
-
-        Args:
-            pipe_output: The PipeOutput to serialize
-
-        Returns:
-            Dict ready for API transmission
-
-        """
-        return {"dict_memory": cls.serialize_working_memory_for_api(pipe_output.working_memory)}
 
     @classmethod
     def _clean_and_format_content(cls, content: Any) -> Any:
