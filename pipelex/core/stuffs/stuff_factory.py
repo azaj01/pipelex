@@ -162,17 +162,17 @@ class StuffFactory:
             # Case 1.3: StuffContent object → Infer concept from class name
             if issubclass(type(stuff_content_or_data), StuffContent):
                 stuff_content = cast("StuffContent", stuff_content_or_data)
-                
+
                 # Case 1.3b: Special handling for ListContent (subcase of 1.3)
                 if isinstance(stuff_content_or_data, ListContent):
                     list_content = cast("ListContent[StuffContent]", stuff_content_or_data)
-                    
+
                     if len(list_content.items) == 0:
                         msg = f"Cannot create Stuff '{name}' from empty ListContent"
                         raise StuffFactoryError(msg)
-                    
+
                     first_item = list_content.items[0]
-                    
+
                     # Check that items are StuffContent
                     if not isinstance(first_item, StuffContent):  # pyright: ignore[reportUnnecessaryIsInstance]
                         msg = (
@@ -181,7 +181,7 @@ class StuffFactory:
                             "ListContent items must be subclasses of StuffContent."
                         )
                         raise StuffFactoryError(msg)
-                    
+
                     # Check all items are of the same type
                     for item in list_content.items:
                         if not isinstance(item, type(first_item)):
@@ -191,7 +191,7 @@ class StuffFactory:
                                 "Every items of the list should be an identical type."
                             )
                             raise StuffFactoryError(msg)
-                    
+
                     # Get concept from first item's class name
                     content_class_name = type(first_item).__name__
                 else:
@@ -234,8 +234,10 @@ class StuffFactory:
                 if isinstance(first_item, str):
                     for item in stuff_content_or_data:
                         if not isinstance(item, str):
-                            msg = f"Trying to create a Stuff '{name}' from a list of strings but the item {item} is not a string."
-                            "Every items of the list should be a identical type. If its a string, everything should be a string."
+                            msg = (
+                                f"Trying to create a Stuff '{name}' from a list of strings but the item {item} is not a string. "
+                                "Every items of the list should be a identical type. If its a string, everything should be a string."
+                            )
                             raise StuffFactoryError(msg)
 
                     items = [TextContent(text=item) for item in cast("list[str]", stuff_content_or_data)]
@@ -254,9 +256,11 @@ class StuffFactory:
                     # Check all items are of the same type
                     for item in stuff_content_or_data:
                         if not isinstance(item, type(first_item)):
-                            msg = f"Trying to create a Stuff '{name}' from a list of '{type(first_item).__name__}' "
-                            f"but the items are not of the same type. Especially, items {item} is of type {type(item).__name__}"
-                            "Every items of the list should be a identical type. If its a string, everything should be a string."
+                            msg = (
+                                f"Trying to create a Stuff '{name}' from a list of '{type(first_item).__name__}' "
+                                f"but the items are not of the same type. Especially, items {item} is of type {type(item).__name__}. "
+                                "Every items of the list should be a identical type. If its a string, everything should be a string."
+                            )
                             raise StuffFactoryError(msg)
 
                     # Check if it's a native concept

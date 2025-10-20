@@ -99,7 +99,7 @@ class TestApiSerialization:
         # Check the dict structure
         datetime_blueprint = implicit_memory["project_meeting"]
         assert isinstance(datetime_blueprint, dict)
-        assert datetime_blueprint["concept_code"] == "DateTimeEvent"
+        assert datetime_blueprint["concept"] == "DateTimeEvent"
 
         # Check content is properly serialized
         content = datetime_blueprint["content"]
@@ -144,9 +144,8 @@ class TestApiSerialization:
         assert "sample_text" in implicit_memory
 
         text_blueprint = cast("dict[str, Any]", implicit_memory["sample_text"])
-        assert text_blueprint["concept_code"] == NativeConceptCode.TEXT
-        assert isinstance(text_blueprint["content"], str)
-        assert text_blueprint["content"] == "Sample text content"
+        assert text_blueprint["concept"] == NativeConceptCode.TEXT
+        assert text_blueprint["content"] == {"text": "Sample text content"}
 
     def test_serialize_number_content(self, number_content_memory: WorkingMemory):
         implicit_memory = ApiSerializer.serialize_working_memory_for_api(number_content_memory)
@@ -155,6 +154,6 @@ class TestApiSerialization:
         assert "pi_value" in implicit_memory
 
         number_blueprint = cast("dict[str, Any]", implicit_memory["pi_value"])
-        assert number_blueprint["concept_code"] == NativeConceptCode.NUMBER
+        assert number_blueprint["concept"] == NativeConceptCode.NUMBER
         assert isinstance(number_blueprint["content"], dict)
         assert number_blueprint["content"]["number"] == 3.14159

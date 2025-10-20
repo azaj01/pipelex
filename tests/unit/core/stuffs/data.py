@@ -19,6 +19,13 @@ class MyConcept(StructuredContent):
     arg3: MySubClass = Field(description="Test argument 3")
 
 
+class AnotherConcept(StructuredContent):
+    """A concept for testing concept resolution with search domains."""
+
+    name: str = Field(description="Name field")
+    value: int = Field(description="Value field")
+
+
 TEST_CASES: list[tuple[str, StuffContentOrData, str, str, Stuff]] = [
     # Case 1.1: Content is a string
     (
@@ -359,5 +366,213 @@ TEST_CASES: list[tuple[str, StuffContentOrData, str, str, Stuff]] = [
                 ]
             ),
         ),
+    ),
+]
+
+
+# Test cases with search_domains - format: (test_name, stuff_content_or_data, stuff_name, stuff_code, search_domains, expected_stuff)
+SEARCH_DOMAIN_TEST_CASES: list[tuple[str, StuffContentOrData, str, str, list[str], Stuff]] = [
+    # Case with search_domains: StuffContent object
+    (
+        "search-domain-stuff-content",
+        AnotherConcept(name="test", value=42),
+        "stuff_name",
+        "stuff_code",
+        ["test_domain"],
+        Stuff(
+            stuff_name="stuff_name",
+            stuff_code="stuff_code",
+            concept=ConceptFactory.make(
+                concept_code="AnotherConcept",
+                domain="test_domain",
+                description="Test concept for search domains",
+                structure_class_name="AnotherConcept",
+            ),
+            content=AnotherConcept(name="test", value=42),
+        ),
+    ),
+    # Case with search_domains: List of StuffContent objects
+    (
+        "search-domain-list-stuff-content",
+        [
+            AnotherConcept(name="test1", value=1),
+            AnotherConcept(name="test2", value=2),
+        ],
+        "stuff_name",
+        "stuff_code",
+        ["test_domain"],
+        Stuff(
+            stuff_name="stuff_name",
+            stuff_code="stuff_code",
+            concept=ConceptFactory.make(
+                concept_code="AnotherConcept",
+                domain="test_domain",
+                description="Test concept for search domains",
+                structure_class_name="AnotherConcept",
+            ),
+            content=ListContent(
+                items=[
+                    AnotherConcept(name="test1", value=1),
+                    AnotherConcept(name="test2", value=2),
+                ]
+            ),
+        ),
+    ),
+    # Case with search_domains: ListContent of StuffContent objects
+    (
+        "search-domain-list-content",
+        ListContent(
+            items=[
+                AnotherConcept(name="test1", value=1),
+                AnotherConcept(name="test2", value=2),
+            ]
+        ),
+        "stuff_name",
+        "stuff_code",
+        ["test_domain"],
+        Stuff(
+            stuff_name="stuff_name",
+            stuff_code="stuff_code",
+            concept=ConceptFactory.make(
+                concept_code="AnotherConcept",
+                domain="test_domain",
+                description="Test concept for search domains",
+                structure_class_name="AnotherConcept",
+            ),
+            content=ListContent(
+                items=[
+                    AnotherConcept(name="test1", value=1),
+                    AnotherConcept(name="test2", value=2),
+                ]
+            ),
+        ),
+    ),
+    # Case with search_domains: Dict with concept and content
+    (
+        "search-domain-dict",
+        {
+            "concept": "test_domain.AnotherConcept",
+            "content": {"name": "test", "value": 100},
+        },
+        "stuff_name",
+        "stuff_code",
+        ["test_domain"],
+        Stuff(
+            stuff_name="stuff_name",
+            stuff_code="stuff_code",
+            concept=ConceptFactory.make(
+                concept_code="AnotherConcept",
+                domain="test_domain",
+                description="Test concept for search domains",
+                structure_class_name="AnotherConcept",
+            ),
+            content=AnotherConcept(name="test", value=100),
+        ),
+    ),
+]
+
+
+# Error test cases - these should raise exceptions
+ERROR_TEST_CASES: list[tuple[str, StuffContentOrData, str, str, list[str] | None, type[Exception], str]] = [
+    # Format: (test_name, stuff_content_or_data, stuff_name, stuff_code, search_domains, expected_exception, error_match)
+    # Empty list - should fail
+    (
+        "error-empty-list",
+        [],
+        "stuff_name",
+        "stuff_code",
+        None,
+        Exception,
+        "empty list",
+    ),
+    # Empty ListContent - should fail
+    (
+        "error-empty-list-content",
+        ListContent(items=[]),
+        "stuff_name",
+        "stuff_code",
+        None,
+        Exception,
+        "empty ListContent",
+    ),
+    # Mixed types in list - should fail
+    (
+        "error-mixed-types-in-list",
+        [
+            TextContent(text="text1"),
+            MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")),
+        ],
+        "stuff_name",
+        "stuff_code",
+        None,
+        Exception,
+        "items are not of the same type",
+    ),
+    # Mixed types in ListContent - should fail
+    (
+        "error-mixed-types-in-list-content",
+        ListContent(
+            items=[
+                TextContent(text="text1"),
+                MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")),
+            ]
+        ),
+        "stuff_name",
+        "stuff_code",
+        None,
+        Exception,
+        "items are not of the same type",
+    ),
+    # Note: Cannot test ListContent with non-StuffContent items because
+    # Pydantic validates at construction time and would fail before we can test it
+    # Concept not found - should fail
+    (
+        "error-concept-not-found",
+        {"concept": "NonExistentConcept", "content": {"field": "value"}},
+        "stuff_name",
+        "stuff_code",
+        None,
+        Exception,
+        "not found",
+    ),
+    # Dict without concept key - should fail
+    (
+        "error-dict-without-concept",
+        {"content": "some content"},
+        "stuff_name",
+        "stuff_code",
+        None,
+        Exception,
+        "'concept' key",
+    ),
+    # Dict without content key - should fail
+    (
+        "error-dict-without-content",
+        {"concept": "Text"},
+        "stuff_name",
+        "stuff_code",
+        None,
+        Exception,
+        "'content' key",
+    ),
+    # Dict with extra keys - should fail
+    (
+        "error-dict-with-extra-keys",
+        {"concept": "Text", "content": "text", "extra": "key"},
+        "stuff_name",
+        "stuff_code",
+        None,
+        Exception,
+        "exactly keys",
+    ),
+    # Incompatible concept for string content - should fail
+    (
+        "error-incompatible-concept-for-string",
+        {"concept": "test_domain.MyConcept", "content": "plain text"},
+        "stuff_name",
+        "stuff_code",
+        ["test_domain"],
+        Exception,
+        "not compatible",
     ),
 ]

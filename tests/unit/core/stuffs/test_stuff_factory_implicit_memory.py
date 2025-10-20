@@ -11,7 +11,7 @@ from pipelex.core.stuffs.stuff import Stuff
 from pipelex.core.stuffs.stuff_factory import StuffFactory
 from pipelex.hub import get_concept_library
 from pipelex.system.registries.class_registry_utils import ClassRegistryUtils
-from tests.unit.core.stuffs.data import TEST_CASES
+from tests.unit.core.stuffs.data import ERROR_TEST_CASES, SEARCH_DOMAIN_TEST_CASES, TEST_CASES
 
 
 @pytest.fixture(scope="class")
@@ -46,10 +46,21 @@ def setup_test_concept():
     )
     concept_library.add_new_concept(concept=concept_not_native_text)
 
+    # Create AnotherConcept for search domain tests
+    concept_another = ConceptFactory.make(
+        concept_code="AnotherConcept",
+        domain="test_domain",
+        description="Test concept for search domains",
+        structure_class_name="AnotherConcept",
+    )
+    concept_library.add_new_concept(concept=concept_another)
+
     yield concept
 
     # Cleanup after test
-    concept_library.remove_concepts_by_concept_strings(concept_strings=["test_domain.MyConcept", "test_domain.MyConceptNotNativeText"])
+    concept_library.remove_concepts_by_concept_strings(
+        concept_strings=["test_domain.MyConcept", "test_domain.MyConceptNotNativeText", "test_domain.AnotherConcept"]
+    )
 
 
 class TestStuffFactoryImplicitMemory:
@@ -57,10 +68,13 @@ class TestStuffFactoryImplicitMemory:
 
     This covers cases where stuff_content_or_data is:
     - Case 1: Direct content (no 'concept' key)
-      - A string (1.1)
-      - A list of strings (1.2)
-      - A StuffContent object (1.3)
-      - A list of StuffContent objects (1.4)
+      - String (1.1)
+      - List of strings (1.2)
+      - TextContent object - native (1.2b)
+      - List of TextContent objects - native (1.2c)
+      - StuffContent object - custom (1.3 / 1.3a)
+      - ListContent of StuffContent objects (1.3b, formerly 1.5)
+      - List of StuffContent objects (1.4)
     - Case 2: Dict with 'concept' AND 'content' keys
       - String content (2.1, 2.1b, 2.1c)
       - List of strings (2.2, 2.2b)
@@ -86,7 +100,6 @@ class TestStuffFactoryImplicitMemory:
         log.info(f"Testing case: {test_name}")
         log.debug(f"setup_test_concept: {setup_test_concept}")
 
-
         result = StuffFactory.make_stuff_from_stuff_content_or_data(
             name=stuff_name,
             code=stuff_code,
@@ -98,62 +111,69 @@ class TestStuffFactoryImplicitMemory:
         assert result == expected_stuff, f"Failed for test case: {test_name}"
 
 
-# class TestStuffFactoryImplicitMemoryEdgeCases:
-#     """Test edge cases and error conditions."""
+class TestStuffFactoryImplicitMemoryWithSearchDomains:
+    """Test StuffFactory with search_domains parameter.
 
-#     def test_empty_list_raises_error(self):
-#         """Test that empty list raises appropriate error."""
-#         with pytest.raises(Exception) as exc_info:
-#             StuffFactory.make_stuff_from_stuff_content_using_search_domains(
-#                 name="test_stuff",
-#                 stuff_content_or_data=[],
-#                 search_domains=["test_domain"],
-#             )
-#         assert "no items" in str(exc_info.value).lower()
+    This tests that search_domains correctly resolves concepts.
+    """
 
-#     def test_dict_without_concept_raises_error(self):
-#         """Test that dict without concept key raises appropriate error."""
-#         with pytest.raises(Exception) as exc_info:
-#             StuffFactory.make_stuff_from_stuff_content_using_search_domains(
-#                 name="test_stuff",
-#                 stuff_content_or_data={"content": "some content"},
-#                 search_domains=["test_domain"],
-#             )
-#         assert "concept" in str(exc_info.value).lower()
+    @pytest.mark.parametrize(
+        ("test_name", "stuff_content_or_data", "stuff_name", "stuff_code", "search_domains", "expected_stuff"),
+        SEARCH_DOMAIN_TEST_CASES,
+    )
+    def test_search_domain_case(
+        self,
+        setup_test_concept: Any,
+        test_name: str,
+        stuff_content_or_data: StuffContentOrData,
+        stuff_name: str,
+        stuff_code: str,
+        search_domains: list[str],
+        expected_stuff: Stuff,
+    ):
+        log.info(f"Testing search domain case: {test_name}")
+        log.debug(f"setup_test_concept: {setup_test_concept}")
+        result = StuffFactory.make_stuff_from_stuff_content_or_data(
+            name=stuff_name,
+            code=stuff_code,
+            stuff_content_or_data=stuff_content_or_data,
+            search_domains=search_domains,
+        )
 
-#     def test_dict_without_content_raises_error(self):
-#         """Test that dict without content key raises appropriate error."""
-#         with pytest.raises(Exception) as exc_info:
-#             StuffFactory.make_stuff_from_stuff_content_using_search_domains(
-#                 name="test_stuff",
-#                 stuff_content_or_data={"concept": "Text"},
-#                 search_domains=["test_domain"],
-#             )
-#         assert "content" in str(exc_info.value).lower()
+        pretty_print(result, title=f"Result for test case: {test_name}")
+        pretty_print(expected_stuff, title=f"Expected stuff for test case: {test_name}")
 
-#     def test_concept_not_found_raises_error(self, setup_test_concept):
-#         """Test that non-existent concept raises appropriate error."""
-#         with pytest.raises(Exception) as exc_info:
-#             StuffFactory.make_stuff_from_stuff_content_using_search_domains(
-#                 name="test_stuff",
-#                 stuff_content_or_data={
-#                     "concept": "NonExistentConcept",
-#                     "content": {"some": "data"},
-#                 },
-#                 search_domains=["test_domain"],
-#             )
-#         # Should raise error about concept not found
+        assert result == expected_stuff, f"Failed for test case: {test_name}"
 
-#     def test_list_with_mixed_types_raises_error(self, setup_test_concept):
-#         """Test that list with mixed StuffContent types raises error."""
-#         # This should ideally raise an error or at least log a warning
-#         # The current implementation might not catch this, but it should
-#         with pytest.raises(Exception):
-#             StuffFactory.make_stuff_from_stuff_content_using_search_domains(
-#                 name="test_stuff",
-#                 stuff_content_or_data=[
-#                     MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")),
-#                     TextContent(text="different type"),  # Different type!
-#                 ],
-#                 search_domains=["test_domain"],
-#             )
+
+class TestStuffFactoryImplicitMemoryErrors:
+    """Test StuffFactory error cases.
+
+    This tests that the factory properly raises exceptions for invalid inputs.
+    """
+
+    @pytest.mark.parametrize(
+        ("test_name", "stuff_content_or_data", "stuff_name", "stuff_code", "search_domains", "expected_exception", "error_match"),
+        ERROR_TEST_CASES,
+    )
+    def test_error_case(
+        self,
+        setup_test_concept: Any,
+        test_name: str,
+        stuff_content_or_data: StuffContentOrData,
+        stuff_name: str,
+        stuff_code: str,
+        search_domains: list[str] | None,
+        expected_exception: type[Exception],
+        error_match: str,
+    ):
+        log.info(f"Testing error case: {test_name}")
+        log.debug(f"setup_test_concept: {setup_test_concept}")
+
+        with pytest.raises(expected_exception, match=error_match):
+            StuffFactory.make_stuff_from_stuff_content_or_data(
+                name=stuff_name,
+                code=stuff_code,
+                stuff_content_or_data=stuff_content_or_data,
+                search_domains=search_domains,
+            )
