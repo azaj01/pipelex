@@ -1,6 +1,6 @@
 import asyncio
 
-from pipelex.client.protocol import ImplicitMemory
+from pipelex.client.protocol import PipelineInputs
 from pipelex.core.memory.working_memory import WorkingMemory
 from pipelex.core.memory.working_memory_factory import WorkingMemoryFactory
 from pipelex.core.pipes.pipe_output import PipeOutput
@@ -15,7 +15,7 @@ from pipelex.pipeline.job_metadata import JobMetadata
 async def start_pipeline(
     pipe_code: str,
     working_memory: WorkingMemory | None = None,
-    inputs: ImplicitMemory | None = None,
+    inputs: PipelineInputs | None = None,
     output_name: str | None = None,
     output_multiplicity: PipeOutputMultiplicity | None = None,
     dynamic_output_concept_code: str | None = None,

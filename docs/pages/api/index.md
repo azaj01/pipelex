@@ -6,7 +6,7 @@ This guide covers everything you need to know about using the Pipelex API to exe
 
 1. [Quick Reference](#quick-reference)
 2. [Execute Pipeline](#execute-pipeline)
-3. [Input Format: ImplicitMemory](#input-format-implicitmemory)
+3. [Input Format: PipelineInputs](#input-format-implicitmemory)
    - [Case 1: Direct Content Format](#case-1-direct-content-format)
    - [Case 2: Explicit Format](#case-2-explicit-format-concept--content)
 4. [Search Domains Explained](#search-domains-explained)
@@ -52,6 +52,9 @@ Authorization: Bearer YOUR_API_KEY
 
 // 5. Domain-prefixed concept (Case 2.5)
 { "data": { "concept": "accounting.Invoice", "content": { ... } } }
+
+// 6. Full DictStuff with stuff_code (Case 2.7)
+{ "invoice": { "stuff_code": "abc123", "stuff_name": "monthly_invoice", "concept": "Invoice", "content": { ... } } }
 ```
 
 ### Key Points
@@ -91,7 +94,7 @@ Execute a Pipelex pipeline with flexible inputs.
 ```
 
 **Request Fields:**
-- `inputs` (ImplicitMemory): Flexible input format - see [Input Format](#input-format-implicitmemory) below
+- `inputs` (PipelineInputs): Flexible input format - see [Input Format](#input-format-implicitmemory) below
 - `output_name` (string, optional): Name for the output slot
 - `output_multiplicity` (string, optional): Output multiplicity setting
 - `dynamic_output_concept_code` (string, optional): Override output concept
@@ -121,13 +124,13 @@ Execute a Pipelex pipeline with flexible inputs.
 
 ---
 
-## Input Format: ImplicitMemory
+## Input Format: PipelineInputs
 
 Run your pipeline with flexible inputs that adapt to your needs. Pipelex supports multiple formats for providing inputs, making it easy to work with simple text, structured data, or complex objects. 
 
-### What is ImplicitMemory?
+### What is PipelineInputs?
 
-The `inputs` field uses **ImplicitMemory** format - a smart, flexible way to provide data to your pipelines. Instead of forcing you into a rigid structure, ImplicitMemory intelligently interprets your data based on how you provide it.
+The `inputs` field uses **PipelineInputs** format - a smart, flexible way to provide data to your pipelines. Instead of forcing you into a rigid structure, PipelineInputs intelligently interprets your data based on how you provide it.
 
 ### How Input Formatting Works
 
@@ -147,6 +150,7 @@ The `inputs` field uses **ImplicitMemory** format - a smart, flexible way to pro
 - 2.4: List of StructuredContent objects with concept → `{"concept": "Invoice", "content": [...]}`
 - 2.5: Dictionary (structured data) → `{"concept": "Invoice", "content": {"field": "value"}}`
 - 2.6: List of dictionaries → `{"concept": "Invoice", "content": [{...}, {...}]}`
+- 2.7: Full DictStuff (with stuff_code) → `{"stuff_code": "abc", "stuff_name": "name", "concept": "Invoice", "content": {...}}`
 
 **Pro Tip:** For **text inputs specifically**, skip the verbose format. Just provide the string directly: `"text": "Hello"` instead of `"text": {"concept": "Text", "content": "Hello"}`
 
@@ -412,6 +416,62 @@ The system will:
 }
 ```
 
+### 2.7: DictStuff Format (Full Stuff Object)
+
+The DictStuff format provides complete control over all Stuff fields, including `stuff_code` and `stuff_name`. This is useful when you need to preserve exact stuff identifiers from a previous pipeline execution or when working with serialized Stuff objects.
+
+```json
+{
+  "inputs": {
+    "invoice_data": {
+      "stuff_code": "abc123",
+      "stuff_name": "invoice_data",
+      "concept": "accounting.Invoice",
+      "content": {
+        "invoice_number": "INV-001",
+        "amount": 1250.00,
+        "date": "2025-10-20"
+      }
+    }
+  }
+}
+```
+
+**Key Fields:**
+- `stuff_code` (required): Unique identifier for the stuff object
+- `stuff_name` (optional): Human-readable name for the stuff (Must be equal to the input key if provided)
+- `concept` (required): Concept code (with optional domain prefix)
+- `content` (required): The actual data content
+
+**When to Use Case 2.7:**
+- Passing serialized Stuff objects between pipeline executions
+- When you need to preserve exact stuff identifiers
+- Working with API responses that return full DictStuff objects
+- Chaining pipelines where output from one becomes input to another
+
+**Content Types:**
+The `content` field in DictStuff can be:
+- A dictionary (structured data)
+- A string (for text-compatible concepts)
+- A list (for list content)
+- Any other format supported by the concept
+
+**Important Validation Rules:**
+- If both `stuff_name` in the DictStuff and the input parameter name are provided (not None), they **must match exactly**
+- If only one is provided, that value will be used
+- If neither is provided, the name will be generated from the concept
+- Example of valid usage:
+  ```json
+  // ✅ Both names match
+  { "stuff_name": "invoice", ... } with input key "invoice"
+  
+  // ✅ Only dict has name
+  { "stuff_name": "my_invoice", ... } with no explicit input name
+  
+  // ❌ Names don't match - will raise error
+  { "stuff_name": "invoice", ... } with input key "different_name"
+  ```
+
 ---
 
 ## Search Domains Explained
@@ -577,7 +637,7 @@ print(response.pipe_output)
 
 ### Combining PLX Content with Inputs
 
-You can use all the ImplicitMemory input formats described above with `plx_content`:
+You can use all the PipelineInputs input formats described above with `plx_content`:
 
 ```json
 {

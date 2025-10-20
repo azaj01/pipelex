@@ -18,7 +18,7 @@ from pipelex.types import StrEnum
 
 
 class Concept(BaseModel):
-    model_config = ConfigDict(extra="ignore", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True)
 
     code: str
     domain: str

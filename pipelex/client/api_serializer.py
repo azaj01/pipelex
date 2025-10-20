@@ -4,7 +4,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, cast
 
-from pipelex.client.protocol import ImplicitMemory
+from pipelex.client.protocol import PipelineInputs
 from pipelex.core.memory.working_memory import WorkingMemory
 
 
@@ -16,17 +16,17 @@ class ApiSerializer:
     FIELDS_TO_SKIP = ("__class__", "__module__")
 
     @classmethod
-    def serialize_working_memory_for_api(cls, working_memory: WorkingMemory | None = None) -> ImplicitMemory:
+    def serialize_working_memory_for_api(cls, working_memory: WorkingMemory | None = None) -> PipelineInputs:
         """Convert WorkingMemory to API-ready format using kajson with proper datetime handling.
 
         Args:
             working_memory: The WorkingMemory to serialize
 
         Returns:
-            ImplicitMemory ready for API transmission with datetime strings and no __class__/__module__.
+            PipelineInputs ready for API transmission with datetime strings and no __class__/__module__.
 
         """
-        implicit_memory: ImplicitMemory = {}
+        implicit_memory: PipelineInputs = {}
         if working_memory is None:
             return implicit_memory
 

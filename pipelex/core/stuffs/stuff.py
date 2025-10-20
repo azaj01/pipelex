@@ -21,7 +21,7 @@ from pipelex.tools.typing.pydantic_utils import CustomBaseModel, format_pydantic
 
 
 class Stuff(CustomBaseModel):
-    model_config = ConfigDict(extra="ignore", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True)
 
     stuff_code: str
     stuff_name: str | None = None
@@ -200,9 +200,9 @@ class DictStuff(CustomBaseModel):
     Has the exact same structure as Stuff but with dict content.
     """
 
-    model_config = ConfigDict(extra="ignore", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True)
 
     stuff_code: str
     stuff_name: str | None = None
-    concept: Concept
+    concept: str
     content: dict[str, Any]

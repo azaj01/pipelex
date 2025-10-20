@@ -1,8 +1,8 @@
 from typing import Any
 
-from pipelex.client.protocol import PipelineResponse, PipelineState, SerializedPipeOutput, SerializedWorkingMemory
-from pipelex.core.memory.working_memory import MAIN_STUFF_NAME, WorkingMemory
-from pipelex.core.pipes.pipe_output import PipeOutput
+from pipelex.client.protocol import PipelineResponse, PipelineState
+from pipelex.core.memory.working_memory import MAIN_STUFF_NAME, DictWorkingMemory, WorkingMemory
+from pipelex.core.pipes.pipe_output import DictPipeOutput, PipeOutput
 from pipelex.core.stuffs.stuff import DictStuff
 
 
@@ -10,7 +10,7 @@ class PipelineResponseFactory:
     """Factory class for creating PipelineResponse objects from PipeOutput."""
 
     @staticmethod
-    def _serialize_working_memory_with_dict_stuffs(working_memory: WorkingMemory) -> SerializedWorkingMemory:
+    def _serialize_working_memory_with_dict_stuffs(working_memory: WorkingMemory) -> DictWorkingMemory:
         """Convert WorkingMemory to dict with DictStuff objects (content as dict).
 
         Keeps the WorkingMemory structure but converts each Stuff.content to dict.
@@ -28,12 +28,12 @@ class PipelineResponseFactory:
             dict_stuff = DictStuff(
                 stuff_code=stuff.stuff_code,
                 stuff_name=stuff.stuff_name,
-                concept=stuff.concept,
+                concept=stuff.concept.concept_string,
                 content=stuff.content.model_dump(serialize_as_any=True),
             )
             dict_stuffs_root[stuff_name] = dict_stuff
 
-        return SerializedWorkingMemory(root=dict_stuffs_root, aliases=working_memory.aliases)
+        return DictWorkingMemory(root=dict_stuffs_root, aliases=working_memory.aliases)
 
     @staticmethod
     def make_from_pipe_output(
@@ -68,7 +68,7 @@ class PipelineResponseFactory:
             created_at=created_at,
             pipeline_state=pipeline_state,
             finished_at=finished_at,
-            pipe_output=SerializedPipeOutput(
+            pipe_output=DictPipeOutput(
                 working_memory=PipelineResponseFactory._serialize_working_memory_with_dict_stuffs(pipe_output.working_memory),
                 pipeline_run_id=pipe_output.pipeline_run_id,
             ),

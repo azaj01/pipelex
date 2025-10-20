@@ -5,7 +5,7 @@ from typing_extensions import override
 
 from pipelex.client.pipeline_request_factory import PipelineRequestFactory
 from pipelex.client.pipeline_response_factory import PipelineResponseFactory
-from pipelex.client.protocol import ImplicitMemory, PipelexProtocol, PipelineResponse
+from pipelex.client.protocol import PipelexProtocol, PipelineInputs, PipelineResponse
 from pipelex.core.memory.working_memory import WorkingMemory
 from pipelex.core.memory.working_memory_factory import WorkingMemoryFactory
 from pipelex.exceptions import ClientAuthenticationError
@@ -82,7 +82,7 @@ class PipelexClient(PipelexProtocol):
         self,
         pipe_code: str,
         working_memory: WorkingMemory | None = None,
-        inputs: ImplicitMemory | None = None,
+        inputs: PipelineInputs | None = None,
         output_name: str | None = None,
         output_multiplicity: PipeOutputMultiplicity | None = None,
         dynamic_output_concept_code: str | None = None,
@@ -109,7 +109,7 @@ class PipelexClient(PipelexProtocol):
         self,
         pipe_code: str,
         working_memory: WorkingMemory | None = None,
-        inputs: ImplicitMemory | None = None,
+        inputs: PipelineInputs | None = None,
         output_name: str | None = None,
         output_multiplicity: PipeOutputMultiplicity | None = None,
         dynamic_output_concept_code: str | None = None,

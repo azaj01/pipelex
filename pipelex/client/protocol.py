@@ -6,6 +6,7 @@ from pydantic.functional_validators import SkipValidation
 from typing_extensions import Annotated, runtime_checkable
 
 from pipelex.core.memory.working_memory import WorkingMemory
+from pipelex.core.pipes.pipe_output import DictPipeOutput
 from pipelex.core.stuffs.stuff import DictStuff
 from pipelex.core.stuffs.stuff_content import StuffContent
 from pipelex.pipe_run.pipe_run_params import PipeOutputMultiplicity
@@ -25,26 +26,17 @@ from pipelex.types import StrEnum
 #   - 2.4: {"concept": str, "content": Sequence[StuffContent]}
 #   - 2.5: {"concept": str, "content": dict[str, Any]}
 #   - 2.6: {"concept": str, "content": Sequence[dict[str, Any]]}
-DictStuffContent = dict[str, Any]
+#   - 2.7: DictStuff {"stuff_code": str, "stuff_name": str | None, "concept": str, "content": Any}
+ReducedDictStuff = dict[str, Any]  # Only contains {"concept": str, "content": Any}
 StuffContentOrData = (
     str  # Case 1.1
     | Sequence[str]  # Case 1.2
     | StuffContent  # Case 1.3 (also covers Case 1.5 as ListContent is a StuffContent)
     | Sequence[StuffContent]  # Case 1.4 (covariant - accepts list[TextContent], etc.)
-    | DictStuffContent  # Case 2.1, 2.2, 2.3, 2.4, 2.5, 2.6
+    | ReducedDictStuff  # Case 2.1, 2.2, 2.3, 2.4, 2.5, 2.6
+    | DictStuff  # Case 2.7
 )
-DictMemory = dict[str, DictStuffContent]  # Serialized dict format (no StuffContent objects)
-ImplicitMemory = dict[str, StuffContentOrData]  # Can include both dict and StuffContent
-
-
-class SerializedWorkingMemory(BaseModel):
-    root: dict[str, DictStuff]
-    aliases: dict[str, str]
-
-
-class SerializedPipeOutput(BaseModel):
-    working_memory: SerializedWorkingMemory
-    pipeline_run_id: str
+PipelineInputs = dict[str, StuffContentOrData]  # Can include both dict and StuffContent
 
 
 class PipelineState(StrEnum):
@@ -77,7 +69,7 @@ class PipelineRequest(BaseModel):
     """Request for executing a pipeline.
 
     Attributes:
-        inputs (ImplicitMemory | None): Inputs in ImplicitMemory format - Pydantic validation is skipped
+        inputs (PipelineInputs | None): Inputs in PipelineInputs format - Pydantic validation is skipped
             to preserve the flexible format (dicts, strings, StuffContent objects, etc.)
         output_name (str | None): Name of the output slot to write to
         output_multiplicity (PipeOutputMultiplicity | None): Output multiplicity setting
@@ -86,7 +78,7 @@ class PipelineRequest(BaseModel):
 
     """
 
-    inputs: Annotated[ImplicitMemory | None, SkipValidation] = None
+    inputs: Annotated[PipelineInputs | WorkingMemory | None, SkipValidation] = None
     output_name: str | None = None
     output_multiplicity: PipeOutputMultiplicity | None = None
     dynamic_output_concept_code: str | None = None
@@ -101,7 +93,7 @@ class PipelineResponse(ApiResponse):
         created_at (str): Timestamp when the pipeline was created
         pipeline_state (PipelineState): Current state of the pipeline
         finished_at (str | None): Timestamp when the pipeline finished, if completed
-        pipe_output (SerializedPipeOutput | None): Output data from the pipeline execution (working_memory dict + pipeline_run_id)
+        pipe_output (DictPipeOutput | None): Output data from the pipeline execution (working_memory dict + pipeline_run_id)
         main_stuff_name (str | None): Name of the main stuff in the pipeline output
         pipe_structures (dict[str, Any] | None): Structure of the pipeline to execute
 
@@ -111,7 +103,7 @@ class PipelineResponse(ApiResponse):
     created_at: str
     pipeline_state: PipelineState
     finished_at: str | None = None
-    pipe_output: SerializedPipeOutput | None = None
+    pipe_output: DictPipeOutput | None = None
     main_stuff_name: str | None = None
     pipe_structures: dict[str, Any] | None = None
 
@@ -137,7 +129,7 @@ class PipelexProtocol(Protocol):
         self,
         pipe_code: str,
         working_memory: WorkingMemory | None = None,
-        inputs: ImplicitMemory | None = None,
+        inputs: PipelineInputs | None = None,
         output_name: str | None = None,
         output_multiplicity: PipeOutputMultiplicity | None = None,
         dynamic_output_concept_code: str | None = None,
@@ -147,7 +139,7 @@ class PipelexProtocol(Protocol):
         Args:
             pipe_code (str): The code identifying the pipeline to execute
             working_memory (WorkingMemory | None): Memory context passed to the pipeline
-            inputs (ImplicitMemory | None): Inputs passed to the pipeline
+            inputs (PipelineInputs | None): Inputs passed to the pipeline
             output_name (str | None): Target output slot name
             output_multiplicity (PipeOutputMultiplicity | None): Output multiplicity setting
             dynamic_output_concept_code (str | None): Override for dynamic output concept
@@ -166,7 +158,7 @@ class PipelexProtocol(Protocol):
         self,
         pipe_code: str,
         working_memory: WorkingMemory | None = None,
-        inputs: ImplicitMemory | None = None,
+        inputs: PipelineInputs | None = None,
         output_name: str | None = None,
         output_multiplicity: PipeOutputMultiplicity | None = None,
         dynamic_output_concept_code: str | None = None,
@@ -176,7 +168,7 @@ class PipelexProtocol(Protocol):
         Args:
             pipe_code (str): The code identifying the pipeline to execute
             working_memory (WorkingMemory | None): Memory context passed to the pipeline
-            inputs (ImplicitMemory | None): Inputs passed to the pipeline
+            inputs (PipelineInputs | None): Inputs passed to the pipeline
             output_name (str | None): Target output slot name
             output_multiplicity (PipeOutputMultiplicity | None): Output multiplicity setting
             dynamic_output_concept_code (str | None): Override for dynamic output concept

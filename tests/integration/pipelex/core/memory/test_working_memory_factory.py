@@ -8,12 +8,12 @@ from pipelex.core.stuffs.text_and_images_content import TextAndImagesContent
 from pipelex.core.stuffs.text_content import TextContent
 
 if TYPE_CHECKING:
-    from pipelex.client.protocol import ImplicitMemory
+    from pipelex.client.protocol import PipelineInputs
 
 
 class TestWorkingMemoryFactory:
     def test_make_from_compact_memory_with_text_content(self):
-        implicit_memory: ImplicitMemory = {
+        implicit_memory: PipelineInputs = {
             "text_item": {
                 "concept": NativeConceptCode.TEXT,
                 "content": "Hello, world!",
@@ -32,7 +32,7 @@ class TestWorkingMemoryFactory:
 
     def test_make_from_compact_memory_with_complex_nested_content(self):
         """Test deserialization of compact memory with complex nested structured content."""
-        implicit_memory: ImplicitMemory = {
+        implicit_memory: PipelineInputs = {
             "complex_page": {
                 "concept": NativeConceptCode.PAGE,
                 "content": {
@@ -113,7 +113,7 @@ class TestWorkingMemoryFactory:
 
     def test_make_from_compact_memory_empty(self):
         """Test deserialization of empty compact memory."""
-        implicit_memory: ImplicitMemory = {}
+        implicit_memory: PipelineInputs = {}
 
         working_memory = WorkingMemoryFactory.make_from_implicit_memory(implicit_memory=implicit_memory)
 
@@ -122,7 +122,7 @@ class TestWorkingMemoryFactory:
 
     def test_make_from_compact_memory_multiple_items(self):
         """Test deserialization of compact memory with multiple items."""
-        implicit_memory: ImplicitMemory = {
+        implicit_memory: PipelineInputs = {
             "text1": {
                 "concept": NativeConceptCode.TEXT,
                 "content": "First text",

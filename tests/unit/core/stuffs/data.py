@@ -26,7 +26,7 @@ class AnotherConcept(StructuredContent):
     value: int = Field(description="Value field")
 
 
-TEST_CASES: list[tuple[str, StuffContentOrData, str, str, Stuff]] = [
+TEST_CASES: list[tuple[str, StuffContentOrData, str | None, str, Stuff]] = [
     # Case 1.1: Content is a string
     (
         "case-1.1-string",
@@ -367,11 +367,92 @@ TEST_CASES: list[tuple[str, StuffContentOrData, str, str, Stuff]] = [
             ),
         ),
     ),
+    # Case 2.7: DictStuff with all fields (stuff_code, stuff_name, concept, content)
+    # Note: name argument must match stuff_name in dict if both are provided
+    (
+        "case-2.7-dict-stuff-with-stuff-name",
+        {
+            "stuff_code": "custom_code",
+            "stuff_name": "custom_name",
+            "concept": "test_domain.MyConcept",
+            "content": {
+                "arg1": "something",
+                "arg2": 1,
+                "arg3": {"arg4": "something else"},
+            },
+        },
+        "custom_name",  # Must match the stuff_name in the dict
+        "ignored_code",
+        Stuff(
+            stuff_code="custom_code",
+            stuff_name="custom_name",
+            concept=ConceptFactory.make(
+                concept_code="MyConcept",
+                domain="test_domain",
+                description="Test concept for unit tests",
+                structure_class_name="MyConcept",
+            ),
+            content=MyConcept(arg1="something", arg2=1, arg3=MySubClass(arg4="something else")),
+        ),
+    ),
+    # Case 2.7a: DictStuff with stuff_name, but name argument is None
+    (
+        "case-2.7a-dict-stuff-with-stuff-name-no-arg",
+        {
+            "stuff_code": "custom_code_a",
+            "stuff_name": "custom_name_a",
+            "concept": "test_domain.MyConcept",
+            "content": {
+                "arg1": "something",
+                "arg2": 1,
+                "arg3": {"arg4": "something else"},
+            },
+        },
+        None,  # name argument is None, so dict's stuff_name is used
+        "ignored_code",
+        Stuff(
+            stuff_code="custom_code_a",
+            stuff_name="custom_name_a",
+            concept=ConceptFactory.make(
+                concept_code="MyConcept",
+                domain="test_domain",
+                description="Test concept for unit tests",
+                structure_class_name="MyConcept",
+            ),
+            content=MyConcept(arg1="something", arg2=1, arg3=MySubClass(arg4="something else")),
+        ),
+    ),
+    # Case 2.7b: DictStuff without stuff_name (only 3 keys)
+    (
+        "case-2.7b-dict-stuff-without-stuff-name",
+        {
+            "stuff_code": "custom_code_2",
+            "concept": "test_domain.MyConcept",
+            "content": {
+                "arg1": "arg1_value",
+                "arg2": 42,
+                "arg3": {"arg4": "arg4_value"},
+            },
+        },
+        "fallback_name",
+        "ignored_code",
+        Stuff(
+            stuff_code="custom_code_2",
+            stuff_name="fallback_name",
+            concept=ConceptFactory.make(
+                concept_code="MyConcept",
+                domain="test_domain",
+                description="Test concept for unit tests",
+                structure_class_name="MyConcept",
+            ),
+            content=MyConcept(arg1="arg1_value", arg2=42, arg3=MySubClass(arg4="arg4_value")),
+        ),
+    ),
 ]
 
 
 # Test cases with search_domains - format: (test_name, stuff_content_or_data, stuff_name, stuff_code, search_domains, expected_stuff)
-SEARCH_DOMAIN_TEST_CASES: list[tuple[str, StuffContentOrData, str, str, list[str], Stuff]] = [
+SEARCH_DOMAIN_TEST_CASES: list[tuple[str, StuffContentOrData, str | None, str, list[str], Stuff]] = [
     # Case with search_domains: StuffContent object
     (
         "search-domain-stuff-content",
@@ -473,7 +554,7 @@ SEARCH_DOMAIN_TEST_CASES: list[tuple[str, StuffContentOrData, str, str, list[str
 
 
 # Error test cases - these should raise exceptions
-ERROR_TEST_CASES: list[tuple[str, StuffContentOrData, str, str, list[str] | None, type[Exception], str]] = [
+ERROR_TEST_CASES: list[tuple[str, StuffContentOrData, str | None, str, list[str] | None, type[Exception], str]] = [
     # Format: (test_name, stuff_content_or_data, stuff_name, stuff_code, search_domains, expected_exception, error_match)
     # Empty list - should fail
     (
@@ -574,5 +655,68 @@ ERROR_TEST_CASES: list[tuple[str, StuffContentOrData, str, str, list[str] | None
         ["test_domain"],
         Exception,
         "not compatible",
+    ),
+    # DictStuff with wrong number of keys - should fail
+    (
+        "error-dict-stuff-wrong-keys",
+        {
+            "stuff_code": "code",
+            "concept": "Text",
+            "content": "text",
+            "extra": "key",
+            "another": "key",
+        },
+        "stuff_name",
+        "stuff_code",
+        None,
+        Exception,
+        "correct keys",
+    ),
+    # DictStuff with missing concept - should fail
+    (
+        "error-dict-stuff-missing-concept",
+        {
+            "stuff_code": "code",
+            "stuff_name": "name",
+            "content": {"field": "value"},
+        },
+        "stuff_name",
+        "stuff_code",
+        None,
+        Exception,
+        "'concept' key",
+    ),
+    # DictStuff with concept not found - should fail
+    (
+        "error-dict-stuff-concept-not-found",
+        {
+            "stuff_code": "code",
+            "concept": "NonExistentConcept",
+            "content": {"field": "value"},
+        },
+        "stuff_name",
+        "stuff_code",
+        None,
+        Exception,
+        "not found",
+    ),
+    # DictStuff with mismatched stuff_name - should fail
+    (
+        "error-dict-stuff-name-mismatch",
+        {
+            "stuff_code": "code",
+            "stuff_name": "name_in_dict",
+            "concept": "test_domain.MyConcept",
+            "content": {
+                "arg1": "arg1",
+                "arg2": 1,
+                "arg3": {"arg4": "arg4"},
+            },
+        },
+        "different_name",  # Does not match "name_in_dict"
+        "stuff_code",
+        ["test_domain"],
+        Exception,
+        "does not match",
     ),
 ]

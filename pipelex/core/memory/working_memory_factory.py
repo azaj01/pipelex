@@ -5,7 +5,7 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 from pydantic import BaseModel
 
 from pipelex import log
-from pipelex.client.protocol import ImplicitMemory
+from pipelex.client.protocol import PipelineInputs
 from pipelex.core.concepts.concept import ConceptBlueprint, SpecialDomain
 from pipelex.core.concepts.concept_native import NativeConceptCode
 from pipelex.core.memory.working_memory import MAIN_STUFF_NAME, StuffDict, WorkingMemory
@@ -125,7 +125,7 @@ class WorkingMemoryFactory(BaseModel):
     @classmethod
     def make_from_implicit_memory(
         cls,
-        implicit_memory: ImplicitMemory,
+        implicit_memory: PipelineInputs,
         search_domains: list[str] | None = None,
     ) -> WorkingMemory:
         """Create a WorkingMemory from a implicit memory dictionary.

@@ -148,6 +148,8 @@ class StuffFactory:
             2.4: {"concept": "...", "content": list[StuffContent]} → ListContent[StuffContent]
             2.5: {"concept": "...", "content": dict} → Create StuffContent from dict
             2.6: {"concept": "...", "content": list[dict]} → ListContent[StuffContent] from dicts
+            2.7: DictStuff (full stuff dict with stuff_code, stuff_name, concept, content) → Create Stuff from all fields
+                 Note: If both stuff_name in dict and name argument are provided, they must match exactly
         """
         concept_library = get_concept_library()
 
@@ -326,6 +328,70 @@ class StuffFactory:
             msg = f"Trying to create a Stuff '{name}' from a dict that should represent a StuffContentOrData but does not have a 'content' key."
             raise StuffFactoryError(msg)
 
+        # Case 2.7: DictStuff - full stuff dict with stuff_code, stuff_name, concept, content
+        if "stuff_code" in stuff_content_or_data:
+            # This is a DictStuff - it has all the fields of a Stuff
+            if len(stuff_content_or_data) not in (3, 4):  # 3 if no stuff_name, 4 if stuff_name present
+                msg = (
+                    f"Trying to create a Stuff '{name}' from a DictStuff but it does not have the correct keys. "
+                    "Expected keys: 'stuff_code', 'concept', 'content', and optionally 'stuff_name'."
+                )
+                raise StuffFactoryError(msg)
+
+            dict_stuff_code = stuff_content_or_data["stuff_code"]
+            dict_stuff_name_in_dict = stuff_content_or_data.get("stuff_name")
+            concept_string = stuff_content_or_data["concept"]
+            content = stuff_content_or_data["content"]
+
+            # Validate: if both dict_stuff_name and name argument are provided, they must match
+            if dict_stuff_name_in_dict is not None and name is not None and dict_stuff_name_in_dict != name:
+                msg = (
+                    f"Trying to create a Stuff from a DictStuff but the stuff_name in the dict ('{dict_stuff_name_in_dict}') "
+                    f"does not match the name argument ('{name}'). They must be equal if both are provided."
+                )
+                raise StuffFactoryError(msg)
+
+            # Use dict's stuff_name if present, otherwise fallback to name argument
+            dict_stuff_name = dict_stuff_name_in_dict if dict_stuff_name_in_dict is not None else name
+
+            # Get the concept from the library
+            try:
+                concept = concept_library.get_required_concept_from_concept_string_or_code(
+                    concept_string_or_code=concept_string, search_domains=search_domains
+                )
+            except ConceptLibraryConceptNotFoundError as exc:
+                msg = f"Trying to create a Stuff from a DictStuff but the concept of name '{concept_string}' is not found in the library"
+                raise StuffFactoryError(msg) from exc
+
+            # Handle content based on type (similar to Case 2.5 for dict content)
+            if isinstance(content, dict):
+                the_class = get_class_registry().get_class(name=concept.structure_class_name)
+                if the_class is None:
+                    msg = (
+                        f"Trying to create a Stuff from a DictStuff but the concept of name '{concept_string}' is not compatible with a dict content"
+                    )
+                    raise StuffFactoryError(msg)
+
+                return cls.make_stuff(
+                    name=dict_stuff_name,
+                    code=dict_stuff_code,
+                    concept=concept,
+                    content=the_class.model_validate(obj=content),
+                )
+            else:
+                # Content might be other types (str, list, etc.) - handle recursively
+                stuff_content = StuffContentFactory.make_stuff_content_from_concept_with_fallback(
+                    concept=concept,
+                    value=content,
+                )
+                return cls.make_stuff(
+                    name=dict_stuff_name,
+                    code=dict_stuff_code,
+                    concept=concept,
+                    content=stuff_content,
+                )
+
+        # ReducedDictStuff - only concept and content
         if len(stuff_content_or_data) != 2:
             msg = (
                 f"Trying to create a Stuff '{name}' from a dict that should represent a StuffContentOrData but does not have "

@@ -82,6 +82,7 @@ class TestStuffFactoryImplicitMemory:
       - List of StuffContent objects (2.4)
       - Dict content (2.5)
       - List of dicts (2.6)
+      - DictStuff with all fields (2.7)
     """
 
     @pytest.mark.parametrize(
@@ -93,7 +94,7 @@ class TestStuffFactoryImplicitMemory:
         setup_test_concept: Any,
         test_name: str,
         stuff_content_or_data: StuffContentOrData,
-        stuff_name: str,
+        stuff_name: str | None,
         stuff_code: str,
         expected_stuff: Stuff,
     ):
@@ -126,7 +127,7 @@ class TestStuffFactoryImplicitMemoryWithSearchDomains:
         setup_test_concept: Any,
         test_name: str,
         stuff_content_or_data: StuffContentOrData,
-        stuff_name: str,
+        stuff_name: str | None,
         stuff_code: str,
         search_domains: list[str],
         expected_stuff: Stuff,
@@ -161,7 +162,7 @@ class TestStuffFactoryImplicitMemoryErrors:
         setup_test_concept: Any,
         test_name: str,
         stuff_content_or_data: StuffContentOrData,
-        stuff_name: str,
+        stuff_name: str | None,
         stuff_code: str,
         search_domains: list[str] | None,
         expected_exception: type[Exception],
