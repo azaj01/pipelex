@@ -124,7 +124,7 @@ class TestPipelexApiClient:
 
             # Verify main_stuff structure
             assert working_memory.root["main_stuff"] is not None
-            assert working_memory.root["main_stuff"].concept == "RetrievedExcerpt"
+            assert working_memory.root["main_stuff"].concept == "retrieve.RetrievedExcerpt"
             assert working_memory.root["main_stuff"].content is not None
             assert len(working_memory.root["main_stuff"].content) > 0
 
