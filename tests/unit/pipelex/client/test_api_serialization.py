@@ -99,7 +99,7 @@ class TestApiSerialization:
         # Check the dict structure
         datetime_blueprint = pipeline_inputs["project_meeting"]
         assert isinstance(datetime_blueprint, dict)
-        assert datetime_blueprint["concept"] == "DateTimeEvent"
+        assert datetime_blueprint["concept"] == "event.DateTimeEvent"
 
         # Check content is properly serialized
         content = datetime_blueprint["content"]
@@ -144,7 +144,7 @@ class TestApiSerialization:
         assert "sample_text" in pipeline_inputs
 
         text_blueprint = cast("dict[str, Any]", pipeline_inputs["sample_text"])
-        assert text_blueprint["concept"] == NativeConceptCode.TEXT
+        assert text_blueprint["concept"] == "native.Text"
         assert text_blueprint["content"] == {"text": "Sample text content"}
 
     def test_serialize_number_content(self, number_content_memory: WorkingMemory):
@@ -154,6 +154,6 @@ class TestApiSerialization:
         assert "pi_value" in pipeline_inputs
 
         number_blueprint = cast("dict[str, Any]", pipeline_inputs["pi_value"])
-        assert number_blueprint["concept"] == NativeConceptCode.NUMBER
+        assert number_blueprint["concept"] == "native.Number"
         assert isinstance(number_blueprint["content"], dict)
         assert number_blueprint["content"]["number"] == 3.14159

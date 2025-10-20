@@ -53,8 +53,8 @@ Authorization: Bearer YOUR_API_KEY
 // 5. Domain-prefixed concept (Case 2.5)
 { "data": { "concept": "accounting.Invoice", "content": { ... } } }
 
-// 6. Full DictStuff with stuff_code (Case 2.7)
-{ "invoice": { "stuff_code": "abc123", "stuff_name": "monthly_invoice", "concept": "Invoice", "content": { ... } } }
+// 6. DictStuff instance (Python clients only)
+DictStuff(concept="Invoice", content={...})
 ```
 
 ### Key Points
@@ -143,14 +143,13 @@ The `inputs` field uses **PipelineInputs** format - a smart, flexible way to pro
 
 **Note:** Cases 1.3 and 1.5 are at the same level - both handle content types that inherit from `StuffContent`, but for different purposes (custom classes vs. list wrappers).
 
-**Case 2: Explicit Format** - Use `{"concept": "...", "content": "..."}` for control
+**Case 2: Explicit Format** - Use `{"concept": "...", "content": "..."}` for control (plain dict or DictStuff instance)
 - 2.1: String with concept → `{"concept": "Text", "content": "my text"}`
 - 2.2: List of strings with concept → `{"concept": "Text", "content": ["text1", "text2"]}`
 - 2.3: StructuredContent object with concept → `{"concept": "Invoice", "content": InvoiceObject}`
 - 2.4: List of StructuredContent objects with concept → `{"concept": "Invoice", "content": [...]}`
 - 2.5: Dictionary (structured data) → `{"concept": "Invoice", "content": {"field": "value"}}`
 - 2.6: List of dictionaries → `{"concept": "Invoice", "content": [{...}, {...}]}`
-- 2.7: Full DictStuff (with stuff_code) → `{"stuff_code": "abc", "stuff_name": "name", "concept": "Invoice", "content": {...}}`
 
 **Pro Tip:** For **text inputs specifically**, skip the verbose format. Just provide the string directly: `"text": "Hello"` instead of `"text": {"concept": "Text", "content": "Hello"}`
 
@@ -416,61 +415,67 @@ The system will:
 }
 ```
 
-### 2.7: DictStuff Format (Full Stuff Object)
+### Using DictStuff Instances (Python Clients Only)
 
-The DictStuff format provides complete control over all Stuff fields, including `stuff_code` and `stuff_name`. This is useful when you need to preserve exact stuff identifiers from a previous pipeline execution or when working with serialized Stuff objects.
+For Python clients, you can also pass `DictStuff` instances instead of plain dicts. `DictStuff` is a Pydantic model with the same structure as the explicit format.
 
-```json
-{
-  "inputs": {
-    "invoice_data": {
-      "stuff_code": "abc123",
-      "stuff_name": "invoice_data",
-      "concept": "accounting.Invoice",
-      "content": {
-        "invoice_number": "INV-001",
-        "amount": 1250.00,
-        "date": "2025-10-20"
-      }
+```python
+from pipelex.client import PipelexClient
+from pipelex.core.stuffs.stuff import DictStuff
+
+client = PipelexClient(api_token="YOUR_API_KEY")
+
+# Using DictStuff instance with dict content
+response = await client.execute_pipeline(
+    pipe_code="process_invoice",
+    inputs={
+        "invoice": DictStuff(
+            concept="accounting.Invoice",
+            content={
+                "invoice_number": "INV-001",
+                "amount": 1250.00,
+                "date": "2025-10-20"
+            }
+        )
     }
-  }
-}
+)
+
+# Using DictStuff instance with list of dicts content
+response = await client.execute_pipeline(
+    pipe_code="process_invoices",
+    inputs={
+        "invoices": DictStuff(
+            concept="accounting.Invoice",
+            content=[
+                {"invoice_number": "INV-001", "amount": 1250.00},
+                {"invoice_number": "INV-002", "amount": 890.00}
+            ]
+        )
+    }
+)
+
+# Using DictStuff instance with list of strings (for Text concept)
+response = await client.execute_pipeline(
+    pipe_code="analyze_texts",
+    inputs={
+        "documents": DictStuff(
+            concept="Text",
+            content=["document 1", "document 2", "document 3"]
+        )
+    }
+)
 ```
 
-**Key Fields:**
-- `stuff_code` (required): Unique identifier for the stuff object
-- `stuff_name` (optional): Human-readable name for the stuff (Must be equal to the input key if provided)
-- `concept` (required): Concept code (with optional domain prefix)
-- `content` (required): The actual data content
-
-**When to Use Case 2.7:**
-- Passing serialized Stuff objects between pipeline executions
-- When you need to preserve exact stuff identifiers
-- Working with API responses that return full DictStuff objects
-- Chaining pipelines where output from one becomes input to another
+**DictStuff Structure:**
+- `concept` (str): The concept code (with optional domain prefix)
+- `content` (dict[str, Any] | list[Any]): The actual data content
 
 **Content Types:**
-The `content` field in DictStuff can be:
-- A dictionary (structured data)
-- A string (for text-compatible concepts)
-- A list (for list content)
-- Any other format supported by the concept
+- **Dictionary**: Single structured object → Creates a single Stuff
+- **List of dicts**: Multiple structured objects → Creates ListContent with validated items
+- **List of strings** (for Text-compatible concepts): Creates ListContent of TextContent
 
-**Important Validation Rules:**
-- If both `stuff_name` in the DictStuff and the input parameter name are provided (not None), they **must match exactly**
-- If only one is provided, that value will be used
-- If neither is provided, the name will be generated from the concept
-- Example of valid usage:
-  ```json
-  // ✅ Both names match
-  { "stuff_name": "invoice", ... } with input key "invoice"
-  
-  // ✅ Only dict has name
-  { "stuff_name": "my_invoice", ... } with no explicit input name
-  
-  // ❌ Names don't match - will raise error
-  { "stuff_name": "invoice", ... } with input key "different_name"
-  ```
+**Note:** `DictStuff` instances are automatically converted to plain dicts and processed through the standard Case 2 logic.
 
 ---
 
