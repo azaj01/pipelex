@@ -10,8 +10,8 @@ description = "Domain with extract pipe"
 [pipe.extract_text]
 type = "PipeExtract"
 description = "Extract text from document"
-output = "Page"
-model = "base_extract_pypdfium2"
+output = "Page[]"
+model = "extract_text_from_pdf"
 """,
     PipelexBundleBlueprint(
         domain="test_pipes",
@@ -20,8 +20,8 @@ model = "base_extract_pypdfium2"
             "extract_text": PipeExtractBlueprint(
                 type="PipeExtract",
                 description="Extract text from document",
-                output=NativeConceptCode.PAGE,
-                model="base_extract_pypdfium2",
+                output=NativeConceptCode.PAGE.as_output_multiple_indeterminate,
+                model="extract_text_from_pdf",
             ),
         },
     ),

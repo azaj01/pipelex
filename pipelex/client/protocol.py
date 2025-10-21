@@ -7,9 +7,9 @@ from typing_extensions import Annotated, runtime_checkable
 
 from pipelex.core.memory.working_memory import WorkingMemory
 from pipelex.core.pipes.pipe_output import DictPipeOutput
+from pipelex.core.pipes.variable_multiplicity import VariableMultiplicity
 from pipelex.core.stuffs.stuff import DictStuff
 from pipelex.core.stuffs.stuff_content import StuffContent
-from pipelex.pipe_run.pipe_run_params import PipeOutputMultiplicity
 from pipelex.types import StrEnum
 
 # StuffContentOrData represents all possible formats for pipeline inputs input:
@@ -79,7 +79,7 @@ class PipelineRequest(BaseModel):
 
     inputs: Annotated[PipelineInputs | None, SkipValidation] = None
     output_name: str | None = None
-    output_multiplicity: PipeOutputMultiplicity | None = None
+    output_multiplicity: VariableMultiplicity | None = None
     dynamic_output_concept_code: str | None = None
     plx_content: str | None = None
 
@@ -130,7 +130,7 @@ class PipelexProtocol(Protocol):
         working_memory: WorkingMemory | None = None,
         inputs: PipelineInputs | None = None,
         output_name: str | None = None,
-        output_multiplicity: PipeOutputMultiplicity | None = None,
+        output_multiplicity: VariableMultiplicity | None = None,
         dynamic_output_concept_code: str | None = None,
     ) -> PipelineResponse:
         """Execute a pipeline synchronously and wait for its completion.
@@ -159,7 +159,7 @@ class PipelexProtocol(Protocol):
         working_memory: WorkingMemory | None = None,
         inputs: PipelineInputs | None = None,
         output_name: str | None = None,
-        output_multiplicity: PipeOutputMultiplicity | None = None,
+        output_multiplicity: VariableMultiplicity | None = None,
         dynamic_output_concept_code: str | None = None,
     ) -> PipelineResponse:
         """Start a pipeline execution asynchronously without waiting for completion.

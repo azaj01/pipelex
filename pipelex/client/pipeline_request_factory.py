@@ -3,7 +3,7 @@ from typing import Any, cast
 from pipelex.client.api_serializer import ApiSerializer
 from pipelex.client.protocol import PipelineInputs, PipelineRequest
 from pipelex.core.memory.working_memory import WorkingMemory
-from pipelex.pipe_run.pipe_run_params import PipeOutputMultiplicity
+from pipelex.core.pipes.variable_multiplicity import VariableMultiplicity
 
 
 class PipelineRequestFactory:
@@ -13,7 +13,7 @@ class PipelineRequestFactory:
     def make_from_working_memory(
         working_memory: WorkingMemory | None = None,
         output_name: str | None = None,
-        output_multiplicity: PipeOutputMultiplicity | None = None,
+        output_multiplicity: VariableMultiplicity | None = None,
         dynamic_output_concept_code: str | None = None,
         plx_content: str | None = None,
     ) -> PipelineRequest:

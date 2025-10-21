@@ -8,8 +8,8 @@ from pipelex.client.pipeline_response_factory import PipelineResponseFactory
 from pipelex.client.protocol import PipelexProtocol, PipelineInputs, PipelineResponse
 from pipelex.core.memory.working_memory import WorkingMemory
 from pipelex.core.memory.working_memory_factory import WorkingMemoryFactory
+from pipelex.core.pipes.variable_multiplicity import VariableMultiplicity
 from pipelex.exceptions import ClientAuthenticationError
-from pipelex.pipe_run.pipe_run_params import PipeOutputMultiplicity
 from pipelex.system.environment import get_required_env
 
 
@@ -84,7 +84,7 @@ class PipelexClient(PipelexProtocol):
         working_memory: WorkingMemory | None = None,
         inputs: PipelineInputs | None = None,
         output_name: str | None = None,
-        output_multiplicity: PipeOutputMultiplicity | None = None,
+        output_multiplicity: VariableMultiplicity | None = None,
         dynamic_output_concept_code: str | None = None,
     ) -> PipelineResponse:
         if working_memory and inputs:
@@ -111,7 +111,7 @@ class PipelexClient(PipelexProtocol):
         working_memory: WorkingMemory | None = None,
         inputs: PipelineInputs | None = None,
         output_name: str | None = None,
-        output_multiplicity: PipeOutputMultiplicity | None = None,
+        output_multiplicity: VariableMultiplicity | None = None,
         dynamic_output_concept_code: str | None = None,
     ) -> PipelineResponse:
         if working_memory and inputs:

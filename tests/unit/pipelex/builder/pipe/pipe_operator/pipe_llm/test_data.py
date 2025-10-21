@@ -1,8 +1,6 @@
 from typing import ClassVar
 
-from pipelex.builder.pipe.pipe_llm_spec import PipeLLMSpec
-from pipelex.cogt.llm.llm_setting import LLMSetting
-from pipelex.core.pipes.input_requirement_blueprint import InputRequirementBlueprint
+from pipelex.builder.pipe.pipe_llm_spec import LLMSkill, PipeLLMSpec
 from pipelex.pipe_operators.llm.pipe_llm_blueprint import PipeLLMBlueprint
 
 
@@ -14,17 +12,17 @@ class PipeLLMTestCases:
             description="Generate text",
             inputs={"topic": "Text"},
             output="Text",
-            llm="llm_for_creative_writing",
+            llm_skill=LLMSkill.LLM_FOR_CREATIVE_WRITING,
             prompt="Write about $topic",
         ),
         PipeLLMBlueprint(
             source=None,
             type="PipeLLM",
             description="Generate text",
-            inputs={"topic": InputRequirementBlueprint(concept="Text")},
+            inputs={"topic": "Text"},
             output="Text",
             prompt="Write about $topic",
-            model="claude-4.1-opus",
+            model=LLMSkill.LLM_FOR_CREATIVE_WRITING,
         ),
     )
 
@@ -35,7 +33,7 @@ class PipeLLMTestCases:
             description="Generate without inputs",
             inputs={},
             output="Text",
-            llm="llm_for_creative_writing",
+            llm_skill=LLMSkill.LLM_FOR_CREATIVE_WRITING,
             prompt="Generate something interesting",
         ),
         PipeLLMBlueprint(
@@ -44,7 +42,7 @@ class PipeLLMTestCases:
             description="Generate without inputs",
             output="Text",
             prompt="Generate something interesting",
-            model="claude-4.1-opus",
+            model=LLMSkill.LLM_FOR_CREATIVE_WRITING,
         ),
     )
 
@@ -56,16 +54,16 @@ class PipeLLMTestCases:
             inputs={"image": "Image"},
             output="Text",
             prompt="Analyze the image: $image",
-            llm="llm_cheap_for_vision",
+            llm_skill=LLMSkill.LLM_FOR_BASIC_VISION,
         ),
         PipeLLMBlueprint(
             source=None,
             type="PipeLLM",
             description="Analyze image",
-            inputs={"image": InputRequirementBlueprint(concept="Image")},
+            inputs={"image": "Image"},
             output="Text",
             prompt="Analyze the image: $image",
-            model="gemini-2.5-flash-lite",
+            model=LLMSkill.LLM_FOR_BASIC_VISION,
         ),
     )
 
@@ -77,13 +75,13 @@ class PipeLLMTestCases:
             inputs={},
             output="Text",
             prompt="Generate text",
-            llm="llm_to_reason",
+            llm_skill=LLMSkill.LLM_FOR_COMPLEX_REASONING,
         ),
         PipeLLMBlueprint(
             source=None,
             type="PipeLLM",
             description="Generate with preset",
-            model="claude-4.5-sonnet",
+            model=LLMSkill.LLM_FOR_COMPLEX_REASONING,
             output="Text",
             prompt="Generate text",
         ),
@@ -97,18 +95,13 @@ class PipeLLMTestCases:
             inputs={},
             output="Text",
             prompt="Generate text",
-            llm="llm_cheap_for_easy_questions",
-            temperature=0.7,
+            llm_skill=LLMSkill.LLM_TO_ANSWER_EASY_QUESTIONS,
         ),
         PipeLLMBlueprint(
             source=None,
             type="PipeLLM",
             description="Generate with settings",
-            model=LLMSetting(
-                model="claude-4.5-sonnet",
-                temperature=0.7,
-                max_tokens=None,  # "auto" is handled at conversion to core
-            ),
+            model=LLMSkill.LLM_TO_ANSWER_EASY_QUESTIONS,
             output="Text",
             prompt="Generate text",
         ),
@@ -123,17 +116,17 @@ class PipeLLMTestCases:
             output="Analysis",
             system_prompt="You are a data analyst",
             prompt="Analyze: @data",
-            llm="llm_to_analyze_data",
+            llm_skill=LLMSkill.LLM_TO_ANALYZE_DATA,
         ),
         PipeLLMBlueprint(
             source=None,
             type="PipeLLM",
             description="Generate with system prompt",
-            inputs={"data": InputRequirementBlueprint(concept="Data")},
+            inputs={"data": "Data"},
             system_prompt="You are a data analyst",
             prompt="Analyze: @data",
             output="Analysis",
-            model="claude-4.5-sonnet",
+            model=LLMSkill.LLM_TO_ANALYZE_DATA,
         ),
     )
 
@@ -143,20 +136,17 @@ class PipeLLMTestCases:
             pipe_code="generate_items",
             description="Generate multiple items",
             inputs={},
-            output="Item",
+            output="Item[]",
             prompt="Generate items",
-            multiple_output=True,
-            llm="llm_cheap_for_easy_questions",
+            llm_skill=LLMSkill.LLM_TO_ANSWER_EASY_QUESTIONS,
         ),
         PipeLLMBlueprint(
             source=None,
             type="PipeLLM",
             description="Generate multiple items",
-            multiple_output=True,
-            nb_output=None,
-            output="Item",
+            output="Item[]",
             prompt="Generate items",
-            model="claude-4.5-sonnet",
+            model=LLMSkill.LLM_TO_ANSWER_EASY_QUESTIONS,
         ),
     )
 
@@ -166,20 +156,17 @@ class PipeLLMTestCases:
             pipe_code="generate_items",
             description="Generate exactly 5 items",
             inputs={},
-            output="Item",
+            output="Item[5]",
             prompt="Generate items",
-            nb_output=5,
-            llm="llm_cheap_for_easy_questions",
+            llm_skill=LLMSkill.LLM_TO_ANSWER_EASY_QUESTIONS,
         ),
         PipeLLMBlueprint(
             source=None,
             type="PipeLLM",
             description="Generate exactly 5 items",
-            nb_output=5,
-            multiple_output=None,
-            output="Item",
+            output="Item[5]",
             prompt="Generate items",
-            model="claude-4.5-sonnet",
+            model=LLMSkill.LLM_TO_ANSWER_EASY_QUESTIONS,
         ),
     )
 

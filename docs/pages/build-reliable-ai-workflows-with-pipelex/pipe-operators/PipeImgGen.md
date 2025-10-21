@@ -39,15 +39,11 @@ Image generation presets are defined in your model deck configuration and can in
 | `type`                  | string          | The type of the pipe: `PipeImgGen`                                                                          | Yes      |
 | `description`           | string          | A description of the image generation operation.                                                                           | Yes      |
 | `inputs`                | dictionary      | The input concept(s) for the image generation operation, as a dictionary mapping input names to concept codes.                                                     | Yes       |
-| `output`                | string          | The output concept produced by the image generation operation.                                                | Yes      |
+| `output`                | string          | The output concept produced by the image generation operation. Use bracket notation for multiple images: `"Image[3]"` generates exactly 3 images.                                                | Yes      |
 | `img_gen_prompt`        | string          | A static text prompt for image generation. Use this *or* `input`.                                                             | No       |
-| `nb_output`             | integer         | The number of images to generate. If omitted, a single image is generated.                                                    | No       |
-| `img_gen`           | string          | The choice of image generation model handle preset or setting to use (e.g., `"gpt-image-1"`). Defaults to the model specified in the global config.    | No       |
+| `model`           | string          | The choice of image generation model name, setting, or preset to use (e.g., `"gpt-image-1"`). Defaults to the model specified in the global config.    | No       |
 | `aspect_ratio`          | string          | The desired aspect ratio of the image (e.g., `"16:9"`, `"1:1"`).                                                              | No       |
-| `quality`               | string          | The quality of the generated image (e.g., `"standard"`, `"hd"`).                                                              | No       |
 | `seed`                  | integer or "auto" | A seed for the random number generator to ensure reproducibility. `"auto"` uses a random seed.                                | No       |
-| `nb_steps`              | integer         | For diffusion models, the number of steps to run. More steps can increase detail but take longer.                             | No       |
-| `guidance_scale`        | float           | How strictly the model should adhere to the prompt. Higher values mean closer adherence.                                      | No       |
 
 
 ### Example: Generating a single image from a static prompt
@@ -60,14 +56,14 @@ type = "PipeImgGen"
 description = "Generate a futuristic car image"
 output = "Image"
 img_gen_prompt = "A sleek, futuristic sports car driving on a neon-lit highway at night."
-model = "base_img_gen"
+model = "gen_image_basic"
 aspect_ratio = "16:9"
 quality = "hd"
 ```
 
 ### Example: Generating multiple images from a dynamic prompt
 
-This pipe takes a text prompt as input and generates three variations of the image.
+This pipe takes a text prompt as input and generates three variations of the image using bracket notation.
 
 ```plx
 [concept]
@@ -77,9 +73,8 @@ ImagePrompt = "A text prompt for generating an image"
 type = "PipeImgGen"
 description = "Generate three logo variations from a prompt"
 inputs = { prompt = "ImgGenPrompt" }
-output = "Image"
-nb_output = 3
-model = "base_img_gen"
+output = "Image[3]"
+model = "gen_image_basic"
 aspect_ratio = "1:1"
 ```
 
