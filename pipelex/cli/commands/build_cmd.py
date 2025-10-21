@@ -253,7 +253,7 @@ def build_one_shot_cmd(
 
         pipe_output = await execute_pipeline(
             pipe_code="pipe_builder",
-            input_memory={"brief": brief},
+            inputs={"brief": brief},
         )
         pretty_print(pipe_output, title="Pipe Output")
 
@@ -308,7 +308,7 @@ def build_partial_cmd(
 
         pipe_output = await execute_pipeline(
             pipe_code="pipe_builder",
-            input_memory={"brief": brief},
+            inputs={"brief": brief},
         )
         # Save to file unless explicitly disabled with --no-output
         if no_output:
