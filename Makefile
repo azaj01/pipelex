@@ -100,6 +100,9 @@ make c                        - Shorthand -> check
 make cc                       - Shorthand -> cleanderived check
 make li                       - Shorthand -> lock install
 
+make test-count              - Count the number of tests
+make check-test-badge        - Check if the test count matches the badge value
+
 endef
 export HELP
 

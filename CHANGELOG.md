@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [v0.13.0] - 2025-10-21
 
 ### Highlights - Simplifying pipeline execution and improving developer experience
 
