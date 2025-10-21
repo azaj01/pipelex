@@ -3,7 +3,8 @@ from typing import Any
 import pytest
 
 from pipelex import log
-from pipelex.exceptions import PipeDefinitionError, StaticValidationError
+from pipelex.core.pipe_errors import PipeDefinitionError
+from pipelex.exceptions import StaticValidationError
 from pipelex.pipe_controllers.sequence.pipe_sequence_blueprint import PipeSequenceBlueprint
 from pipelex.pipe_controllers.sequence.pipe_sequence_factory import PipeSequenceFactory
 from tests.unit.pipelex.pipe_controllers.sequence.data import PipeSequenceInputTestCases
@@ -19,7 +20,7 @@ class TestPipeSequenceValidateInputs:
         test_id: str,
         blueprint: PipeSequenceBlueprint,
     ):
-        log.debug(f"Testing valid case: {test_id}")
+        log.verbose(f"Testing valid case: {test_id}")
 
         # Validation happens automatically during instantiation via model_validator
         pipe_sequence = PipeSequenceFactory.make_from_blueprint(
@@ -42,7 +43,7 @@ class TestPipeSequenceValidateInputs:
         blueprint_dict: dict[str, Any],
         expected_error_message_fragment: str,
     ):
-        log.debug(f"Testing error case: {test_id}")
+        log.verbose(f"Testing error case: {test_id}")
 
         with pytest.raises((StaticValidationError, ValueError, PipeDefinitionError)) as exc_info:  # noqa: PT012
             # Construct blueprint from dict at test time to trigger validation

@@ -8,11 +8,12 @@ from pipelex import log
 from pipelex.config import StaticValidationReaction, get_config
 from pipelex.core.concepts.concept import Concept
 from pipelex.core.memory.working_memory import WorkingMemory
+from pipelex.core.pipe_errors import PipeDefinitionError
 from pipelex.core.pipes.input_requirements import InputRequirements
 from pipelex.core.pipes.input_requirements_factory import InputRequirementsFactory
 from pipelex.core.pipes.pipe_output import PipeOutput
 from pipelex.core.stuffs.stuff_factory import StuffFactory
-from pipelex.exceptions import DryRunError, PipeDefinitionError, PipeRunParamsError, StaticValidationError, StaticValidationErrorType
+from pipelex.exceptions import DryRunError, PipeRunParamsError, StaticValidationError, StaticValidationErrorType
 from pipelex.hub import get_pipeline_tracker, get_required_pipe
 from pipelex.pipe_controllers.pipe_controller import PipeController
 from pipelex.pipe_controllers.sub_pipe import SubPipe
@@ -149,7 +150,7 @@ class PipeParallel(PipeController):
             msg = "PipeParallel requires either add_each_output or combined_output to be set"
             raise PipeDefinitionError(msg)
         if pipe_run_params.final_stuff_code:
-            log.debug(f"PipeBatch.run_pipe() final_stuff_code: {pipe_run_params.final_stuff_code}")
+            log.verbose(f"PipeBatch.run_pipe() final_stuff_code: {pipe_run_params.final_stuff_code}")
             pipe_run_params.final_stuff_code = None
 
         tasks: list[Coroutine[Any, Any, PipeOutput]] = []
@@ -190,7 +191,7 @@ class PipeParallel(PipeController):
                 msg = f"PipeParallel requires unique output names for each parallel sub pipe, but {sub_pipe_output_name} is already used"
                 raise PipeDefinitionError(msg)
             output_stuff_contents[sub_pipe_output_name] = output_stuff.content
-            log.debug(f"PipeParallel '{self.code}': output_stuff_contents[{sub_pipe_output_name}]: {output_stuff_contents[sub_pipe_output_name]}")
+            log.verbose(f"PipeParallel '{self.code}': output_stuff_contents[{sub_pipe_output_name}]: {output_stuff_contents[sub_pipe_output_name]}")
 
         if self.combined_output:
             combined_output_stuff = StuffFactory.combine_stuffs(
@@ -225,7 +226,7 @@ class PipeParallel(PipeController):
         """Dry run implementation for PipeParallel.
         Validates that all required inputs are present and that all parallel sub-pipes can be dry run.
         """
-        log.debug(f"PipeParallel: dry run controller pipe: {self.code}")
+        log.verbose(f"PipeParallel: dry run controller pipe: {self.code}")
         if pipe_run_params.run_mode != PipeRunMode.DRY:
             msg = f"PipeSequence._dry_run_controller_pipe() called with run_mode = {pipe_run_params.run_mode} in pipe {self.code}"
             raise PipeRunParamsError(msg)

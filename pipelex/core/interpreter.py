@@ -28,6 +28,7 @@ class PipelexInterpreter(BaseModel):
             raise PipelexConfigurationError(msg)
         return self
 
+    # TODO: rethink this method
     @staticmethod
     def is_pipelex_file(file_path: Path) -> bool:
         """Check if a file is a valid Pipelex PLX file.
@@ -78,3 +79,14 @@ class PipelexInterpreter(BaseModel):
         except TomlError as exc:
             raise PLXDecodeError(message=exc.message, doc=exc.doc, pos=exc.pos, lineno=exc.lineno, colno=exc.colno) from exc
         return PipelexBundleBlueprint.model_validate(blueprint_dict)
+
+    @classmethod
+    def load_bundle_blueprint(cls, bundle_path: str) -> PipelexBundleBlueprint:
+        """Load a bundle file and return its blueprint."""
+        bundle_path_obj = Path(bundle_path)
+        if not bundle_path_obj.exists():
+            msg = f"Bundle file not found: {bundle_path}"
+            raise FileNotFoundError(msg)
+
+        interpreter = cls(file_path=bundle_path_obj)
+        return interpreter.make_pipelex_bundle_blueprint()

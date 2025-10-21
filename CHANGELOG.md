@@ -1,5 +1,50 @@
 # Changelog
 
+## [v0.13.0] - 2025-10-21
+
+### Highlights - Simplifying pipeline execution and improving developer experience
+
+This release focuses on making Pipelex more accessible and easier to use, with major improvements to the CLI, simplified syntax for multiplicity, and a complete documentation overhaul:
+
+- **New CLI commands**: Run pipelines directly with `pipelex run`, generate Python runners with `pipelex build runner`, and inspect your AI backend configuration with `pipelex show backends`
+- **Simplified pipeline inputs**: The new `inputs` parameter replaces `input_memory` and accepts strings, lists, or content objects directly - no more complex dictionary structures
+- **Getting started faster**: Completely rewritten quick-start guide and new documentation sections help you go from installation to your first pipeline in minutes
+
+### Added
+
+- CLI command `pipelex run`: Top-level command to execute pipelines directly from the CLI. Can run pipes from the package or from any `.plx` bundle file, with options to provide inputs from a JSON file and save the output
+- CLI command `pipelex build runner`: Generates Python script with imports and example input structures for any pipe
+- CLI command `pipelex show backends`: Displays configured AI providers, their status, and active routing rules
+- Model presets: Added task-oriented presets including `llm_to_write_questions`, `llm_to_code`, `llm_for_basic_vision`, `llm_for_visual_analysis`
+- Documentation: Complete quick-start guide rewrite, new guides for "Understanding Multiplicity", "API Guide", "Executing Pipelines with Inputs", and updated README with video demo
+- Migration guide: Updated guide at `pipelex/kit/migrations/migrate_0.11.0_0.12.x.md`
+
+### Changed
+
+- **Unified bracket notation for multiplicity**: Single items use `"Concept"`, variable lists use `"Concept[]"`, fixed-count lists use `"Concept[3]"`. Applies to both `inputs` and `output` fields in `.plx` files
+- **Pipeline input format**: `input_memory` parameter renamed to `inputs`; now accepts strings, lists of strings, `StuffContent` objects, or explicit concept dictionaries instead of `CompactMemory`
+- **Bundle `main_pipe` attribute**: Pipelex bundles (`.plx` files) now support a `main_pipe` attribute to designate the primary entry point of the bundle. Used by `pipelex run` and `pipelex build runner` commands to simplify execution
+- **Model preset names**: `llm_to_reason` → `llm_for_complex_reasoning`, `base_ocr_mistral` → `extract_text_from_visuals`, `base_extract_pypdfium2` → `extract_text_from_pdf`, `base_img_gen` → `gen_image_basic`, `fast_img_gen` → `gen_image_fast`, `high_quality_img_gen` → `gen_image_high_quality`
+- **Unified model parameter**: `PipeExtract` and `PipeImgGen` now use `model` parameter for consistency across all operator pipes
+- **`PipeExtract` operator**: Output is now consistently validated to be the `Page` concept, simplifying its usage for document processing
+- **CLI improvements**: `pipelex run` and `pipelex validate` now auto-detect pipe code vs `.plx` bundle files; `pipelex validate` promoted to top-level command with improved error reporting and syntax-highlighted code snippets
+- **CLI reorganization**: Main command-line interface restructured for better usability with improved help texts and more logical command order
+- **Python API**: `Pipelex.make()` now accepts dependency injection arguments directly
+- **Python coding standards**: Updated internal coding standards to recommend declaring variables with a type but no default value to better leverage linters for bug detection
+- **Default configuration**: Azure and AWS inference backends now disabled by default in template configuration
+
+### Fixed
+
+- Structure generation: Special characters (double quotes, backslashes) in concept field descriptions or default values no longer produce invalid Python code
+
+### Removed
+
+- Legacy multiplicity syntax: `nb_output`, `multiple_output` parameters, and complex input dictionary syntax with `multiplicity` field
+- Pipe-specific model parameters: `ocr` parameter from `PipeExtract` and `img_gen` parameter from `PipeImgGen`
+- `prompt_template_to_structure` and `system_prompt_to_structure` configurations at the pipe and domain level
+- Project Name discovery from Configuration
+- Temporary design document for the new inference backend system (feature now fully implemented and documented)
+
 ## [v0.12.0] - 2025-10-15
 
 ### Highlights - Moving fast and breaking things
@@ -15,7 +60,7 @@ We tried to group all the renamings we wanted to do which impact our language, s
 
 This is all in the spirit of making Pipelex a declarative language, where you express what you want to do, and the system will figure out how to do it. So our focus inwas to make the Pipelex language easier to understand and use for non-technical users, and at the same time use more consistent and obvious words that developers are used to.
 
-**💡 Pro tip:** To make migration easier, pass the [migration guide](https://github.com/PipelexLab/pipelex/blob/main/pipelex/kit/migrations/migrate_0.11.0_0.12.0.md) to your favorite SWE agent (Cursor, Claude Code, github copilot, etc.) and let it handle the bulk of the changes!
+**💡 Pro tip:** To make migration easier, pass the [migration guide](https://github.com/Pipelex/pipelex/blob/main/pipelex/kit/migrations/migrate_0.11.0_0.12.0.md) to your favorite SWE agent (Cursor, Claude Code, github copilot, etc.) and let it handle the bulk of the changes!
 
 - **Removed centralized `pipelex_libraries` folder system**
   - Pipelines are now auto-discovered from anywhere in your project—no special directory required
@@ -245,7 +290,7 @@ This is all in the spirit of making Pipelex a declarative language, where you ex
 
 We've completely redesigned how LLMs are configured and accessed in Pipelex, making it more flexible and easier to get started:
 
-- **Get started in seconds** with [Pipelex Inference](pages/configuration/config-technical/inference-backend-config.md#pipelex-inference): Use a single API key to access all major LLM providers (OpenAI, Anthropic, Google, Mistral, and more)
+- **Get started in seconds** with [Pipelex Inference](pages/configuration/config-technical/inference-backend-config.md): Use a single API key to access all major LLM providers (OpenAI, Anthropic, Google, Mistral, and more)
 - **Flexible backend configuration**: Configure multiple inference backends (Azure OpenAI, AWS Bedrock, Vertex AI, etc.) through simple TOML files in `.pipelex/inference/`
 - **Smart model routing**: Automatically route models to the right backend using [routing profiles](pages/configuration/config-technical/inference-backend-config.md#routing-profiles) with pattern matching
 - **User-friendly aliases**: Define shortcuts like `best-claude` → `claude-4.1-opus` with optional fallback chains
@@ -480,7 +525,7 @@ Simplified input memory:
 
 ### Changed
 - Refactored `PipeInput` to use `InputRequirement` and `TypedNamedInputRequirement` classes instead of plain strings for input specifications.
-- Updated `WorkingMemoryFactory` to handle `ImplicitMemory` instead of `CompactMemory`.
+- Updated `WorkingMemoryFactory` to handle `PipelineInputs` instead of `CompactMemory`.
 - Replaced `ExecutePipelineException` with `PipelineInputError` in `execute_pipeline` function.
 - Updated `PipeBatch`, `PipeCondition`, `PipeParallel`, `PipeSequence`, `PipeFunc`, `PipeImgGen`, `PipeCompose`, `PipeLLM`, and `PipeExtract` classes to use `InputRequirement` for input handling.
 - Updated `PipeInput` creation in various test files to use `make_from_dict` method.

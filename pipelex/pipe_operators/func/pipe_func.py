@@ -48,7 +48,7 @@ class PipeFunc(PipeOperator[PipeFuncOutput]):
         pipe_run_params: PipeRunParams,
         output_name: str | None = None,
     ) -> PipeFuncOutput:
-        log.debug(f"Applying function '{self.function_name}'")
+        log.verbose(f"Applying function '{self.function_name}'")
 
         function = func_registry.get_required_function(self.function_name)
 
@@ -93,7 +93,7 @@ class PipeFunc(PipeOperator[PipeFuncOutput]):
         pipe_run_params: PipeRunParams,
         output_name: str | None = None,
     ) -> PipeFuncOutput:
-        log.debug(f"Dry run for PipeFunc '{self.function_name}'")
+        log.verbose(f"Dry run for PipeFunc '{self.function_name}'")
 
         function = func_registry.get_required_function(self.function_name)
 
@@ -114,6 +114,7 @@ class PipeFunc(PipeOperator[PipeFuncOutput]):
                 msg = f"Function '{self.function_name}' return type {return_type} is not a subclass of StuffContent"
                 raise DryRunError(msg)
 
+            # TODO: Support PipeFunc returning with multiplicity. Create an equivalent of TypedNamedInputRequirement for outputs.
             requirement = TypedNamedInputRequirement(
                 variable_name="mock_output",
                 concept=ConceptFactory.make(

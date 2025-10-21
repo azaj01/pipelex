@@ -56,6 +56,9 @@ You will specifically generate the PipeSequence related to this signature:
 
 Here are the concepts you can use for inputs/outputs:
 @concept_specs
+
+- If you are to apply a pipe step to a previous output which is multiple, use batch_over/batch_as attributes in that step.
+- The output concept of a pipe sequence must always be the same as the output concept of the last pipe in the sequence.
 """
 
 [pipe.detail_pipe_parallel]
@@ -116,7 +119,7 @@ This PipeLLM is part of a larger pipeline:
 You will specifically generate the PipeLLM related to this signature:
 @pipe_signature
 
-If it's a structured generation, indicate it in the system_prompt to clarify the task.
+If we are generating a structured concept, indicate it in the system_prompt to clarify the task. But DO NOT detail the structure in any of the user/system prompts: we will add the schema later. So, don't write a bullet-list of all the attributes to determine.
 If it's to generate free form text, the prompt should indicate to be concise.
 If it's to generate an image generation prompt, the prompt should indicate to be VERY concise and focus and apply the best practice for image generation.
 

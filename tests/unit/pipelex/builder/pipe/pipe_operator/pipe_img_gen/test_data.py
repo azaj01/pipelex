@@ -1,7 +1,6 @@
 from typing import ClassVar
 
 from pipelex.builder.pipe.pipe_img_gen_spec import ImgGenSkill, PipeImgGenSpec
-from pipelex.core.pipes.input_requirement_blueprint import InputRequirementBlueprint
 from pipelex.pipe_operators.img_gen.pipe_img_gen_blueprint import PipeImgGenBlueprint
 
 
@@ -13,6 +12,7 @@ class PipeImgGenTestCases:
             description="Generate an image",
             inputs={},
             output="GeneratedImage",
+            img_gen_skill=ImgGenSkill.GEN_IMAGE_BASIC,
         ),
         PipeImgGenBlueprint(
             description="Generate an image",
@@ -22,11 +22,10 @@ class PipeImgGenTestCases:
             pipe_category="PipeOperator",
             img_gen_prompt=None,
             img_gen_prompt_var_name=None,
-            model=None,
+            model=ImgGenSkill.GEN_IMAGE_BASIC,
             aspect_ratio=None,
             background=None,
             output_format=None,
-            nb_output=None,
             is_raw=None,
             seed=None,
         ),
@@ -38,24 +37,22 @@ class PipeImgGenTestCases:
             pipe_code="advanced_img_gen",
             description="Generate image with options",
             inputs={"description": "Text"},
-            output="Image",
-            img_gen_skill=ImgGenSkill.GEN_IMAGE,
-            nb_output=3,
+            output="Image[3]",
+            img_gen_skill=ImgGenSkill.GEN_IMAGE_FAST,
         ),
         PipeImgGenBlueprint(
             description="Generate image with options",
-            inputs={"description": InputRequirementBlueprint(concept="Text")},
-            output="Image",
+            inputs={"description": "Text"},
+            output="Image[3]",
             type="PipeImgGen",
             pipe_category="PipeOperator",
             img_gen_prompt=None,
-            model=ImgGenSkill.GEN_IMAGE.model_recommendation,
+            model=ImgGenSkill.GEN_IMAGE_FAST,
             aspect_ratio=None,
             background=None,
             output_format=None,
             is_raw=None,
             seed=None,
-            nb_output=3,
             img_gen_prompt_var_name=None,
         ),
     )

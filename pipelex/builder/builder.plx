@@ -7,9 +7,7 @@ PlanDraft = "Natural-language pipeline plan text describing sequences, inputs, o
 ConceptDrafts = "Textual draft of the concepts to create."
 PipelexBundleSpec = "A Pipelex bundle spec."
 ValidationResult = "Status (success or failure) and details of the validation failure if applicable."
-# PipeFailure = "Details of a single pipe failure during dry run."
-# DryRunResult = "A result of a dry run of a pipelex bundle spec."
-DomainInformation = "A domain information object."
+BundleHeaderSpec = "A domain information object."
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Main
@@ -26,24 +24,27 @@ steps = [
     { pipe = "structure_concepts", result = "concept_specs" },
     { pipe = "design_pipe_signatures", result = "pipe_signatures" },
     { pipe = "detail_pipe_spec", batch_over = "pipe_signatures", batch_as = "pipe_signature", result = "pipe_specs" },
-    { pipe = "pipe_builder_domain_information", result = "domain_information" },
+    { pipe = "write_bundle_header", result = "bundle_header_spec" },
     { pipe = "assemble_pipelex_bundle_spec", result = "pipelex_bundle_spec" }
 ]
 
-[pipe.pipe_builder_domain_information]
+[pipe.write_bundle_header]
 type = "PipeLLM"
-description = "Turn the brief into a DomainInformation object."
-inputs = { brief = "UserBrief" }
-output = "DomainInformation"
+description = "Write the bundle header."
+inputs = { brief = "UserBrief", pipe_signatures = "PipeSignature" }
+output = "BundleHeaderSpec"
 model = "llm_to_engineer"
 prompt = """
 Name and define the domain of this process:
 @brief
 
+@pipe_signatures
+
 For example, if the brief is about generating and analyzing a compliance matrix out of a RFP,
-the domain would be "rfp_compliance" and the definition would be "Generating and analyzing compliance related to RFPs".
+the domain would be "rfp_compliance" and the description would be "Generating and analyzing compliance related to RFPs".
 The domain name should be not more than 4 words, in snake_case.
-For the definition, be concise.
+For the description, be concise.
+The main pipe is the one that will carry out the main task of the pipeline, it should be pretty obvious to identify.
 """
 
 [pipe.draft_the_plan]
@@ -54,6 +55,7 @@ output = "PlanDraft"
 model = "llm_to_engineer"
 prompt = """
 Return a draft of a plan that narrates the pipeline as pseudo-steps (no code):
+- Be clear which is the main pipe of the pipeline, don't write "main" in its pipe_code, but make it clear in its description.
 - Explicitly indicate when you are running things in sequence,
   or in parallel (several independant steps in parallel),
   or in batch (same operation applied to N elements of a list)
@@ -61,6 +63,7 @@ Return a draft of a plan that narrates the pipeline as pseudo-steps (no code):
 - For each pipe: state the pipe's description, inputs (by name using snake_case), and the output (by name using snake_case),
 DO NOT indicate the inputs or output type. Just name them.
 - Be aware of the steps where you will want structured outputs or inputs. Make sense of it but be concise.
+- Do not bother with planning a final step that gathers all the elements unless it's clear from the brief that the user wants the pipe to do that.
 
 Available pipe controllers:
 - PipeSequence: A pipe that executes a sequence of pipes: it needs to reference the pipes it will execute.
@@ -73,20 +76,32 @@ Available pipe controllers:
 When describing the task of a pipe controller, be concise, don't detail all the sub-pipes.
 
 Available pipe operators:
-- PipeLLM: A pipe that uses an LLM to generate a text, or a structured object. It is a vision LLM so it can also use images.
-  CRITICAL: When extracting MULTIPLE items (articles, employees, products), use multiple_output = true with SINGULAR concepts!
+- PipeLLM: A pipe that uses an LLM to generate text or structured objects. It is a vision LLM so it can also use images.
+  CRITICAL: When extracting MULTIPLE items (articles, employees, products), use bracket notation in output with SINGULAR concepts!
   - Create concept "Article" (not "Articles") with fields "item_name", "quantity" (not "item_names", "quantities")
-  - Then set multiple_output = true to get a list of Article objects
-- PipeImgGen: A pipe that uses an AI model to generate an image.
-  VERY IMPORTANT: IF YOU DECIDE TO CREATE A PipeImgGen, YOU ALSO HAVE TO CREATE A PIPELLM THAT WILL WRITE THE PROMPT, AND THAT NEEDS TO PRECEED THE PIPEIMGEN, based on the necessary elements.
-  That means that in the MAIN pipeline, the prompt MUST NOT be considered as an input. It should be the output of a step that generates the prompt.
-- PipeExtract: A pipe that uses an OCR technology to extract text from an image or a pdf.
-  VERY IMPORTANT: THE INPUT OF THE PIPEOCR MUST BE either an image or a pdf or a concept which refines one of them.
+  - Then set output = "Article[]" to get a variable list, or output = "Article[5]" for exactly 5 items
+  - Examples: output = "Text[]" (multiple texts), output = "Image[3]" (exactly 3 images), output = "Employee[]" (list of employees)
+- PipeImgGen: A pipe that uses an AI model to generate images.
+  - VERY IMPORTANT: IF YOU DECIDE TO CREATE A PipeImgGen to generate an image, YOU ALSO HAVE TO CREATE A PIPELLM THAT WILL WRITE THE PROMPT
+  AND THAT NEEDS TO PRECEED THE PIPEIMGEN, based on the necessary elements, unless it's clear from the brief that the prompt should be part of the main pipe's original inputs.
+- PipeExtract: A pipe that uses OCR technology to extract text from an image or a pdf.
+  - Always outputs a list of pages: output = "Page[]"
+  VERY IMPORTANT: THE INPUT OF THE PIPEEXTRACT MUST BE either an image or a pdf or a concept which refines one of them.
 
+Be smart about multiplicity: when a step is to generate a variable or fixed number of items, use the multiplicity notation to specify it.
+Don't create numbered variables like `idea_1`, `idea_2`, etc: trust that the pipes will handle the multiplicity for you.
+You can name the variables with a plural name like "ideas" and make them use a concept with a singular name and a multiplicity like "Idea[]" or "Idea[5]".
 
 Be smart about splitting the workflow into steps (sequence or parallel):
 - You can use an LLM to extract or analyze several things at the same time, they can be output as a single concept which will be structured with attributes etc.
 - But don't ask the LLM for many things which are unrelated, it would lose reliability.
+
+Apply the DRY principle: don't repeat yourself. if you have a task to apply several times, make it a dedicated pipe.
+If you're in a sequence and you are to apply that pipe to a previous output which is multiple, plan to batch over it.
+
+You must never include nore than one batch step in the same pipe sequence.
+Instead, you must create a pipe sequence specifically for the process to apply to each batched element
+and that sub pipe will have the second batch step.
 
 Keep your style concise, no need to write tags such as "Description:", just write what you need to write.
 Do not write any intro or outro, just write the plan.
@@ -118,7 +133,7 @@ For instance:
 - Concepts are always expressed as singular nouns, even if we're to use them as a list:
   for instance, define the concept as "Article" not "Articles", "Employee" not "Employees".
   If we need multiple items, we'll indicate it elsewhere so you don't bother with it here.
-- Provide a short description concise description for each concept
+- Provide a concise description for each concept
 
 If the concept can be expressed as a text, image, pdf, number, or page:
 - Name the concept, define it and just write "refines: Text", "refines: PDF", or "refines: Image" etc.
@@ -143,8 +158,7 @@ List the concept drafts in Markdown format with a heading 3 for each, e.g. `### 
 type = "PipeLLM"
 description = "Structure the concept definitions."
 inputs = { concept_drafts = "ConceptDrafts", brief = "UserBrief" }
-output = "concept.ConceptSpec"
-multiple_output = true
+output = "concept.ConceptSpec[]"
 model = "llm_to_engineer"
 system_prompt = """
 You are an expert at data extraction and json formatting.
@@ -162,8 +176,7 @@ Your task here is to extract a list of ConceptSpec from these concept drafts:
 type = "PipeLLM"
 description = "Write the pipe signatures for the plan."
 inputs = { plan_draft = "PlanDraft", brief = "UserBrief", concept_specs = "concept.ConceptSpec" }
-output = "pipe_design.PipeSignature"
-multiple_output = true
+output = "pipe_design.PipeSignature[]"
 model = "llm_to_engineer"
 system_prompt = """
 You are a Senior engineer, very well versed in creating pipelines.
@@ -187,6 +200,8 @@ You can use the native concepts for inputs/outputs as required: Text, Image, PDF
 Define the contracts of the pipes to build:
 - For each pipe: give a unique snake_case pipe_code, a type and description, specify inputs (one or more) and output (one)
 - Add as much details as possible for the description.
+- Be clear which is the main pipe of the pipeline, don't write "main" in its pipe_code, but make it clear in its description.
+- Do not bother with planning a final step that gathers all the elements unless it's clear from the brief that the user wants the pipe to do that.
 
 Available pipe controllers:
 - PipeSequence: A pipe that executes a sequence of pipes: it needs to reference the pipes it will execute.
@@ -199,23 +214,37 @@ Available pipe controllers:
 When describing the task of a pipe controller, be concise, don't detail all the sub-pipes.
 
 Available pipe operators:
-- PipeLLM: A pipe that uses an LLM to generate a text, or a structured object. It is a vision LLM so it can also use images.
-  CRITICAL: When extracting MULTIPLE items (articles, employees, products), use multiple_output = true with SINGULAR concepts!
+- PipeLLM: A pipe that uses an LLM to generate text or structured objects. It is a vision LLM so it can also use images.
+  CRITICAL: When extracting MULTIPLE items (articles, employees, products), use bracket notation in output with SINGULAR concepts!
   - Create concept "Article" (not "Articles") with fields "item_name", "quantity" (not "item_names", "quantities")
-  - Then set multiple_output = true to get a list of Article objects
-- PipeImgGen: A pipe that uses an AI model to generate an image.
+  - Then set output = "Article[]" to get a variable list, or output = "Article[5]" for exactly 5 items
+  - Examples: output = "Text[]" (multiple texts), output = "Image[3]" (exactly 3 images), output = "Employee[]" (list of employees)
+- PipeImgGen: A pipe that uses an AI model to generate images.
+  - Use bracket notation for multiple images: output = "Image[3]" generates exactly 3 images
   VERY IMPORTANT: IF YOU DECIDE TO CREATE A PipeImgGen, YOU ALSO HAVE TO CREATE A PIPELLM THAT WILL WRITE THE PROMPT, AND THAT NEEDS TO PRECEED THE PIPEIMGEN, based on the necessary elements.
   That means that in the MAIN pipeline, the prompt MUST NOT be considered as an input. It should be the output of a step that generates the prompt.
-- PipeExtract: A pipe that extracts text from an image or a pdf. PipeExtract must have a exactly one input which must be either an `Image` or a `PDF`.
+- PipeExtract: A pipe that extracts text from an image or a pdf. PipeExtract must have exactly one input which must be either an `Image` or a `PDF`.
+  - Always outputs a list of pages: output = "Page[]"
+
+Be smart about multiplicity: when a step is to generate a variable or fixed number of items, use the multiplicity notation to specify it.
+Don't create numbered variables like `idea_1`, `idea_2`, etc: trust that the pipes will handle the multiplicity for you.
+You can name the variables with a plural name like "ideas" and make them use a concept with a singular name and a multiplicity like "Idea[]" or "Idea[5]".
 
 Be smart about splitting the workflow into steps (sequence or parallel):
 - You can use an LLM to extract or analyze several things at the same time, they can be output as a single concept which will be structured with attributes etc.
 - But don't ask the LLM for many things which are unrelated, it would lose reliability.
+- Apply the DRY principle: don't repeat yourself. if you have a task to apply several times, make it a dedicated pipe.
+- If you're in a sequence and you are to apply that pipe to a previous output which is multiple, use batch_over/batch_as attributes in that step.
+- The output concept of a pipe sequence must always be the same as the output concept of the last pipe in the sequence.
+
+You must never include nore than one batch step in the same pipe sequence.
+Instead, you must create a pipe sequence specifically for the process to apply to each batched element
+and that sub pipe will have the second batch step.
 """
 
 [pipe.assemble_pipelex_bundle_spec]
 type = "PipeFunc"
 description = "Compile the pipelex bundle spec."
-inputs = { pipe_specs = "PipeSpec", concept_specs = "ConceptSpec", domain_information = "DomainInformation" }
+inputs = { pipe_specs = "PipeSpec", concept_specs = "ConceptSpec", bundle_header_spec = "BundleHeaderSpec" }
 output = "PipelexBundleSpec"
 function_name = "assemble_pipelex_bundle_spec"
