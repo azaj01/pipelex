@@ -189,12 +189,12 @@ class StructureGenerator:
                 try:
                     item_type_enum = ConceptStructureBlueprintFieldType(item_type)
                     if item_type_enum == ConceptStructureBlueprintFieldType.DICT:
-                        temp_blueprint = ConceptStructureBlueprint(description="temp", type=item_type_enum, key_type="str", value_type="Any")
-                        item_type = self._get_python_type_from_blueprint(temp_blueprint)
+                        item_blueprint = ConceptStructureBlueprint(description="lorem ipsum", type=item_type_enum, key_type="str", value_type="Any")
+                        item_type = self._get_python_type_from_blueprint(item_blueprint)
                     else:
                         # Create a temporary blueprint for the item type
-                        temp_blueprint = ConceptStructureBlueprint(description="temp", type=item_type_enum)
-                        item_type = self._get_python_type_from_blueprint(temp_blueprint)
+                        item_blueprint = ConceptStructureBlueprint(description="lorem ipsum", type=item_type_enum)
+                        item_type = self._get_python_type_from_blueprint(item_blueprint)
                 except ValueError:
                     # Keep as string if not a known FieldType
                     pass
@@ -204,8 +204,8 @@ class StructureGenerator:
                 value_type = field_blueprint.value_type or "Any"
                 try:
                     value_type_enum = ConceptStructureBlueprintFieldType(value_type)
-                    temp_blueprint = ConceptStructureBlueprint(description="temp", type=value_type_enum)
-                    value_type = self._get_python_type_from_blueprint(temp_blueprint)
+                    item_blueprint = ConceptStructureBlueprint(description="lorem ipsum", type=value_type_enum)
+                    value_type = self._get_python_type_from_blueprint(item_blueprint)
                 except ValueError:
                     pass
                 return f"Dict[{key_type}, {value_type}]"

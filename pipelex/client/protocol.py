@@ -59,7 +59,7 @@ class ApiResponse(BaseModel):
 
     """
 
-    status: str = "success"
+    status: str | None
     message: str | None = None
     error: str | None = None
 
