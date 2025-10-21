@@ -29,12 +29,19 @@ class PipeSignature(StructuredContent):
     pipe_category: SkipJsonSchema[AllowedPipeCategories] = Field(description="Pipe category set according to its type.")
     description: str = Field(description="What the pipe does")
     inputs: dict[str, str] = Field(
-        description="Pipe inputs: keys are the input variable_names in snake_case, values are the ConceptCodes in PascalCase."
+        description=(
+            "Input specifications mapping variable names to concept codes. "
+            "Keys: input variable names in snake_case. "
+            "Values: ConceptCodes in PascalCase. Don't use multiplicity brackets. "
+        )
     )
-    result: str = Field(
-        description="variable_name for the result of the pipe. Must be snake_case. It could be referenced as input in a following pipe."
+    result: str = Field(description="Variable name for the pipe's result in snake_case. This name can be referenced as input in subsequent pipes.")
+    output: str = Field(
+        description=(
+            "Output concept code in PascalCase with optional multiplicity brackets. "
+            "Examples: 'Text' (single text), 'Article[]' (list of articles), 'Image[5]' (exactly 5 images)."
+        )
     )
-    output: str = Field(description="The output ConceptCode in PascalCase, possibly with multiplicity brackets")
     pipe_dependencies: list[str] = Field(description="List of pipe codes that this pipe depends on. This is for the PipeControllers")
 
     @model_validator(mode="before")

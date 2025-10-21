@@ -1,13 +1,13 @@
 import asyncio
 import time
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import click
 import typer
 
 from pipelex import pretty_print
 from pipelex.builder.builder import PipelexBundleSpec, load_and_validate_bundle
-from pipelex.builder.builder_errors import PipelexBundleError
+from pipelex.builder.builder_errors import PipeBuilderError, PipelexBundleError
 from pipelex.builder.builder_loop import BuilderLoop
 from pipelex.builder.runner_code import generate_runner_code
 from pipelex.exceptions import PipeInputError
@@ -16,7 +16,10 @@ from pipelex.language.plx_factory import PlxFactory
 from pipelex.pipelex import Pipelex
 from pipelex.pipeline.execute import execute_pipeline
 from pipelex.tools.misc.file_utils import ensure_directory_for_file_path, get_incremental_file_path, save_text_to_path
-from pipelex.tools.misc.json_utils import save_as_json_to_path
+from pipelex.tools.misc.json_utils import load_json_dict_from_path, save_as_json_to_path
+
+if TYPE_CHECKING:
+    from pipelex.client.protocol import PipelineInputs
 
 build_app = typer.Typer(help="Build working pipelines from natural language requirements", no_args_is_help=True)
 
@@ -37,7 +40,7 @@ Other ideas:
 pipelex build pipe "Take a photo as input, and render the opposite of the photo, don't structure anything, use only text content, be super concise"
 pipelex build pipe "Take a photo as input, and render the opposite of the photo"
 pipelex build pipe "Given an RDFP PDF, build a compliance matrix"
-pipelex build pipe "Given an theme, write a Haiku"
+pipelex build pipe "Given a theme, write a Haiku"
 """
 
 
@@ -47,6 +50,10 @@ def build_pipe_cmd(
         str,
         typer.Argument(help="Prompt describing what the pipeline should do"),
     ],
+    builder_pipe: Annotated[
+        str,
+        typer.Option("--builder-pipe", help="Builder pipe to use for generating the pipeline"),
+    ] = "pipe_builder",
     output_path: Annotated[
         str,
         typer.Option("--output", "-o", help="Path to save the generated PLX file"),
@@ -76,7 +83,23 @@ def build_pipe_cmd(
             typer.secho("\n⚠️  Pipeline not saved to file (--no-output specified)", fg=typer.colors.YELLOW)
             return
 
-        pipelex_bundle_spec = await builder_loop.build_and_fix(pipe_code="pipe_builder", input_memory={"brief": prompt})
+        try:
+            pipelex_bundle_spec = await builder_loop.build_and_fix(pipe_code=builder_pipe, input_memory={"brief": prompt})
+        except PipeBuilderError as exc:
+            msg = f"Builder loop: Failed to execute pipeline: {exc}."
+            if exc.working_memory:
+                failure_memory_path = get_incremental_file_path(
+                    base_path="results",
+                    base_name="failure_memory",
+                    extension="json",
+                )
+                save_as_json_to_path(object_to_save=exc.working_memory.smart_dump(), path=failure_memory_path)
+                typer.secho(f"❌ {msg}", fg=typer.colors.RED)
+                typer.secho(f"❌ Failure memory saved to: {failure_memory_path}", fg=typer.colors.RED)
+            else:
+                typer.secho(f"❌ {msg}", fg=typer.colors.RED)
+                typer.secho("❌ No failure memory available", fg=typer.colors.RED)
+            raise typer.Exit(1) from exc
         plx_content = PlxFactory.make_plx_content(blueprint=pipelex_bundle_spec.to_blueprint())
         save_text_to_path(text=plx_content, path=output_path)
         typer.secho(f"\n✅ Pipeline saved to: {output_path}", fg=typer.colors.GREEN)
@@ -236,6 +259,10 @@ def build_one_shot_cmd(
         str,
         typer.Argument(help="Brief description of what the pipeline should do"),
     ],
+    builder_pipe: Annotated[
+        str,
+        typer.Option("--builder-pipe", help="Builder pipe to use for generating the pipeline"),
+    ] = "pipe_builder",
     output_path: Annotated[
         str,
         typer.Option("--output", "-o", help="Path to save the generated PLX file"),
@@ -260,7 +287,7 @@ def build_one_shot_cmd(
             ensure_directory_for_file_path(file_path=output_path)
 
         pipe_output = await execute_pipeline(
-            pipe_code="pipe_builder",
+            pipe_code=builder_pipe,
             inputs={"brief": brief},
         )
         pretty_print(pipe_output, title="Pipe Output")
@@ -287,14 +314,26 @@ def build_one_shot_cmd(
     "partial-pipe", help="Developer utility for contributors: deliver a partial pipeline specification (not an actual bundle) and save it as JSON"
 )
 def build_partial_cmd(
-    brief: Annotated[
+    inputs: Annotated[
         str,
-        typer.Argument(help="Brief description of what the pipeline should do"),
+        typer.Argument(help="Inline brief or path to JSON file with input_memory"),
     ],
-    output_path: Annotated[
+    builder_pipe: Annotated[
+        str,
+        typer.Option("--builder-pipe", help="Builder pipe to use for generating the pipeline"),
+    ] = "pipe_builder",
+    output_dir_path: Annotated[
         str,
         typer.Option("--output", "-o", help="Path to save the generated PLX file"),
-    ] = "./results/generated_pipeline.plx",
+    ] = "./results",
+    output_base_name: Annotated[
+        str,
+        typer.Option("--output-file-name", "-b", help="Name of the generated JSON file"),
+    ] = "partial_pipe",
+    extension: Annotated[
+        str,
+        typer.Option("--extension", "-e", help="Extension of the generated file"),
+    ] = "json",
     no_output: Annotated[
         bool,
         typer.Option("--no-output", help="Skip saving the pipeline to file"),
@@ -306,25 +345,47 @@ def build_partial_cmd(
     typer.echo("")
 
     async def run_pipeline():
+        output_path: str | None = None
         if no_output:
             typer.secho("\n⚠️  Pipeline will not be saved to file (--no-output specified)", fg=typer.colors.YELLOW)
-        elif not output_path:
-            typer.secho("\n🛑  Cannot save a pipeline to an empty file name", fg=typer.colors.RED)
-            raise typer.Exit(1)
         else:
+            output_path = get_incremental_file_path(
+                base_path=output_dir_path,
+                base_name=output_base_name,
+                extension=extension,
+            )
             ensure_directory_for_file_path(file_path=output_path)
 
+        input_memory: PipelineInputs | None = None
+        if inputs.endswith(".json"):
+            input_memory = load_json_dict_from_path(inputs)
+        else:
+            input_memory = {"brief": inputs}
         pipe_output = await execute_pipeline(
-            pipe_code="pipe_builder",
-            inputs={"brief": brief},
+            pipe_code=builder_pipe,
+            inputs=input_memory,
         )
         # Save to file unless explicitly disabled with --no-output
-        if no_output:
+        if output_path:
+            match extension:
+                case "md":
+                    markdown_output = pipe_output.main_stuff.content.rendered_markdown()
+                    save_text_to_path(text=markdown_output, path=output_path)
+                case "txt":
+                    text_output = pipe_output.main_stuff.content.rendered_plain()
+                    save_text_to_path(text=text_output, path=output_path)
+                case "html":
+                    html_output = pipe_output.main_stuff.content.rendered_html()
+                    save_text_to_path(text=html_output, path=output_path)
+                case "json":
+                    json_output = pipe_output.main_stuff.content.smart_dump()
+                    save_as_json_to_path(object_to_save=json_output, path=output_path)
+                case _:
+                    json_output = pipe_output.main_stuff.content.smart_dump()
+                    save_as_json_to_path(object_to_save=json_output, path=output_path)
+            typer.secho(f"\n✅ Pipeline saved to: {output_path}", fg=typer.colors.GREEN)
+        else:
             typer.secho("\n⚠️  Pipeline not saved to file (--no-output specified)", fg=typer.colors.YELLOW)
-            return
-        json_output = pipe_output.main_stuff.content.smart_dump()
-        save_as_json_to_path(object_to_save=json_output, path=output_path)
-        typer.secho(f"\n✅ Pipeline saved to: {output_path}", fg=typer.colors.GREEN)
 
     start_time = time.time()
     asyncio.run(run_pipeline())

@@ -7,8 +7,6 @@ PlanDraft = "Natural-language pipeline plan text describing sequences, inputs, o
 ConceptDrafts = "Textual draft of the concepts to create."
 PipelexBundleSpec = "A Pipelex bundle spec."
 ValidationResult = "Status (success or failure) and details of the validation failure if applicable."
-# PipeFailure = "Details of a single pipe failure during dry run."
-# DryRunResult = "A result of a dry run of a pipelex bundle spec."
 BundleHeaderSpec = "A domain information object."
 
 # ────────────────────────────────────────────────────────────────────────────────
@@ -65,6 +63,7 @@ Return a draft of a plan that narrates the pipeline as pseudo-steps (no code):
 - For each pipe: state the pipe's description, inputs (by name using snake_case), and the output (by name using snake_case),
 DO NOT indicate the inputs or output type. Just name them.
 - Be aware of the steps where you will want structured outputs or inputs. Make sense of it but be concise.
+- Do not bother with planning a final step that gathers all the elements unless it's clear from the brief that the user wants the pipe to do that.
 
 Available pipe controllers:
 - PipeSequence: A pipe that executes a sequence of pipes: it needs to reference the pipes it will execute.
@@ -83,9 +82,8 @@ Available pipe operators:
   - Then set output = "Article[]" to get a variable list, or output = "Article[5]" for exactly 5 items
   - Examples: output = "Text[]" (multiple texts), output = "Image[3]" (exactly 3 images), output = "Employee[]" (list of employees)
 - PipeImgGen: A pipe that uses an AI model to generate images.
-  - Use bracket notation for multiple images: output = "Image[3]" generates exactly 3 images
-  VERY IMPORTANT: IF YOU DECIDE TO CREATE A PipeImgGen, YOU ALSO HAVE TO CREATE A PIPELLM THAT WILL WRITE THE PROMPT, AND THAT NEEDS TO PRECEED THE PIPEIMGEN, based on the necessary elements.
-  That means that in the MAIN pipeline, the prompt MUST NOT be considered as an input. It should be the output of a step that generates the prompt.
+  - VERY IMPORTANT: IF YOU DECIDE TO CREATE A PipeImgGen to generate an image, YOU ALSO HAVE TO CREATE A PIPELLM THAT WILL WRITE THE PROMPT
+  AND THAT NEEDS TO PRECEED THE PIPEIMGEN, based on the necessary elements, unless it's clear from the brief that the prompt should be part of the main pipe's original inputs.
 - PipeExtract: A pipe that uses OCR technology to extract text from an image or a pdf.
   - Always outputs a list of pages: output = "Page[]"
   VERY IMPORTANT: THE INPUT OF THE PIPEEXTRACT MUST BE either an image or a pdf or a concept which refines one of them.
@@ -135,7 +133,7 @@ For instance:
 - Concepts are always expressed as singular nouns, even if we're to use them as a list:
   for instance, define the concept as "Article" not "Articles", "Employee" not "Employees".
   If we need multiple items, we'll indicate it elsewhere so you don't bother with it here.
-- Provide a short description concise description for each concept
+- Provide a concise description for each concept
 
 If the concept can be expressed as a text, image, pdf, number, or page:
 - Name the concept, define it and just write "refines: Text", "refines: PDF", or "refines: Image" etc.
@@ -203,6 +201,7 @@ Define the contracts of the pipes to build:
 - For each pipe: give a unique snake_case pipe_code, a type and description, specify inputs (one or more) and output (one)
 - Add as much details as possible for the description.
 - Be clear which is the main pipe of the pipeline, don't write "main" in its pipe_code, but make it clear in its description.
+- Do not bother with planning a final step that gathers all the elements unless it's clear from the brief that the user wants the pipe to do that.
 
 Available pipe controllers:
 - PipeSequence: A pipe that executes a sequence of pipes: it needs to reference the pipes it will execute.
@@ -236,7 +235,7 @@ Be smart about splitting the workflow into steps (sequence or parallel):
 - But don't ask the LLM for many things which are unrelated, it would lose reliability.
 - Apply the DRY principle: don't repeat yourself. if you have a task to apply several times, make it a dedicated pipe.
 - If you're in a sequence and you are to apply that pipe to a previous output which is multiple, use batch_over/batch_as attributes in that step.
-
+- The output concept of a pipe sequence must always be the same as the output concept of the last pipe in the sequence.
 
 You must never include nore than one batch step in the same pipe sequence.
 Instead, you must create a pipe sequence specifically for the process to apply to each batched element

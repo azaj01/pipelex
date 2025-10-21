@@ -261,6 +261,7 @@ class ConceptFactory:
                         concept_code=concept_code,
                         description=blueprint.description,
                         structure_class_python_code=exc.structure_class_python_code,
+                        structure_class_syntax_error_data=exc.syntax_error_data,
                         source=blueprint.source,
                     ) from exc
 
