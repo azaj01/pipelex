@@ -44,9 +44,9 @@ extra:
     - icon: fontawesome/brands/twitter
       link: https://x.com/PipelexAI
       name: Pipelex on X
-    # - icon: fontawesome/brands/discord
-    #   link: https://go.pipelex.com/discord
-    #   name: Pipelex on Discord
+    - icon: fontawesome/brands/discord
+      link: https://go.pipelex.com/discord
+      name: Pipelex on Discord
   generator: false
 
 plugins:
@@ -89,6 +89,7 @@ nav:
     - Setup:
       - Configure AI Providers: pages/setup/configure-ai-providers.md
       - Project Organization: pages/setup/project-organization.md
+      - Telemetry: pages/setup/telemetry.md
     - Understand Pipelex:
       - The Knowledge Pipeline Manifesto: manifesto.md
       - The Pipelex Paradigm: pages/pipelex-paradigm-for-repeatable-ai-workflows/index.md
@@ -134,6 +135,7 @@ nav:
       - LLM Providers & Models: pages/configuration/config-technical/inference-backend-config.md
   - API Reference:
     - API Guide: pages/api/index.md
+  - n8n Node: https://pipelex.github.io/n8n-nodes-pipelex/
   - Configuration:
     - Overview: pages/configuration/index.md
     - Pipeline Validation Configuration:
@@ -143,6 +145,7 @@ nav:
       - Logging: pages/configuration/config-practical/logging-config.md
       - Pipe Run: pages/configuration/config-practical/pipe-run-config.md
       - Reporting: pages/configuration/config-practical/reporting-config.md
+      - Telemetry: pages/configuration/config-practical/telemetry-config.md
       - Tracker: pages/configuration/config-practical/tracker-config.md
     - Technical Configuration:
       - AWS: pages/configuration/config-technical/aws-config.md
