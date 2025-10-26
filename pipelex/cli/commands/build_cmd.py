@@ -4,17 +4,20 @@ from typing import TYPE_CHECKING, Annotated
 
 import click
 import typer
+from posthog import new_context, tag
 
 from pipelex import pretty_print
 from pipelex.builder.builder import PipelexBundleSpec, load_and_validate_bundle
 from pipelex.builder.builder_errors import PipeBuilderError, PipelexBundleError
 from pipelex.builder.builder_loop import BuilderLoop
 from pipelex.builder.runner_code import generate_runner_code
-from pipelex.exceptions import PipeInputError
+from pipelex.exceptions import PipeInputError, PipelineExecutionError
 from pipelex.hub import get_report_delegate, get_required_pipe
 from pipelex.language.plx_factory import PlxFactory
-from pipelex.pipelex import Pipelex
+from pipelex.pipelex import PACKAGE_VERSION, Pipelex
 from pipelex.pipeline.execute import execute_pipeline
+from pipelex.system.runtime import IntegrationMode
+from pipelex.system.telemetry.events import EventProperty
 from pipelex.tools.misc.file_utils import ensure_directory_for_file_path, get_incremental_file_path, save_text_to_path
 from pipelex.tools.misc.json_utils import load_json_dict_from_path, save_as_json_to_path
 
@@ -43,8 +46,15 @@ pipelex build pipe "Given an RDFP PDF, build a compliance matrix"
 pipelex build pipe "Given a theme, write a Haiku"
 """
 
+COMMAND = "build"
 
-@build_app.command("pipe", help="Build a Pipelex bundle with one validation/fix loop correcting deterministic issues")
+SUB_COMMAND_PIPE = "pipe"
+SUB_COMMAND_RUNNER = "runner"
+SUB_COMMAND_ONE_SHOT_PIPE = "one-shot-pipe"
+SUB_COMMAND_PARTIAL_PIPE = "partial-pipe"
+
+
+@build_app.command(SUB_COMMAND_PIPE, help="Build a Pipelex bundle with one validation/fix loop correcting deterministic issues")
 def build_pipe_cmd(
     prompt: Annotated[
         str,
@@ -63,7 +73,7 @@ def build_pipe_cmd(
         typer.Option("--no-output", help="Skip saving the pipeline to file"),
     ] = False,
 ) -> None:
-    Pipelex.make()
+    Pipelex.make(integration_mode=IntegrationMode.CLI)
     typer.echo("=" * 70)
     typer.secho("🔥 Starting pipe builder... 🚀", fg=typer.colors.GREEN)
     typer.echo("")
@@ -84,7 +94,7 @@ def build_pipe_cmd(
             return
 
         try:
-            pipelex_bundle_spec = await builder_loop.build_and_fix(pipe_code=builder_pipe, input_memory={"brief": prompt})
+            pipelex_bundle_spec = await builder_loop.build_and_fix(pipe_code=builder_pipe, inputs={"brief": prompt})
         except PipeBuilderError as exc:
             msg = f"Builder loop: Failed to execute pipeline: {exc}."
             if exc.working_memory:
@@ -104,15 +114,20 @@ def build_pipe_cmd(
         save_text_to_path(text=plx_content, path=output_path)
         typer.secho(f"\n✅ Pipeline saved to: {output_path}", fg=typer.colors.GREEN)
 
-    start_time = time.time()
-    asyncio.run(run_pipeline())
-    end_time = time.time()
-    typer.secho(f"\n✅ Pipeline built in {end_time - start_time:.2f} seconds", fg=typer.colors.GREEN)
+    with new_context():
+        tag(name=EventProperty.INTEGRATION, value=IntegrationMode.CLI)
+        tag(name=EventProperty.PIPELEX_VERSION, value=PACKAGE_VERSION)
+        tag(name=EventProperty.CLI_COMMAND, value=f"{COMMAND} {SUB_COMMAND_PIPE}")
 
-    get_report_delegate().generate_report()
+        start_time = time.time()
+        asyncio.run(run_pipeline())
+        end_time = time.time()
+        typer.secho(f"\n✅ Pipeline built in {end_time - start_time:.2f} seconds", fg=typer.colors.GREEN)
+
+        get_report_delegate().generate_report()
 
 
-@build_app.command("runner", help="Build the Python code to run a pipe with the necessary inputs")
+@build_app.command(SUB_COMMAND_RUNNER, help="Build the Python code to run a pipe with the necessary inputs")
 def prepare_runner_cmd(
     target: Annotated[
         str | None,
@@ -193,7 +208,7 @@ def prepare_runner_cmd(
 
     async def prepare_runner(pipe_code: str | None = None, bundle_path: str | None = None):
         # Initialize Pipelex
-        Pipelex.make()
+        Pipelex.make(integration_mode=IntegrationMode.CLI)
 
         if bundle_path:
             try:
@@ -250,10 +265,15 @@ def prepare_runner_cmd(
             typer.secho(f"❌ Error saving file: {exc}", fg=typer.colors.RED)
             raise typer.Exit(1) from exc
 
-    asyncio.run(prepare_runner(pipe_code=pipe_code, bundle_path=bundle_path))
+    with new_context():
+        tag(name=EventProperty.INTEGRATION, value=IntegrationMode.CLI)
+        tag(name=EventProperty.PIPELEX_VERSION, value=PACKAGE_VERSION)
+        tag(name=EventProperty.CLI_COMMAND, value=f"{COMMAND} {SUB_COMMAND_RUNNER}")
+
+        asyncio.run(prepare_runner(pipe_code=pipe_code, bundle_path=bundle_path))
 
 
-@build_app.command("one-shot-pipe", help="Developer utility for contributors: deliver pipeline in one shot, without validation loop")
+@build_app.command(SUB_COMMAND_ONE_SHOT_PIPE, help="Developer utility for contributors: deliver pipeline in one shot, without validation loop")
 def build_one_shot_cmd(
     brief: Annotated[
         str,
@@ -272,7 +292,7 @@ def build_one_shot_cmd(
         typer.Option("--no-output", help="Skip saving the pipeline to file"),
     ] = False,
 ) -> None:
-    Pipelex.make()
+    Pipelex.make(integration_mode=IntegrationMode.CLI)
     typer.echo("=" * 70)
     typer.secho("🔥 Starting pipe builder... 🚀", fg=typer.colors.GREEN)
     typer.echo("")
@@ -286,10 +306,14 @@ def build_one_shot_cmd(
         else:
             ensure_directory_for_file_path(file_path=output_path)
 
-        pipe_output = await execute_pipeline(
-            pipe_code=builder_pipe,
-            inputs={"brief": brief},
-        )
+        try:
+            pipe_output = await execute_pipeline(
+                pipe_code=builder_pipe,
+                inputs={"brief": brief},
+            )
+        except PipelineExecutionError as exc:
+            typer.secho(f"Failed to execute pipeline: {exc}", fg=typer.colors.RED, err=True)
+            raise typer.Exit(1) from exc
         pretty_print(pipe_output, title="Pipe Output")
 
         # Save to file unless explicitly disabled with --no-output
@@ -302,21 +326,27 @@ def build_one_shot_cmd(
         save_text_to_path(text=plx_content, path=output_path)
         typer.secho(f"\n✅ Pipeline saved to: {output_path}", fg=typer.colors.GREEN)
 
-    start_time = time.time()
-    asyncio.run(run_pipeline())
-    end_time = time.time()
-    typer.secho(f"\n✅ Pipeline built in {end_time - start_time:.2f} seconds", fg=typer.colors.GREEN)
+    with new_context():
+        tag(name=EventProperty.INTEGRATION, value=IntegrationMode.CLI)
+        tag(name=EventProperty.PIPELEX_VERSION, value=PACKAGE_VERSION)
+        tag(name=EventProperty.CLI_COMMAND, value=f"{COMMAND} {SUB_COMMAND_ONE_SHOT_PIPE}")
 
-    get_report_delegate().generate_report()
+        start_time = time.time()
+        asyncio.run(run_pipeline())
+        end_time = time.time()
+        typer.secho(f"\n✅ Pipeline built in {end_time - start_time:.2f} seconds", fg=typer.colors.GREEN)
+
+        get_report_delegate().generate_report()
 
 
 @build_app.command(
-    "partial-pipe", help="Developer utility for contributors: deliver a partial pipeline specification (not an actual bundle) and save it as JSON"
+    SUB_COMMAND_PARTIAL_PIPE,
+    help="Developer utility for contributors: deliver a partial pipeline specification (not an actual bundle) and save it as JSON",
 )
 def build_partial_cmd(
     inputs: Annotated[
         str,
-        typer.Argument(help="Inline brief or path to JSON file with input_memory"),
+        typer.Argument(help="Inline brief or path to JSON file with inputs"),
     ],
     builder_pipe: Annotated[
         str,
@@ -339,7 +369,7 @@ def build_partial_cmd(
         typer.Option("--no-output", help="Skip saving the pipeline to file"),
     ] = False,
 ) -> None:
-    Pipelex.make()
+    Pipelex.make(integration_mode=IntegrationMode.CLI)
     typer.echo("=" * 70)
     typer.secho("🔥 Starting pipe builder... 🚀", fg=typer.colors.GREEN)
     typer.echo("")
@@ -356,15 +386,19 @@ def build_partial_cmd(
             )
             ensure_directory_for_file_path(file_path=output_path)
 
-        input_memory: PipelineInputs | None = None
+        pipeline_inputs: PipelineInputs | None = None
         if inputs.endswith(".json"):
-            input_memory = load_json_dict_from_path(inputs)
+            pipeline_inputs = load_json_dict_from_path(inputs)
         else:
-            input_memory = {"brief": inputs}
-        pipe_output = await execute_pipeline(
-            pipe_code=builder_pipe,
-            inputs=input_memory,
-        )
+            pipeline_inputs = {"brief": inputs}
+        try:
+            pipe_output = await execute_pipeline(
+                pipe_code=builder_pipe,
+                inputs=pipeline_inputs,
+            )
+        except PipelineExecutionError as exc:
+            typer.secho(f"Failed to execute pipeline: {exc}", fg=typer.colors.RED, err=True)
+            raise typer.Exit(1) from exc
         # Save to file unless explicitly disabled with --no-output
         if output_path:
             match extension:
@@ -387,9 +421,14 @@ def build_partial_cmd(
         else:
             typer.secho("\n⚠️  Pipeline not saved to file (--no-output specified)", fg=typer.colors.YELLOW)
 
-    start_time = time.time()
-    asyncio.run(run_pipeline())
-    end_time = time.time()
-    typer.secho(f"\n✅ Pipeline built in {end_time - start_time:.2f} seconds", fg=typer.colors.GREEN)
+    with new_context():
+        tag(name=EventProperty.INTEGRATION, value=IntegrationMode.CLI)
+        tag(name=EventProperty.PIPELEX_VERSION, value=PACKAGE_VERSION)
+        tag(name=EventProperty.CLI_COMMAND, value=f"{COMMAND} {SUB_COMMAND_PARTIAL_PIPE}")
 
-    get_report_delegate().generate_report()
+        start_time = time.time()
+        asyncio.run(run_pipeline())
+        end_time = time.time()
+        typer.secho(f"\n✅ Pipeline built in {end_time - start_time:.2f} seconds", fg=typer.colors.GREEN)
+
+        get_report_delegate().generate_report()

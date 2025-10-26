@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.13.2] - 2025-10-25
+
+### Added
+
+- Added the `n8n` documentation page for the [n8n-nodes-pipelex](https://github.com/Pipelex/n8n-nodes-pipelex) package.
+- Added optional telemetry system with first-run interactive prompt offering three modes: off (no data collected), anonymous (usage data without identification), and identified (usage data with user identification). Automatically respects `DO_NOT_TRACK` environment variable and redacts sensitive data (prompts, responses, file paths, URLs). Configuration stored in `.pipelex/telemetry.toml`.
+- Added telemetry documentation: user-friendly setup guide and comprehensive configuration reference.
+
+### Changed
+
+- Updated the `PipelexClient` and changed the route of the API calls to `v1/pipeline/execute` and `v1/pipeline/start`.
+- Changed the parameter `input_memory` to `inputs` in the documentaton.
+
 ## [v0.13.1] - 2025-10-22
 
 ### Changed
