@@ -78,7 +78,9 @@ class WorkingMemory(BaseModel, ContextProviderAbstract):
     def get_optional_main_stuff(self) -> Stuff | None:
         return self.get_optional_stuff(name=MAIN_STUFF_NAME)
 
-    # TODO: all calls to get_stuff should catch WorkingMemoryStuffNotFoundError in order to indicate what pipe is missing a required stuff
+    def get_main_stuff(self) -> Stuff:
+        return self.get_stuff(name=MAIN_STUFF_NAME)
+
     def get_stuff(self, name: str) -> Stuff:
         if named_stuff := self.root.get(name):
             return named_stuff
@@ -110,9 +112,6 @@ class WorkingMemory(BaseModel, ContextProviderAbstract):
 
     def is_stuff_code_used(self, stuff_code: str) -> bool:
         return any(stuff.concept.code == stuff_code for stuff in self.root.values())
-
-    def get_main_stuff(self) -> Stuff:
-        return self.get_stuff(name=MAIN_STUFF_NAME)
 
     def remove_stuff(self, name: str):
         self.root.pop(name, None)

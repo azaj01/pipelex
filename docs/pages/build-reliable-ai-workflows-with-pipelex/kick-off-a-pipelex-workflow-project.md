@@ -1,4 +1,4 @@
-# Kicking off a Knowledge Pipeline Project
+# Kicking off a Pipelex Workflow Project
 
 ## Creating Your First Pipeline
 
@@ -31,6 +31,7 @@ Provide a clear and concise answer.
 ```
 
 This creates a simple Q&A pipeline with:
+
 - A domain called "tutorial"
 - Two concepts: Question and Answer
 - One pipe that transforms a Question into an Answer

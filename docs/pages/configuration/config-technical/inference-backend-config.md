@@ -58,7 +58,7 @@ All inference backend configurations are stored in the `.pipelex/inference/` dir
     ├── backends/               # Individual backend model specifications
     │   ├── openai.toml         # OpenAI models (LLMs, image generation)
     │   ├── anthropic.toml      # Anthropic models (LLMs)
-    │   ├── bedrock.toml        # AWS Bedrock models (LLMs)
+    │   ├── bedrock.toml        # Amazon Bedrock models (LLMs)
     │   ├── mistral.toml        # Mistral models (LLMs, OCR)
     │   ├── vertexai.toml       # Google Vertex AI models (LLMs)
     │   ├── fal.toml            # FAL models (image generation)
@@ -84,9 +84,9 @@ Pipelex Inference is a unified inference backend that provides access to all maj
 ### Setup
 
 1. **Get your API key:**
-   - Visit [https://go.pipelex.com/discord](https://go.pipelex.com/discord) to join our Discord
-   - Request your free API key in the appropriate channel
-   - No credit card required (limited time offer)
+- Visit [https://go.pipelex.com/discord](https://go.pipelex.com/discord) to join our Discord
+- Request your free API key in the appropriate channel
+- No credit card required (limited time offer)
 
 2. **Configure environment variables:**
    ```bash
@@ -170,7 +170,7 @@ PIPELEX_INFERENCE_API_KEY=
 
 OPENAI_API_KEY=
 
-# AWS Bedrock - For accessing models via Amazon Bedrock
+# Amazon Bedrock - For accessing models via Amazon Bedrock
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
 AWS_REGION=

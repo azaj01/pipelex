@@ -18,8 +18,9 @@ Get **free credits** for testing and development with a single API key that work
 **Setup:**
 
 1. Join our Discord community to get your free API key:
-   - Visit [https://go.pipelex.com/discord](https://go.pipelex.com/discord)
-   - Request your key in the appropriate channel
+   
+- Visit [https://go.pipelex.com/discord](https://go.pipelex.com/discord)
+- Request your key in the appropriate channel
 
 2. Create a `.env` file in your project root:
    ```env
@@ -64,7 +65,7 @@ AZURE_API_KEY=...
 AZURE_API_BASE=...
 AZURE_API_VERSION=...
 
-# AWS Bedrock
+# Amazon Bedrock
 AWS_ACCESS_KEY_ID=...
 AWS_SECRET_ACCESS_KEY=...
 AWS_REGION=...
@@ -131,12 +132,15 @@ pipelex init config
 ```
 
 This creates a `.pipelex/` directory with:
-
-- `pipelex.toml`: Feature flags, logging, cost reporting
-- `inference/`: LLM configuration and model presets
-  - `backends.toml`: Enable/disable model providers
-  - `deck/base_deck.toml`: LLM presets and aliases
-  - `routing_profiles.toml`: Model routing configuration
+```
+.pipelex/
+├── pipelex.toml              # Feature flags, logging, cost reporting
+└── inference/                # LLM configuration and model presets
+    ├── backends.toml         # Enable/disable model providers
+    ├── deck/
+    │   └── base_deck.toml    # LLM presets and aliases
+    └── routing_profiles.toml # Model routing configuration
+```
 
 Learn more in our [Inference Backend Configuration](../configuration/config-technical/inference-backend-config.md) guide.
 
@@ -147,9 +151,10 @@ Learn more in our [Inference Backend Configuration](../configuration/config-tech
 Now that you have your backend configured:
 
 1. **Organize your project**: [Project Organization](project-organization.md)
-2. **Learn the concepts**: [Full Tutorial](../quick-start/index.md)
+2. **Learn the concepts**: [Writing Workflows Tutorial](../writing-workflows/index.md)
 3. **Explore examples**: [Cookbook Repository](https://github.com/Pipelex/pipelex-cookbook)
-4. **Deep dive**: [Build Reliable AI Workflows](../build-reliable-ai-workflows-with-pipelex/kick-off-a-knowledge-pipeline-project.md)
+4. **Deep dive**: [Build Reliable AI Workflows](../build-reliable-ai-workflows-with-pipelex/kick-off-a-pipelex-workflow-project.md)
 
-💡 For detailed backend configuration options, see [Inference Backend Configuration](../configuration/config-technical/inference-backend-config.md).
+!!! tip "Advanced Configuration"
+    For detailed backend configuration options, see [Inference Backend Configuration](../configuration/config-technical/inference-backend-config.md).
 

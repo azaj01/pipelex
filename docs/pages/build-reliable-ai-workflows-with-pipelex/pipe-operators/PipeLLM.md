@@ -32,7 +32,8 @@ Describe the provided image in great detail.
 """
 ```
 
-**Important**: It is necessary to tag the image variable in the prompt with `@image` or `$image`, just like with regular objects.
+!!! important "Image Variable Tagging"
+    It is necessary to tag the image variable in the prompt with `@image` or `$image`, just like with regular objects.
 
 **Flexible Image Inputs**
 
@@ -66,6 +67,7 @@ Focus on typography, spacing, and overall composition.
 ```
 
 In this example:
+
 - `page_content` is the input variable containing a `PageContent` object
 - `page_view` is the `ImageContent` field within the `PageContent` structure
 - The dot notation `page_content.page_view` tells Pipelex to extract the image from that specific field
