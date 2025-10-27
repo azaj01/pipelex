@@ -7,19 +7,20 @@ from typer.core import TyperGroup
 from typing_extensions import override
 
 from pipelex.cli.commands.build_cmd import build_app
+from pipelex.cli.commands.doctor_cmd import doctor_cmd
 from pipelex.cli.commands.init_cmd import InitFocus, init_cmd
 from pipelex.cli.commands.kit_cmd import kit_app
 from pipelex.cli.commands.run_cmd import run_cmd
 from pipelex.cli.commands.show_cmd import show_app
 from pipelex.cli.commands.validate_cmd import validate_cmd
-from pipelex.system.telemetry.telemetry_manager_abstract import TelemetryManagerAbstract
+from pipelex.tools.misc.package_utils import get_package_version
 
 
 class PipelexCLI(TyperGroup):
     @override
     def list_commands(self, ctx: Context) -> list[str]:
         # List the commands in the proper order because natural ordering doesn't work between Typer groups and commands
-        return ["init", "kit", "build", "validate", "run", "show"]
+        return ["init", "doctor", "kit", "build", "validate", "run", "show"]
 
     @override
     def get_command(self, ctx: Context, cmd_name: str) -> Command | None:
@@ -48,8 +49,9 @@ app = typer.Typer(
 def app_callback(ctx: typer.Context) -> None:
     """Run pre-command checks like printing the logo and checking telemetry consent."""
     console = Console()
+    package_version = get_package_version()
     console.print(
-        """
+        f"""
 
 ░█████████  ░[bold green4]██[/bold green4]                      ░██
 ░██     ░██                          ░██
@@ -59,15 +61,14 @@ def app_callback(ctx: typer.Context) -> None:
 ░██         ░██░███   ░██ ░██        ░██ ░██         ░██  ░██
 ░██         ░██░██░█████   ░███████  ░██  ░███████  ░██    ░██
                ░██
-               ░██
-
+               ░██                                     v{package_version}
 """
     )
-    # Skip checks if no command is being run (e.g., just --help) or if running init command
-    if ctx.invoked_subcommand is None or ctx.invoked_subcommand == "init":
+    # Skip checks if no command is being run (e.g., just --help) or if running init/doctor command
+    if ctx.invoked_subcommand is None or ctx.invoked_subcommand in ("init", "doctor"):
         return
 
-    TelemetryManagerAbstract.telemetry_mode_just_set = init_cmd()
+    init_cmd()
 
 
 @app.command(name="init", help="Initialize Pipelex configuration in a `.pipelex` directory")
@@ -77,6 +78,14 @@ def init_command(
 ) -> None:
     """Initialize Pipelex configuration and telemetry."""
     init_cmd(focus=focus, reset=reset)
+
+
+@app.command(name="doctor", help="Check Pipelex configuration health and suggest fixes")
+def doctor_command(
+    fix: Annotated[bool, typer.Option("--fix", "-f", help="Offer to fix detected issues interactively")] = False,
+) -> None:
+    """Check Pipelex configuration health."""
+    doctor_cmd(fix=fix)
 
 
 app.add_typer(kit_app, name="kit", help="Manage kit assets: agent rules, migration rules")
