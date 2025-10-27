@@ -66,6 +66,7 @@ plugins:
 
 markdown_extensions:
   - meta
+  - sane_lists
   - admonition
   - attr_list
   - md_in_html
@@ -134,6 +135,8 @@ nav:
       - LLM Structured Generation: pages/build-reliable-ai-workflows-with-pipelex/llm-structured-generation-config.md
       - LLM Prompting Style: pages/build-reliable-ai-workflows-with-pipelex/adapt-to-llm-prompting-style-openai-anthropic-mistral.md
       - LLM Providers & Models: pages/configuration/config-technical/inference-backend-config.md
+  - Observer:
+    - Data Extraction: pages/observer/data-extraction.md
   - API Reference:
     - API Guide: pages/api/index.md
   - n8n Node: https://pipelex.github.io/n8n-nodes-pipelex/
@@ -168,6 +171,7 @@ nav:
       - Pipeline Tracker: pages/advanced-customization/pipeline-tracker-injection.md
       - Storage Provider: pages/advanced-customization/storage-provider-injection.md
       - Template Provider: pages/advanced-customization/template-provider-injection.md
+      - Observer Provider: pages/advanced-customization/observer-provider-injection.md
       - Content Generator: pages/advanced-customization/content-generator-injection.md
       - Pipe Router: pages/advanced-customization/pipe-router-injection.md
     - License: license.md
