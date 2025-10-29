@@ -1,5 +1,15 @@
 # Changelog
 
+## [v0.14.2] - 2025-10-29
+
+### Chaged
+
+- Improved pipe builder.
+
+### Added
+
+- CLI to generate inputs JSON.
+
 ## [v0.14.1] - 2025-10-27
 
 ### Added
