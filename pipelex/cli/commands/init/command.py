@@ -1,6 +1,7 @@
 """Main command orchestration for the init command."""
 
 import os
+import shutil
 
 import typer
 from rich.console import Console
@@ -12,6 +13,7 @@ from pipelex.cli.commands.init.routing import customize_routing_profile
 from pipelex.cli.commands.init.telemetry import setup_telemetry
 from pipelex.cli.commands.init.ui.general_ui import build_initialization_panel, display_already_configured_message
 from pipelex.cli.commands.init.ui.types import InitFocus
+from pipelex.kit.paths import get_kit_configs_dir
 from pipelex.system.configuration.config_loader import config_manager
 from pipelex.system.telemetry.telemetry_config import TELEMETRY_CONFIG_FILE_NAME
 from pipelex.system.telemetry.telemetry_manager_abstract import TelemetryManagerAbstract
@@ -200,6 +202,16 @@ def execute_initialization(
     # Step 2.5: Set up routing profile if specifically requested
     if needs_routing:
         console.print()
+
+        # If reset is True, copy the template file first
+        if reset:
+            routing_profiles_toml_path = os.path.join(config_manager.pipelex_config_dir, "inference", "routing_profiles.toml")
+            template_routing_path = os.path.join(str(get_kit_configs_dir()), "inference", "routing_profiles.toml")
+
+            if path_exists(template_routing_path):
+                shutil.copy2(template_routing_path, routing_profiles_toml_path)
+                console.print("✅ Reset routing_profiles.toml from template")
+
         selected_backend_keys = get_selected_backend_keys(backends_toml_path)
         if selected_backend_keys:
             customize_routing_profile(selected_backend_keys)

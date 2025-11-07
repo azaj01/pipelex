@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.15.2] - 2025-11-07
+
+### Fixed
+- Fixed resetting routing profile when calling with `--reset` flag in `pipelex init`
+
 ## [v0.15.1] - 2025-11-07
 
 ### Fixed

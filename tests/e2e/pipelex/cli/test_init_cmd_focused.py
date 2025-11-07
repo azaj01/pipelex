@@ -192,6 +192,37 @@ class TestFocusedInitialization:
         # Verify telemetry was changed
         env.verify_telemetry("identified")
 
+    def test_reset_routing_with_pipelex_inference(self, tmp_path: Path, mocker: MockerFixture) -> None:
+        """Test Case: Reset routing when only pipelex_inference is enabled (bug fix test)."""
+        # Setup environment with existing config and pipelex_inference enabled
+        env = MockedInitEnvironment(tmp_path, mocker)
+        env.setup_with_configs(include_backends=True, include_routing=True, include_telemetry=True)
+
+        # Enable only pipelex_inference
+        backends_path = env.inference_dir / "backends.toml"
+        toml_doc = load_toml_with_tomlkit(str(backends_path))
+        toml_doc["pipelex_inference"]["enabled"] = True  # type: ignore[index]
+        toml_doc["openai"]["enabled"] = False  # type: ignore[index]
+        toml_doc["anthropic"]["enabled"] = False  # type: ignore[index]
+        save_toml_to_path(toml_doc, str(backends_path))
+
+        # Modify routing to have wrong config (simulating the bug scenario)
+        routing_path = env.inference_dir / "routing_profiles.toml"
+        routing_doc = load_toml_with_tomlkit(str(routing_path))
+        routing_doc["active"] = "wrong_profile"  # type: ignore[index]
+        save_toml_to_path(routing_doc, str(routing_path))
+
+        # User inputs - need to confirm reset
+        env.add_confirm_input(True)  # Confirm reset initialization
+
+        env.setup_mocks()
+
+        # Execute with ROUTING focus and reset flag
+        init_cmd(focus=InitFocus.ROUTING, reset=True)
+
+        # Verify routing was reset to pipelex_first (correct for pipelex_inference)
+        env.verify_routing("pipelex_first")
+
     def test_everything_already_configured(self, tmp_path: Path, mocker: MockerFixture) -> None:
         """Test Case 7.1: Everything configured - decline reconfigure."""
         # Setup complete environment
