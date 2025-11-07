@@ -56,8 +56,9 @@ def get_selected_backend_keys(backends_toml_path: str) -> list[str]:
         if backend_key != "internal":
             backend_section = toml_doc[backend_key]
             if isinstance(backend_section, dict):
-                if backend_section.get("enabled", False) is True:  # pyright: ignore[reportUnknownMemberType]
-                    selected_backends.append(backend_key)
+                if (setting := backend_section.get("enabled")) is not None and not setting:  # type: ignore[reportUnknownMemberType]
+                    continue
+                selected_backends.append(backend_key)
 
     return selected_backends
 
