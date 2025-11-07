@@ -382,7 +382,7 @@ class ModelDeck(ConfigModel):
                 "'.pipelex/inference/backends.toml' and that you have the necessary credentials."
                 "To find what backend is required for this model, look at the routing profile in .pipelex/inference/routing_profiles.toml. "
                 "Learn more about the inference backend system in the Pipelex documentation: "
-                "https://docs.pipelex.com/pages/configuration/config-technical/inference-backend-config/"
+                f"{URLs.backend_provider_docs}"
             )
 
             raise ModelNotFoundError(message=msg, model_handle=model_handle)
