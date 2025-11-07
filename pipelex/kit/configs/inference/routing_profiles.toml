@@ -45,9 +45,8 @@ fallback_order = [
 "gemini-*" = "pipelex_inference"
 
 [profiles.pipelex_first.optional_routes] # Each optional route is considered only if its backend is available
-"*-sdxl" = "blackboxai"
-"flux-*" = "blackboxai"
-"nano-banana" = "blackboxai"
+"*-sdxl" = "fal"
+"flux-*" = "fal"
 "gpt-image-1" = "openai"
 "mistral-ocr" = "mistral"
 
