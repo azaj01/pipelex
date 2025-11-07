@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.15.1] - 2025-11-07
+
+### Fixed
+- Bumped OpenAI dependency to `>=1.108.1` to support their breaking change: "change optional parameter type from `NotGiven` to `Omit`"
+
 ## [v0.15.0] - 2025-11-07
 
 **Highlights:** This release dramatically simplifies onboarding with interactive CLI setup, comprehensive documentation relaunch, and intelligent model fallbacks, making Pipelex more accessible and resilient than ever.
