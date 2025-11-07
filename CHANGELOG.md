@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## [v0.15.0] - 2025-11-07
+
+**Highlights:** This release dramatically simplifies onboarding with interactive CLI setup, comprehensive documentation relaunch, and intelligent model fallbacks, making Pipelex more accessible and resilient than ever.
 
 ### Added
  - Model Waterfalls: Define prioritized model lists in `base_deck.toml` (e.g., `smart_llm = ["gpt-4o", "claude-4.5-sonnet", "grok-3"]`). Pipelex automatically falls back to the next model if the preferred one is unavailable.
