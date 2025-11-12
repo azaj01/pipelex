@@ -44,7 +44,9 @@ class PipeOperator(PipeAbstract, Generic[PipeOperatorOutputType]):
         job_metadata.update(updated_metadata=updated_metadata)
 
         pipe_run_info = self._format_pipe_run_info(pipe_run_params=pipe_run_params)
-        log.info(pipe_run_info)
+        # log.info(pipe_run_info)
+        if pipe_run_params.run_mode == PipeRunMode.LIVE:
+            log.info(pipe_run_info)
         try:
             match pipe_run_params.run_mode:
                 case PipeRunMode.LIVE:
@@ -60,8 +62,11 @@ class PipeOperator(PipeAbstract, Generic[PipeOperatorOutputType]):
                     if main_stuff.is_list:
                         list_content: ListContent[StuffContent] = main_stuff.as_list_content()  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
                         nb_items = len(list_content.items)
-                        output_concept_with_multiplicity = f" ({nb_items} items)"
-                    title = f"Output of pipe [red]{self.code}[/red]: {output_concept_with_multiplicity}"
+                        if nb_items == 1:
+                            output_concept_with_multiplicity += " [1 item]"
+                        else:
+                            output_concept_with_multiplicity += f" [{nb_items} items]"
+                    title = f"Output of pipe [red]{self.code}[/red] [yellow]→[/yellow] {output_concept_with_multiplicity}"
                     main_stuff.pretty_print_stuff(title=title)
                 case PipeRunMode.DRY:
                     pipe_output = await self._dry_run_operator_pipe(
