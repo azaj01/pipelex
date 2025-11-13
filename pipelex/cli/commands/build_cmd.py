@@ -1,15 +1,18 @@
 import asyncio
+import os
 import time
 from typing import TYPE_CHECKING, Annotated
 
 import click
 import typer
 from posthog import tag
+from rich.console import Console
 
 from pipelex import pretty_print
 from pipelex.builder.builder import PipelexBundleSpec, load_and_validate_bundle
-from pipelex.builder.builder_errors import PipeBuilderError, PipelexBundleError
+from pipelex.builder.builder_errors import PipeBuilderError
 from pipelex.builder.builder_loop import BuilderLoop
+from pipelex.builder.exceptions import PipelexBundleError
 from pipelex.builder.runner_code import generate_input_memory_json_string, generate_runner_code
 from pipelex.cli.error_handlers import (
     ErrorContext,
@@ -19,21 +22,25 @@ from pipelex.cli.error_handlers import (
     handle_validation_error,
 )
 from pipelex.cogt.exceptions import ModelDeckPresetValidatonError
-from pipelex.exceptions import (
-    LibraryLoadingError,
-    PipeInputError,
-    PipelineExecutionError,
-    PipeOperatorModelAvailabilityError,
-    PipeOperatorModelChoiceError,
-)
+from pipelex.config import get_config
+from pipelex.core.pipes.exceptions import PipeInputError, PipeOperatorModelChoiceError
 from pipelex.hub import get_report_delegate, get_required_pipe, get_telemetry_manager
 from pipelex.language.plx_factory import PlxFactory
+from pipelex.libraries.exceptions import LibraryLoadingError
+from pipelex.pipe_operators.exceptions import PipeOperatorModelAvailabilityError
 from pipelex.pipelex import PACKAGE_VERSION, Pipelex
+from pipelex.pipeline.exceptions import PipelineExecutionError
 from pipelex.pipeline.execute import execute_pipeline
 from pipelex.system.runtime import IntegrationMode
 from pipelex.system.telemetry.events import EventProperty
-from pipelex.tools.misc.file_utils import ensure_directory_for_file_path, get_incremental_file_path, save_text_to_path
+from pipelex.tools.misc.file_utils import (
+    ensure_directory_for_file_path,
+    get_incremental_directory_path,
+    get_incremental_file_path,
+    save_text_to_path,
+)
 from pipelex.tools.misc.json_utils import load_json_dict_from_path, save_as_json_to_path
+from pipelex.tools.misc.pretty import PrettyPrinter
 
 if TYPE_CHECKING:
     from pipelex.client.protocol import PipelineInputs
@@ -48,7 +55,7 @@ pipelex build pipe "Imagine a cute animal mascot for a startup based on its elev
     include 3 variants of the ideas and 2 variants of each prompt"
 pipelex build pipe "Imagine a cute animal mascot for a startup based on its elevator pitch \
     and some brand guidelines, propose 2 different ideas, and for each, 3 style variants in the image generation prompt, \
-        at the end we want the rendered image" --output results/mascot.plx
+        at the end we want the rendered image" -o mascot
 
 pipelex build pipe "Given an expense report, apply company rules"
 pipelex build pipe "Take a CV in a PDF file, a Job offer text, and analyze if they match"
@@ -87,13 +94,21 @@ def build_pipe_cmd(
         str,
         typer.Option("--builder-pipe", help="Builder pipe to use for generating the pipeline"),
     ] = "pipe_builder",
-    output_path: Annotated[
-        str,
-        typer.Option("--output", "-o", help="Path to save the generated PLX file"),
-    ] = "./results/generated_pipeline.plx",
+    output_name: Annotated[
+        str | None,
+        typer.Option("--output-name", "-o", help="Base name for the generated file or directory (without extension)"),
+    ] = None,
+    output_dir: Annotated[
+        str | None,
+        typer.Option("--output-dir", help="Directory where files will be generated"),
+    ] = None,
     no_output: Annotated[
         bool,
         typer.Option("--no-output", help="Skip saving the pipeline to file"),
+    ] = False,
+    no_extras: Annotated[
+        bool,
+        typer.Option("--no-extras", help="Skip generating inputs.json and runner.py, only generate the PLX file"),
     ] = False,
 ) -> None:
     try:
@@ -106,27 +121,23 @@ def build_pipe_cmd(
     typer.secho("🔥 Starting pipe builder... 🚀\n", fg=typer.colors.GREEN)
 
     async def run_pipeline():
+        start_time = time.time()
+        # Get builder config
+        builder_config = get_config().pipelex.builder_config
+
+        # Case 1: --no-output flag → Don't save anything
         if no_output:
             typer.secho("\n⚠️  Pipeline will not be saved to file (--no-output specified)", fg=typer.colors.YELLOW)
-        elif not output_path:
-            typer.secho("\n🛑  Cannot save a pipeline to an empty file name", fg=typer.colors.RED)
-            raise typer.Exit(1)
-        else:
-            ensure_directory_for_file_path(file_path=output_path)
 
+        # Build the pipeline
         builder_loop = BuilderLoop()
-        # Save to file unless explicitly disabled with --no-output
-        if no_output:
-            typer.secho("\n⚠️  Pipeline not saved to file (--no-output specified)", fg=typer.colors.YELLOW)
-            return
-
         try:
             pipelex_bundle_spec = await builder_loop.build_and_fix(pipe_code=builder_pipe, inputs={"brief": prompt})
         except PipeBuilderError as exc:
             msg = f"Builder loop: Failed to execute pipeline: {exc}."
             if exc.working_memory:
                 failure_memory_path = get_incremental_file_path(
-                    base_path="results",
+                    base_path=builder_config.default_output_dir,
                     base_name="failure_memory",
                     extension="json",
                 )
@@ -137,24 +148,88 @@ def build_pipe_cmd(
                 typer.secho(f"❌ {msg}", fg=typer.colors.RED)
                 typer.secho("❌ No failure memory available", fg=typer.colors.RED)
             raise typer.Exit(1) from exc
-        plx_content = PlxFactory.make_plx_content(blueprint=pipelex_bundle_spec.to_blueprint())
-        save_text_to_path(text=plx_content, path=output_path)
-        typer.secho(f"\n✅ Pipeline saved to: {output_path}", fg=typer.colors.GREEN)
 
-        # Generate input JSON for the main pipe
-        main_pipe_code = pipelex_bundle_spec.main_pipe
-        if main_pipe_code:
-            try:
-                # Load the bundle from the file we just saved to register the pipe
-                _ = await load_and_validate_bundle(output_path)
-                pipe = get_required_pipe(pipe_code=main_pipe_code)
-                inputs_json_str = generate_input_memory_json_string(pipe.inputs, indent=2)
-                inputs_json_path = "results/inputs.json"
-                ensure_directory_for_file_path(file_path=inputs_json_path)
-                save_text_to_path(text=inputs_json_str, path=inputs_json_path)
-                typer.secho(f"✅ Input example saved to: {inputs_json_path}", fg=typer.colors.GREEN)
-            except Exception as exc:
-                typer.secho(f"⚠️  Warning: Could not generate input JSON: {exc}", fg=typer.colors.YELLOW)
+        # Return early if no output requested
+        if no_output:
+            return
+
+        # Determine base output directory
+        base_dir = output_dir or builder_config.default_output_dir
+
+        # Determine output path and whether to generate extras
+        bundle_file_name = f"{builder_config.default_bundle_file_name}.plx"
+
+        if no_extras:
+            # Generate single file: {base_dir}/{name}_01.plx
+            name = output_name or builder_config.default_bundle_file_name
+            plx_file_path = get_incremental_file_path(
+                base_path=base_dir,
+                base_name=name,
+                extension="plx",
+            )
+            extras_output_dir = ""  # Not used in no_extras mode
+        else:
+            # Generate directory with extras: {base_dir}/{name}_01/bundle.plx + extras
+            dir_name = output_name or builder_config.default_directory_base_name
+            extras_output_dir = get_incremental_directory_path(
+                base_path=base_dir,
+                base_name=dir_name,
+            )
+            plx_file_path = os.path.join(extras_output_dir, bundle_file_name)
+
+        # Save the PLX file
+        ensure_directory_for_file_path(file_path=plx_file_path)
+        plx_content = PlxFactory.make_plx_content(blueprint=pipelex_bundle_spec.to_blueprint())
+        save_text_to_path(text=plx_content, path=plx_file_path)
+        typer.secho(f"✅ Pipelex bundle saved to: {plx_file_path}", fg=typer.colors.GREEN)
+
+        # Generate extras (inputs and runner) if requested
+        if not no_extras:
+            main_pipe_code = pipelex_bundle_spec.main_pipe
+            if main_pipe_code:
+                try:
+                    pretty = pipelex_bundle_spec.rendered_pretty()
+                    # Generate pretty HTML
+                    pretty_html = PrettyPrinter.pretty_html(pretty=pretty)
+                    html_path = os.path.join(extras_output_dir, "bundle_view.html")
+                    save_text_to_path(text=pretty_html, path=html_path)
+                    typer.secho(f"✅ Pretty HTML saved to: {html_path}", fg=typer.colors.GREEN)
+
+                    # Generate pretty SVG
+                    pretty_svg = PrettyPrinter.pretty_svg(pretty=pretty)
+                    svg_path = os.path.join(extras_output_dir, "bundle_view.svg")
+                    save_text_to_path(text=pretty_svg, path=svg_path)
+                    typer.secho(f"✅ Pretty SVG saved to: {svg_path}", fg=typer.colors.GREEN)
+
+                    # Load the bundle from the file we just saved to register the pipe
+                    _ = await load_and_validate_bundle(plx_file_path)
+                    pipe = get_required_pipe(pipe_code=main_pipe_code)
+
+                    # Generate inputs.json
+                    inputs_json_str = generate_input_memory_json_string(pipe.inputs, indent=2)
+                    inputs_json_path = os.path.join(extras_output_dir, "inputs.json")
+                    save_text_to_path(text=inputs_json_str, path=inputs_json_path)
+                    typer.secho(f"✅ Inputs template saved to: {inputs_json_path}", fg=typer.colors.GREEN)
+
+                    # Generate runner.py
+                    runner_code = generate_runner_code(pipe)
+                    runner_path = os.path.join(extras_output_dir, f"run_{main_pipe_code}.py")
+                    save_text_to_path(text=runner_code, path=runner_path)
+                    typer.secho(f"✅ Python runner script saved to: {runner_path}", fg=typer.colors.GREEN)
+
+                    end_time = time.time()
+                    typer.secho(f"\n✅ Pipeline built in {end_time - start_time:.2f} seconds\n", fg=typer.colors.WHITE)
+
+                    get_report_delegate().generate_report()
+
+                    # Show how to run the pipe
+                    console = Console()
+                    console.print("\n📋 [cyan]To run your pipeline:[/cyan]")
+                    console.print(f"   [cyan]• Execute the runner:[/cyan] python {runner_path}")
+                    console.print(f"   [cyan]• Or use CLI:[/cyan] pipelex run {main_pipe_code} --inputs {inputs_json_path}\n")
+
+                except Exception as exc:
+                    typer.secho(f"⚠️  Warning: Could not generate extras: {exc}", fg=typer.colors.YELLOW)
 
     try:
         with get_telemetry_manager().telemetry_context():
@@ -162,12 +237,7 @@ def build_pipe_cmd(
             tag(name=EventProperty.PIPELEX_VERSION, value=PACKAGE_VERSION)
             tag(name=EventProperty.CLI_COMMAND, value=f"{COMMAND} {SUB_COMMAND_PIPE}")
 
-            start_time = time.time()
             asyncio.run(run_pipeline())
-            end_time = time.time()
-            typer.secho(f"\n✅ Pipeline built in {end_time - start_time:.2f} seconds", fg=typer.colors.GREEN)
-
-            get_report_delegate().generate_report()
 
     except PipeOperatorModelChoiceError as exc:
         handle_model_choice_error(exc, context=ErrorContext.BUILD)

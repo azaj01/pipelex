@@ -9,9 +9,9 @@ import typer
 from posthog import tag
 from rich.console import Console
 
-from pipelex import log, pretty_print_md
+from pipelex import log
 from pipelex.builder.builder import load_and_validate_bundle
-from pipelex.builder.builder_errors import PipelexBundleError
+from pipelex.builder.exceptions import PipelexBundleError
 from pipelex.cli.error_handlers import (
     ErrorContext,
     handle_model_availability_error,
@@ -20,15 +20,12 @@ from pipelex.cli.error_handlers import (
     handle_validation_error,
 )
 from pipelex.cogt.exceptions import ModelDeckPresetValidatonError
-from pipelex.exceptions import (
-    LibraryLoadingError,
-    PipeInputError,
-    PipelineExecutionError,
-    PipeOperatorModelAvailabilityError,
-    PipeOperatorModelChoiceError,
-)
+from pipelex.core.pipes.exceptions import PipeInputError, PipeOperatorModelChoiceError
 from pipelex.hub import get_telemetry_manager
+from pipelex.libraries.exceptions import LibraryLoadingError
+from pipelex.pipe_operators.exceptions import PipeOperatorModelAvailabilityError
 from pipelex.pipelex import Pipelex
+from pipelex.pipeline.exceptions import PipelineExecutionError
 from pipelex.pipeline.execute import execute_pipeline
 from pipelex.system.runtime import IntegrationMode
 from pipelex.system.telemetry.events import EventProperty
@@ -184,9 +181,9 @@ def run_cmd(
 
         # Pretty print main_stuff unless disabled
         if not no_pretty_print:
-            typer.echo("")
-            pretty_print_md(content=pipe_output.main_stuff.content.rendered_markdown(), title=f"Main output of '{pipe_code}'")
-            typer.echo("")
+            title = f"Final output of pipe [red]{pipe_code}[/red]"
+            pipe_output.main_stuff.pretty_print_stuff(title=title)
+            # TODO: no_pretty_print should also disable the pretty printing of each pipe operator step
 
         # Save working memory to JSON unless disabled
         if not no_output:
@@ -222,11 +219,15 @@ def run_cmd(
     except PipeOperatorModelAvailabilityError as exc:
         handle_model_availability_error(exc, context=ErrorContext.PIPE_RUN)
 
+    except typer.Exit:
+        raise
+
     except Exception as exc:
         log.error(f"Error executing pipeline: {exc}")
         console = Console(stderr=True)
         console.print("\n[bold red]Failed to execute pipeline[/bold red]\n")
         console.print_exception(show_locals=True)
         raise typer.Exit(1) from exc
+
     finally:
         pipelex_instance.teardown()
